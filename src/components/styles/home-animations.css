@@ -1,0 +1,94 @@
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInFromRight {
+  from {
+    transform: translateX(10%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInFromLeft {
+  from {
+    transform: translateX(-20%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes walletfadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes walletfadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.wallet-fade-out {
+  animation: walletfadeOut 0.5s ease-in-out forwards;
+}
+
+.wallet-fade-in {
+  animation: walletfadeIn 0.7s ease-in-out forwards;
+}
+
+.fade-in-from-left {
+  animation: fadeInFromLeft 0.7s ease-in-out forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.5s ease-in-out forwards;
+}
+
+.fade-in {
+  animation: fadeInFromRight 0.7s ease-in-out forwards;
+}
+@keyframes focusGlow {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.5);
+  }
+}
+.ring-gradient-base {
+  border: 3px solid transparent;
+  box-sizing: border-box;
+}
+
+.focus\:ring-gradient-to-r:focus {
+  animation: focusGlow 0.7s ease-in-out forwards;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  background: linear-gradient(#2c2c2c, #2c2c2c) padding-box,
+    linear-gradient(to right, #FA6631, #FFEE00) border-box;
+
+  color: #b3b3b3;
+}

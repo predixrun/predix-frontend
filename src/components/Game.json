@@ -1,0 +1,434 @@
+[
+    {
+        "title": "[Premier League]",
+        "match": "Man VS New",
+        "username": "@redDevilFan",
+        "endDate": "Sep 12",
+        "wagerSize": "18 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "Liv VS ACM",
+        "username": "@kopWarrior",
+        "endDate": "Oct 05",
+        "wagerSize": "9 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[La Liga]",
+        "match": "Atl VS Ath",
+        "username": "@madridistaX",
+        "endDate": "Nov 17",
+        "wagerSize": "14 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "Int VS Man",
+        "username": "@nerazzurri22",
+        "endDate": "Dec 02",
+        "wagerSize": "22 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[Premier League]",
+        "match": "Eve VS Ast",
+        "username": "@toffeeLad",
+        "endDate": "Jan 09",
+        "wagerSize": "6 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[La Liga]",
+        "match": "Sev VS Rea",
+        "username": "@sevillaSoul",
+        "endDate": "Feb 14",
+        "wagerSize": "11 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "PSG VS Bar",
+        "username": "@parisianGoal",
+        "endDate": "Mar 23",
+        "wagerSize": "17 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Premier League]",
+        "match": "Tot VS Wes",
+        "username": "@spursLegend",
+        "endDate": "Apr 18",
+        "wagerSize": "13 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[La Liga]",
+        "match": "Vil VS Get",
+        "username": "@yellowSub",
+        "endDate": "May 05",
+        "wagerSize": "19 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "Rea VS Bay",
+        "username": "@galacticoFan",
+        "endDate": "Jun 11",
+        "wagerSize": "21 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Premier League]",
+        "match": "Lei VS Bri",
+        "username": "@foxesPride",
+        "endDate": "Jul 03",
+        "wagerSize": "10 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[La Liga]",
+        "match": "Rea VS Cel",
+        "username": "@betisLover",
+        "endDate": "Aug 15",
+        "wagerSize": "16 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "Che VS Aja",
+        "username": "@blueLionKing",
+        "endDate": "Sep 20",
+        "wagerSize": "23 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Premier League]",
+        "match": "Wol VS Sou",
+        "username": "@wolfPack99",
+        "endDate": "Oct 27",
+        "wagerSize": "7 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[La Liga]",
+        "match": "Esp VS Osa",
+        "username": "@periquitoFan",
+        "endDate": "Nov 30",
+        "wagerSize": "12 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "Dor VS Por",
+        "username": "@yellowWallX",
+        "endDate": "Dec 14",
+        "wagerSize": "20 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Premier League]",
+        "match": "Cry VS Ful",
+        "username": "@eagleEye22",
+        "endDate": "Jan 25",
+        "wagerSize": "8 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[La Liga]",
+        "match": "Gra VS Mal",
+        "username": "@nazaríSpirit",
+        "endDate": "Feb 28",
+        "wagerSize": "15 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "Ata VS Ars",
+        "username": "@deaSupporter",
+        "endDate": "Mar 10",
+        "wagerSize": "24 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Premier League]",
+        "match": "Bre VS Bou",
+        "username": "@beesBuzz",
+        "endDate": "Apr 22",
+        "wagerSize": "11 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Serie A]",
+        "match": "Juv VS Mil",
+        "username": "@bianconeriFan",
+        "endDate": "May 15",
+        "wagerSize": "13 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[Bundesliga]",
+        "match": "Bay VS Bor",
+        "username": "@bavarianKing",
+        "endDate": "Jun 20",
+        "wagerSize": "19 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[Ligue 1]",
+        "match": "Mon VS Lyo",
+        "username": "@monacoStar",
+        "endDate": "Jul 10",
+        "wagerSize": "15 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Eredivisie]",
+        "match": "Aja VS PSV",
+        "username": "@ajaxLad",
+        "endDate": "Aug 25",
+        "wagerSize": "10 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Premier League]",
+        "match": "Ars VS Che",
+        "username": "@goonerFan",
+        "endDate": "Sep 30",
+        "wagerSize": "16 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[La Liga]",
+        "match": "Bar VS Val",
+        "username": "@culerKing",
+        "endDate": "Oct 15",
+        "wagerSize": "20 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "Man VS Liv",
+        "username": "@redsDevil",
+        "endDate": "Nov 05",
+        "wagerSize": "18 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Serie A]",
+        "match": "Int VS Nap",
+        "username": "@nerazzurriX",
+        "endDate": "Dec 10",
+        "wagerSize": "14 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Bundesliga]",
+        "match": "Dor VS Lei",
+        "username": "@yellowWall2",
+        "endDate": "Jan 18",
+        "wagerSize": "12 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[Ligue 1]",
+        "match": "PSG VS Mar",
+        "username": "@parisFan",
+        "endDate": "Feb 05",
+        "wagerSize": "17 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Premier League]",
+        "match": "Sou VS Wat",
+        "username": "@saintsFan",
+        "endDate": "Mar 12",
+        "wagerSize": "9 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[La Liga]",
+        "match": "Bet VS Lev",
+        "username": "@betisStar",
+        "endDate": "Apr 20",
+        "wagerSize": "13 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "Juv VS Por",
+        "username": "@juveFan",
+        "endDate": "May 25",
+        "wagerSize": "22 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[Serie A]",
+        "match": "Rom VS Laz",
+        "username": "@romaLad",
+        "endDate": "Jun 30",
+        "wagerSize": "15 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Bundesliga]",
+        "match": "Wol VS Fre",
+        "username": "@wolfFan",
+        "endDate": "Jul 15",
+        "wagerSize": "11 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[Ligue 1]",
+        "match": "Nic VS Ren",
+        "username": "@niceFan",
+        "endDate": "Aug 10",
+        "wagerSize": "14 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Eredivisie]",
+        "match": "Fey VS Utr",
+        "username": "@feyenoordX",
+        "endDate": "Sep 15",
+        "wagerSize": "10 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[Premier League]",
+        "match": "Bur VS Nor",
+        "username": "@claretsFan",
+        "endDate": "Oct 20",
+        "wagerSize": "8 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[La Liga]",
+        "match": "Cad VS Ela",
+        "username": "@cadizLad",
+        "endDate": "Nov 25",
+        "wagerSize": "12 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "Atl VS Ben",
+        "username": "@atletiFan",
+        "endDate": "Dec 30",
+        "wagerSize": "19 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Serie A]",
+        "match": "Fio VS Tor",
+        "username": "@violaFan",
+        "endDate": "Jan 05",
+        "wagerSize": "16 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[Bundesliga]",
+        "match": "Stu VS Aug",
+        "username": "@stuttgartX",
+        "endDate": "Feb 10",
+        "wagerSize": "13 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Ligue 1]",
+        "match": "Lil VS Bre",
+        "username": "@lilleFan",
+        "endDate": "Mar 15",
+        "wagerSize": "17 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[Eredivisie]",
+        "match": "Gron VS Her",
+        "username": "@groningenX",
+        "endDate": "Apr 05",
+        "wagerSize": "9 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Premier League]",
+        "match": "She VS Lee",
+        "username": "@bladesFan",
+        "endDate": "May 10",
+        "wagerSize": "14 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[La Liga]",
+        "match": "Alv VS Osu",
+        "username": "@alavesFan",
+        "endDate": "Jun 15",
+        "wagerSize": "10 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[UEFA Champions League]",
+        "match": "Nap VS Cel",
+        "username": "@napoliStar",
+        "endDate": "Jul 20",
+        "wagerSize": "21 SOL",
+        "status": "End",
+        "result": "Lose!"
+    },
+    {
+        "title": "[Serie A]",
+        "match": "Sas VS Gen",
+        "username": "@sampFan",
+        "endDate": "Aug 25",
+        "wagerSize": "12 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Bundesliga]",
+        "match": "Her VS Mai",
+        "username": "@herthaFan",
+        "endDate": "Sep 30",
+        "wagerSize": "15 SOL",
+        "status": "End",
+        "result": "Win!"
+    },
+    {
+        "title": "[Ligue 1]",
+        "match": "Str VS Ang",
+        "username": "@strasFan",
+        "endDate": "Oct 10",
+        "wagerSize": "11 SOL",
+        "status": "Ongoing"
+    },
+    {
+        "title": "[Eredivisie]",
+        "match": "Waa VS Spa",
+        "username": "@waalFan",
+        "endDate": "Nov 15",
+        "wagerSize": "13 SOL",
+        "status": "End",
+        "result": "Lose!"
+    }
+]
