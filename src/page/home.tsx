@@ -26,7 +26,7 @@ function Home() {
   const changeParents = () => {
     setSelectedCategory("");
   };
-  console.log(selectedCategory)
+
   const homeSendMessage = () => {
     setPresseSearch(!presseSearch);
   };
@@ -131,7 +131,7 @@ function Home() {
       )}
       {/* 지갑 UI */}
       {isConnected && !isMinimized && (
-        <Card className="fade-in-from-left py-6 absolute top-3 left-3 flex items-start min-w-[320px] min-h-[363px] bg-[#1E1E1E] text-[#767676]">
+        <Card className="fade-in-from-left py-6 absolute top-3 left-3 flex items-start min-w-[320px] min-h-[363px] bg-[#1E1E1E] text-[#767676] z-20">
           <CardHeader>
             <div className="flex items-center">
               <img

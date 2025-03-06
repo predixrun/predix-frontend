@@ -34,9 +34,9 @@ function GameInterfaceComponent({ changeParentsFunction }: GameInterfaceProps) {
   };
 
   const games: Game[] = gamesData;
-  console.log("gamesData:", gamesData);
+
   const displayedGames = games.filter((game) => game.status === filter);
-  console.log("Rendering displayedGames:", displayedGames);
+
 
   // 페이지네이션 설정
   const itemsPerPage = 8;
