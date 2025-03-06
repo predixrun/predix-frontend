@@ -403,7 +403,7 @@ function Home() {
         </Card>
       )}
       {isConnected && isMinimized && (
-        <div className="fade-in-from-left gap-2 font-prme absolute top-3 left-3 min-w-[261px] h-[134px] p-3 text-white rounded-lg shadow-lg flex flex-col items-center justify-center">
+        <div className="fade-in-from-left gap-2 font-prme absolute top-3 left-3 min-w-[261px] h-[134px] text-white rounded-lg shadow-lg flex flex-col items-center justify-center bg-black rounded-lgc">
           <CardHeader>
             <div className="flex items-center">
               <img
