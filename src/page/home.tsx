@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import GameInterfaceComponent from "@/components/GameInterface";
 import ChattingComponent from "@/components/ChattingComponent";
+import LoginTest from "@/components/LoginTest";
 
 function Home() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -60,13 +61,7 @@ function Home() {
                     <span className="pl-8 text-white text-lg">
                       Please connect wallet {"->"}
                     </span>
-                    <button
-                      className="w-[178px] h-[45px] rounded-[6px] bg-[#383838] text-white mr-[35px] hover:cursor-pointer text-base"
-                      type="button"
-                      onClick={() => setIsConnected(true)}
-                    >
-                      Connect wallet
-                    </button>
+                    <LoginTest setIsConnected={setIsConnected} />
                   </div>
                 </div>
               </div>
