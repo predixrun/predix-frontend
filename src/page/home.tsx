@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Category } from "@/components/Category";
 import "@/components/styles/home-animations.css";
 import {
@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/card";
 import GameInterfaceComponent from "@/components/GameInterface";
 import ChattingComponent from "@/components/ChattingComponent";
-import LoginTest from "@/components/LoginTest";
+import LoginHandler from "@/components/LoginHandler";
+import { usePrivy } from "@privy-io/react-auth";
+import DelegateWalletButton from "@/components/DelegateWallet";
+import { QRCodeCanvas } from "qrcode.react";
+import { CopyQRClipboard } from "@/components/CopyQRClipboard";
 
 function Home() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -20,6 +24,60 @@ function Home() {
 
   const [presseSearch, setPresseSearch] = useState<boolean>(false);
   const [inputText, setInputText] = useState<string>("");
+
+  const { user } = usePrivy();
+  const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
+  let referralCode = "";
+  if (userProfile?.data?.referral?.code) {
+    referralCode = userProfile.data.referral.code;
+  }
+
+  // qr & referralCode 복사기능 분리 필요
+  const copyToReferralCode = () => {
+    if (referralCode) {
+      navigator.clipboard
+        .writeText(referralCode)
+        .then(() => {
+          alert("Invite code copied to clipboard!");
+        })
+        .catch((err) => {
+          console.error("Failed to copy text:", err);
+        });
+    }
+  };
+
+  // 사용자 내장 지갑 delegate체크 부분 임시 제거
+  const walletToDelegate = user?.linkedAccounts.find(
+    (wallet) =>
+      wallet.type === "wallet" &&
+      wallet.walletClientType === "privy" &&
+      wallet.chainType === "solana"
+  ) as { delegated: boolean; address: string } | undefined;
+
+  useEffect(() => {
+    if (!walletToDelegate) return;
+    
+    setCurrentState((prevState) => {
+      if (walletToDelegate.delegated && prevState !== "deposit") {
+        return "deposit";
+      }
+      if (!walletToDelegate.delegated && prevState !== "delegate") {
+        return "delegate";
+      }
+      return prevState;
+    });
+  }, [walletToDelegate]);
+
+  // 사용자 닉네임 찾기
+  const twitterAccount = user?.linkedAccounts[0] as
+    | { username: string }
+    | undefined;
+  const username = twitterAccount?.username;
+  // 사용자 이미지 찾기
+  const twitterProfileUrl = user?.linkedAccounts[0] as
+    | { profilePictureUrl: string }
+    | undefined;
+  const ProfileUrl = twitterProfileUrl?.profilePictureUrl;
 
   const handleMinimizeToggle = () => {
     setIsMinimized(!isMinimized);
@@ -61,7 +119,7 @@ function Home() {
                     <span className="pl-8 text-white text-lg">
                       Please connect wallet {"->"}
                     </span>
-                    <LoginTest setIsConnected={setIsConnected} />
+                    <LoginHandler setIsConnected={setIsConnected} />
                   </div>
                 </div>
               </div>
@@ -76,7 +134,6 @@ function Home() {
             <div className="mt-6 text-base">
               <Category onSelect={setSelectedCategory} />
             </div>
-
           </div>
 
           {/* 새로운 UI */}
@@ -116,7 +173,6 @@ function Home() {
             <div className="mt-6 text-base">
               <Category onSelect={setSelectedCategory} />
             </div>
-         
           </div>
 
           {selectedCategory === "Trending Game" && (
@@ -126,15 +182,15 @@ function Home() {
       )}
       {/* 지갑 UI */}
       {isConnected && !isMinimized && (
-        <Card className="fade-in-from-left py-6 absolute top-3 left-3 flex items-start min-w-[320px] min-h-[363px] bg-[#1E1E1E] text-[#767676] z-20">
+        <Card className="fade-in-from-left py-6 absolute top-3 left-3 flex items-start min-w-[320px]  bg-[#1E1E1E] text-[#767676] z-20">
           <CardHeader>
             <div className="flex items-center">
               <img
-                src="money.webp"
+                src={ProfileUrl}
                 alt="Profile"
                 className="rounded-full w-10 h-10"
               />
-              <span className="ml-2 text-sm">@3454ffdg</span>
+              <span className="ml-2 text-sm">@{username}</span>
             </div>
             <div className="flex items-center gap-5">
               {presseSearch && (
@@ -189,11 +245,8 @@ function Home() {
                   }`}
                 >
                   {currentState === "delegate" && (
-                    <div
-                      className="h-full flex justify-center items-center font-prme text-[36px] text-white cursor-pointer"
-                      onClick={() => setCurrentState("deposit")}
-                    >
-                      Delegate
+                    <div className="h-full flex justify-center items-center font-prme text-[36px] text-white cursor-pointer">
+                      <DelegateWalletButton setCurrentState={setCurrentState} />
                     </div>
                   )}
                   {currentState === "deposit" && (
@@ -209,25 +262,17 @@ function Home() {
                   )}
                   {currentState === "qrCode" && (
                     <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-family text-white">
-                      <img
-                        src="money.webp"
-                        alt="QR Code"
-                        className="w-[86px] h-[86px]"
-                      />
+                      <div className="p-2 bg-white rounded-lg inline-block">
+                        <QRCodeCanvas
+                          value={walletToDelegate?.address ?? ""}
+                          size={100}
+                          level="H"
+                          bgColor="#FFFFFF"
+                          fgColor="#000000"
+                        />
+                      </div>
                       <div className="mt-4 mb-2 flex items-center gap-4">
-                        <p>Aqwr...0xre</p>
-                        <span>
-                          {" "}
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="size-5 text-white"
-                          >
-                            <path d="M2 4.25A2.25 2.25 0 0 1 4.25 2h6.5A2.25 2.25 0 0 1 13 4.25V5.5H9.25A3.75 3.75 0 0 0 5.5 9.25V13H4.25A2.25 2.25 0 0 1 2 10.75v-6.5Z" />
-                            <path d="M9.25 7A2.25 2.25 0 0 0 7 9.25v6.5A2.25 2.25 0 0 0 9.25 18h6.5A2.25 2.25 0 0 0 18 15.75v-6.5A2.25 2.25 0 0 0 15.75 7h-6.5Z" />
-                          </svg>
-                        </span>
+                        <CopyQRClipboard />
                       </div>
                       <button
                         className="mt-4 bg-[#161414] text-[#B3B3B3] px-4 py-2 rounded text-[14px] w-[264px] cursor-pointer"
@@ -303,23 +348,25 @@ function Home() {
           </CardTitle>
           <CardContent>
             <div className="text-sm mb-3 flex justify-between">
-              <div className="ml-2">Invite code: UC08FS973gv</div>
-              <div className="mr-2">
+              <div className="ml-2">Invite code: {referralCode}</div>
+              <div className="mr-2 cursor-pointer">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                   className="size-5 fill-[#767676]"
+                  onClick={copyToReferralCode}
                 >
                   <path d="M2 4.25A2.25 2.25 0 0 1 4.25 2h6.5A2.25 2.25 0 0 1 13 4.25V5.5H9.25A3.75 3.75 0 0 0 5.5 9.25V13H4.25A2.25 2.25 0 0 1 2 10.75v-6.5Z" />
                   <path d="M9.25 7A2.25 2.25 0 0 0 7 9.25v6.5A2.25 2.25 0 0 0 9.25 18h6.5A2.25 2.25 0 0 0 18 15.75v-6.5A2.25 2.25 0 0 0 15.75 7h-6.5Z" />
                 </svg>
               </div>
             </div>
-            <div className="relative flex flex-col items-center">
+            {/* recommended코드 작성 임시 비활성화 */}
+            {/* <div className="relative flex flex-col items-center">
               <input
                 type="text"
-                className="peer w-full bg-[#2C2C2C] text-[#767676] pr-14 p-2 rounded text-[12px] text-left placeholder:text-center focus:outline-none focus:ring-gradient-to-r ring-gradient-base focus:placeholder-transparent focus:bg-black"
+                className="peer w-full bg-[#2C2C2C] text-[#767676] pr-12 p-2 rounded text-[12px] text-left placeholder:text-center focus:outline-none focus:ring-gradient-to-r ring-gradient-base focus:placeholder-transparent focus:bg-black"
                 placeholder="Input of the recommended code"
               />
               <button
@@ -339,7 +386,7 @@ function Home() {
                   />
                 </svg>
               </button>
-            </div>
+            </div> */}
           </CardContent>
           <CardFooter>
             <div className="flex gap-4 text-[#B3B3B3]">

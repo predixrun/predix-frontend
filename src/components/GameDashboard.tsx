@@ -2,15 +2,60 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import "@/components/styles/game-dashboard-animations.css";
 
+interface GameRelation {
+  key: string;
+  content: string;
+  thumbnail: string;
+  count: number;
+}
+
+interface GameData {
+  gameId: number;
+  gameTitle: string;
+  gameContent: string;
+  gameQuantity: string;
+  gameStatus: string;
+  gameExpiredAt: string;
+  gameRelation: GameRelation[];
+  joined: {
+    choiceKey: string;
+    quantity: string;
+    choiceType: string;
+    choiceResult?: string | null;
+    rewardResult?: string | null;
+  };
+  user: {
+    userId: number;
+    name: string;
+    profileImg: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface GameDashboardProps {
+  gameData: GameData;
   onClose: () => void;
 }
 
-function GameDashboard({ onClose }: GameDashboardProps) {
+function GameDashboard({ gameData, onClose }: GameDashboardProps) {
   const [closing, setClosing] = useState(false);
   const [betStatus, setBetStatus] = useState<
     "pending" | "success" | "fail" | ""
   >("");
+  const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
+  console.log("gameData", gameData);
+  if (userProfile?.data?.id) {
+    if (gameData.user.userId === userProfile.data.id) {
+      console.log("사용자 ID가 일치합니다.", gameData.joined);
+    } else {
+      console.log("사용자 ID가 일치하지 않습니다.");
+    }
+  } else {
+    console.log("사용자 프로필 데이터가 없습니다.");
+  }
+
+  console.log("Received game data:", gameData);
 
   const handleClose = () => {
     setClosing(true);
@@ -46,25 +91,36 @@ function GameDashboard({ onClose }: GameDashboardProps) {
         <Card className="bg-[#1C1C1D] text-white">
           <CardHeader className="flex-col rounded-t-lg drop-shadow-lg shadow-2xl shadow-black bg-gradient-to-b from-[#2C2C2C] to-black p-3">
             <div className="justify-between flex p-1 mt-1 text-xl">
-              <div>[UEFA Champions League]</div>
-              <div className="text-sm items-center flex">win</div>
+              <div>[{gameData.gameTitle}]</div>
+              <div className="text-sm items-center flex">
+                {gameData.joined.choiceResult || "Ongoing"}
+              </div>
             </div>
             <div className="justify-between flex p-1 mb-1 text-sm">
-              <div>이미@rolllghfdjhgd... | Ends: Jan 21</div>
-              <div>Wager Size (12 SOL)</div>
+              <div>
+                <div className="flex gap-2 items-center">
+                  <img
+                    src={gameData.user.profileImg}
+                    alt=""
+                    className="size-6 rounded-full"
+                  />{" "}
+                  {gameData.user.name} | Ends: {gameData.gameExpiredAt}
+                </div>
+              </div>
+              <div>Wager Size ({parseFloat(gameData.gameQuantity)} SOL)</div>
             </div>
           </CardHeader>
           <CardContent className="mt-5">
             <div className="flex-col flex items-center gap-2 border rounded-lg bg-[#1B191E] text-base px-6 py-5">
-              <div>Your answer is 'Draw/Lose'</div>
+              <div>Your answer is '{gameData.joined.choiceType}'</div>
               <div className="text-xs text-[#767676]">
-                Title: [UEFA Champions League]
+                Title: {gameData.gameTitle}
               </div>
               <div
                 className="gap-1 text-sm bg-black w-[120px] h-[32px] items-center flex justify-center rounded-full border-2 border-[#D74713] cursor-pointer"
                 onClick={handleFail}
               >
-                Draw/Lose
+                {gameData.joined.choiceType}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
@@ -78,7 +134,7 @@ function GameDashboard({ onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Your votes</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                    12 SOL
+                  {parseFloat(gameData.gameQuantity)} SOL
                   </div>
                 </div>
                 <div className="flex justify-center">
@@ -87,7 +143,7 @@ function GameDashboard({ onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Potential reward</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                    24 SOL ~$5447.22
+                  {parseFloat(gameData.gameQuantity) * 2} SOL
                   </div>
                 </div>
               </div>
