@@ -25,11 +25,22 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
 
     login();
 
+
+
     if (authenticated && user) {
-      const token = await getAccessToken();
+      await getAccessToken();
+      function getCookie(name: string) {
+        return document.cookie
+          .split("; ")
+          .find((row) => row.startsWith(name + "="))
+          ?.split("=")[1];
+      }
+  
+      const privyToken = getCookie("privy-token");
+      console.log("privyToken",privyToken)
 
       const userAuthInfo: UserAuthInfo = {
-        token: token || "",
+        token: privyToken || "",
         authType: "privy-twitter",
         name: user.twitter?.username || "",
         profileImage: user.twitter?.profilePictureUrl || "",
@@ -61,7 +72,7 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
       setIsConnected(false);
     }
   };
-// New data and changes required
+  // New data and changes required
   const handleSignIn = async (userAuthInfo: UserAuthInfo) => {
     try {
       const signInResponse = await authAPI.signIn({
@@ -71,7 +82,9 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
 
       if (signInResponse.status === "SUCCESS" && signInResponse.data?.token) {
         localStorage.setItem("auth_token", signInResponse.data.token);
-        const profileResponse = await authAPI.profile(signInResponse.data?.token);
+        const profileResponse = await authAPI.profile(
+          signInResponse.data?.token
+        );
         localStorage.setItem("profile_data", JSON.stringify(profileResponse));
 
         return true;
@@ -90,9 +103,10 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
       const signUpResponse = await authAPI.signUp(userAuthInfo);
 
       if (signUpResponse.status === "SUCCESS" && signUpResponse.data?.token) {
-
         localStorage.setItem("auth_token", signUpResponse.data.token);
-        const profileResponse = await authAPI.profile(signUpResponse.data?.token);
+        const profileResponse = await authAPI.profile(
+          signUpResponse.data?.token
+        );
         localStorage.setItem("profile_data", JSON.stringify(profileResponse));
         return true;
       }

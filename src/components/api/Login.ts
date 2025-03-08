@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://3.35.47.226";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 interface SignUpParams {
   token: string;
