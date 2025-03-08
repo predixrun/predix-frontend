@@ -93,7 +93,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
             <div className="justify-between flex p-1 mt-1 text-xl">
               <div>[{gameData.gameTitle}]</div>
               <div className="text-sm items-center flex">
-                {gameData.joined.choiceResult || "Ongoing"}
+                {gameData.gameStatus || "Ongoing"}
               </div>
             </div>
             <div className="justify-between flex p-1 mb-1 text-sm">

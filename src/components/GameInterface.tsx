@@ -6,6 +6,7 @@ import gameAPI from "@/components/api/Game";
 
 interface GameInterfaceProps {
   changeParentsFunction: () => void;
+  selectedCategory: string;
 }
 interface GameRelation {
   key: string;
@@ -43,13 +44,22 @@ interface Game {
   updatedAt: string;
 }
 
-function GameInterfaceComponent({ changeParentsFunction }: GameInterfaceProps) {
+function GameInterfaceComponent({
+  changeParentsFunction,
+  selectedCategory,
+}: GameInterfaceProps) {
   const [selectedGame, setSelectedGame] = useState<number | null>(null);
   const [filter, setFilter] = useState<"ONGOING" | "EXPIRED">("ONGOING");
   const [currentPage, setCurrentPage] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [gamesData, setGamesData] = useState<Game[]>([]);
-  
+
+  const [statusFilter, setStatusFilter] = useState<"ONGOING" | "END">(
+    "ONGOING"
+  );
+  const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
+  const currentUserId = userProfile?.data?.id || null;
+
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -61,7 +71,15 @@ function GameInterfaceComponent({ changeParentsFunction }: GameInterfaceProps) {
   };
   useEffect(() => {
     const loadGames = async () => {
-      const gameData = await gameAPI.fetchGameHistory("T", 1, 5);
+      const gameData = await gameAPI.fetchGameHistory({
+        category: selectedCategory,
+        page: 1,
+        take: 5,
+        status:
+          selectedCategory === "History" || selectedCategory === "Created Game"
+            ? statusFilter
+            : undefined,
+      });
       if (gameData && gameData.items) {
         const formattedGames = gameData.items.map((game: Game) => ({
           gameId: game.gameId,
@@ -97,10 +115,27 @@ function GameInterfaceComponent({ changeParentsFunction }: GameInterfaceProps) {
     };
 
     loadGames();
-  }, []);
+  }, [selectedCategory, statusFilter]);
   const games: Game[] = gamesData;
 
-  const displayedGames = games.filter((game) => game.gameStatus === filter);
+  const displayedGames = games.filter((game) => {
+    const isCreatedGame = selectedCategory === "Created Game";
+    const isHistory = selectedCategory === "History";
+  
+    const isUserGame = isCreatedGame ? game.user.userId === currentUserId : true;
+  
+    if (isHistory) {
+      return game.joined.choiceKey !== "" && (statusFilter === "END" ? game.gameStatus === "EXPIRED" : game.gameStatus === "ONGOING");
+    }
+  
+    if (isCreatedGame) {
+      return isUserGame && (statusFilter === "END" ? game.gameStatus === "EXPIRED" : game.gameStatus === "ONGOING");
+    }
+  
+    return game.gameStatus === filter;
+  });
+  
+
 
   // 페이지네이션 설정
   const itemsPerPage = 8;
@@ -124,33 +159,67 @@ function GameInterfaceComponent({ changeParentsFunction }: GameInterfaceProps) {
   const selectedGameData = gamesData.find(
     (game) => game.gameId === selectedGame
   );
-  console.log("selectedGameData", currentItems);
+
   return (
     <div className="bg-black text-white rounded-lg font-family p-4 z-10">
       <div className="mb-6 mt-6 flex justify-between items-center text-white gap-2">
         <div>
-          <button
-            className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
-              filter === "ONGOING" ? "border-[#D74713] text-white" : ""
-            }`}
-            onClick={() => {
-              setFilter("ONGOING");
-              setCurrentPage(0);
-            }}
-          >
-            ongoing
-          </button>
-          <button
-            className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
-              filter === "EXPIRED" ? "border-[#D74713] text-white" : ""
-            }`}
-            onClick={() => {
-              setFilter("EXPIRED");
-              setCurrentPage(0);
-            }}
-          >
-            End
-          </button>
+          {(selectedCategory === "Trending Game" ||
+            selectedCategory === "Recent Game") && (
+            <>
+              <button
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                  filter === "ONGOING" ? "border-[#D74713] text-white" : ""
+                }`}
+                onClick={() => {
+                  setFilter("ONGOING");
+                  setCurrentPage(0);
+                }}
+              >
+                Ongoing
+              </button>
+              <button
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                  filter === "EXPIRED" ? "border-[#D74713] text-white" : ""
+                }`}
+                onClick={() => {
+                  setFilter("EXPIRED");
+                  setCurrentPage(0);
+                }}
+              >
+                End
+              </button>
+            </>
+          )}
+          {(selectedCategory === "History" ||
+            selectedCategory === "Created Game") && (
+            <>
+              <button
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                  statusFilter === "ONGOING"
+                    ? "border-[#D74713] text-white"
+                    : ""
+                }`}
+                onClick={() => {
+                  setStatusFilter("ONGOING");
+                  setCurrentPage(0);
+                }}
+              >
+                Ongoing
+              </button>
+              <button
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                  statusFilter === "END" ? "border-[#D74713] text-white" : ""
+                }`}
+                onClick={() => {
+                  setStatusFilter("END");
+                  setCurrentPage(0);
+                }}
+              >
+                End
+              </button>
+            </>
+          )}
           <button
             className="bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white"
             onClick={changeParentsFunction}
@@ -158,15 +227,14 @@ function GameInterfaceComponent({ changeParentsFunction }: GameInterfaceProps) {
             close
           </button>
         </div>
-        <div className="flex">
-          <span className="text-gray-500">Recent ↓</span>
+        <div>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2 items-center justify-center">
-        {currentItems.map((game, index) => (
+        {currentItems.map((game) => (
           <>
             <div
-              key={index}
+              key={game.gameId}
               className="animated-card w-[450px]"
               onClick={() => handleCardClick(game.gameId)}
             >
@@ -220,7 +288,6 @@ function GameInterfaceComponent({ changeParentsFunction }: GameInterfaceProps) {
                     }
                   >
                     Wager Size ({parseFloat(game.gameQuantity)} SOL)
-  
                   </div>
                 </div>
               </div>

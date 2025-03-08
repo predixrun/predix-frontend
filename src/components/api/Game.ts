@@ -2,24 +2,60 @@ import axios from "axios";
 
 const BASE_URL = "http://3.35.47.226";
 
-export const fetchGameHistory = async (type = "T", page = 1, take = 5) => {
+interface FetchGameHistoryParams {
+  category: string;
+  page: number;
+  take: number;
+  status?: "ONGOING" | "END"; 
+}
+
+export const fetchGameHistory = async ({
+  category,
+  page,
+  take,
+  status, 
+}: FetchGameHistoryParams) => {
   try {
     const authToken = localStorage.getItem("auth_token");
     if (!authToken) {
       throw new Error("No auth token found. Please log in.");
     }
 
-    const response = await axios.get(`${BASE_URL}/v1/game`, {
-        params: {
-          type,
-          page,
-          take,
-        },
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-    
+    let endpoint = `${BASE_URL}/v1/game`;
+    let type = "T"; 
+
+    switch (category) {
+      case "Trending Game":
+        type = "T"; 
+        break;
+      case "Recent Game":
+        type = "R"; 
+        break;
+      case "History":
+        endpoint = `${BASE_URL}/v1/game/hist`;
+        type = status || "ONGOING"; 
+        break;
+      case "Created Game":
+        endpoint = `${BASE_URL}/v1/game/created`;
+        type = status || "ONGOING"; 
+        break;
+      default:
+        type = "T";
+    }
+  
+
+    const response = await axios.get(endpoint, {
+      params: {
+        type,
+        page,
+        take,
+        _t: new Date().getTime(),
+      },
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
     if (response.data?.status === "SUCCESS") {
       return response.data.data;
     }
