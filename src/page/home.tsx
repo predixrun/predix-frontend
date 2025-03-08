@@ -56,7 +56,7 @@ function Home() {
 
   useEffect(() => {
     if (!walletToDelegate) return;
-    
+
     setCurrentState((prevState) => {
       if (walletToDelegate.delegated && prevState !== "deposit") {
         return "deposit";
@@ -175,8 +175,13 @@ function Home() {
             </div>
           </div>
 
-          {selectedCategory === "Trending Game" && (
-            <GameInterfaceComponent changeParentsFunction={changeParents} />
+          {["Trending Game", "Recent Game", "History", "Created Game"].includes(
+            selectedCategory
+          ) && (
+            <GameInterfaceComponent
+              changeParentsFunction={changeParents}
+              selectedCategory={selectedCategory}
+            />
           )}
         </div>
       )}
