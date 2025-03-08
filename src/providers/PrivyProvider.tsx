@@ -1,6 +1,7 @@
-import { PrivyProvider, usePrivy } from "@privy-io/react-auth";
-import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
-import { useEffect } from "react";
+import { PrivyProvider } from "@privy-io/react-auth";
+import {
+  toSolanaWalletConnectors,
+} from "@privy-io/react-auth/solana";
 
 const solanaConnectors = toSolanaWalletConnectors({
   shouldAutoConnect: true,
@@ -30,24 +31,16 @@ const PrivyProviderComponent = ({
           solana: {
             createOnLogin: "users-without-wallets", // defaults to 'off'
           },
+          ethereum: {
+            createOnLogin: "users-without-wallets", // defaults to 'off'
+          },
         },
       }}
     >
-      <PrivyUserHandler />
+
       {children}
     </PrivyProvider>
   );
 };
-const PrivyUserHandler = () => {
-  const { user, ready } = usePrivy();
 
-  useEffect(() => {
-    if (ready && user) {
-      console.log(`User ${user.id} logged in!`);
-      console.log("User wallets:", user.wallet);
-    }
-  }, [ready, user]);
-
-  return null;
-};
 export default PrivyProviderComponent;
