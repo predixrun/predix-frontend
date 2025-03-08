@@ -40,22 +40,9 @@ interface GameDashboardProps {
 
 function GameDashboard({ gameData, onClose }: GameDashboardProps) {
   const [closing, setClosing] = useState(false);
-  const [betStatus, setBetStatus] = useState<
-    "pending" | "success" | "fail" | ""
-  >("");
+  const [betStatus, setBetStatus] = useState<"pending" | "success" | "fail" | "">("");
   const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
-  console.log("gameData", gameData);
-  if (userProfile?.data?.id) {
-    if (gameData.user.userId === userProfile.data.id) {
-      console.log("사용자 ID가 일치합니다.", gameData.joined);
-    } else {
-      console.log("사용자 ID가 일치하지 않습니다.");
-    }
-  } else {
-    console.log("사용자 프로필 데이터가 없습니다.");
-  }
-
-  console.log("Received game data:", gameData);
+  const currentUserId = userProfile?.data?.id || null;
 
   const handleClose = () => {
     setClosing(true);
@@ -81,6 +68,13 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
     }, 1000);
   };
 
+
+  const isUserMatch = gameData.user.userId === currentUserId;
+  
+
+  const quantity = gameData.joined.choiceKey === "" ? "" : (isUserMatch ? parseFloat(gameData.gameQuantity) : parseFloat(gameData.joined.quantity));
+  const potentialReward = gameData.joined.choiceKey === "" ? "" : (isUserMatch ? parseFloat(gameData.gameQuantity) * 2 : parseFloat(gameData.joined.quantity) * 2);
+
   return (
     <>
       <div
@@ -93,7 +87,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
             <div className="justify-between flex p-1 mt-1 text-xl">
               <div>[{gameData.gameTitle}]</div>
               <div className="text-sm items-center flex">
-                {gameData.gameStatus || "Ongoing"}
+                {gameData.joined.choiceResult || ""}
               </div>
             </div>
             <div className="justify-between flex p-1 mb-1 text-sm">
@@ -107,12 +101,12 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                   {gameData.user.name} | Ends: {gameData.gameExpiredAt}
                 </div>
               </div>
-              <div>Wager Size ({parseFloat(gameData.gameQuantity)} SOL)</div>
+              <div>Wager Size ({quantity} SOL)</div>
             </div>
           </CardHeader>
           <CardContent className="mt-5">
             <div className="flex-col flex items-center gap-2 border rounded-lg bg-[#1B191E] text-base px-6 py-5">
-              <div>Your answer is '{gameData.joined.choiceType}'</div>
+              <div>Your answer is '{gameData.joined.choiceType || ""}'</div>
               <div className="text-xs text-[#767676]">
                 Title: {gameData.gameTitle}
               </div>
@@ -134,7 +128,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Your votes</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                  {parseFloat(gameData.gameQuantity)} SOL
+                    {quantity || "0"} SOL
                   </div>
                 </div>
                 <div className="flex justify-center">
@@ -143,7 +137,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Potential reward</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                  {parseFloat(gameData.gameQuantity) * 2} SOL
+                    {potentialReward || "0"} SOL
                   </div>
                 </div>
               </div>
@@ -153,7 +147,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
               </div>
             </div>
             <div className="text-sm text-[#B3B3B3] p-2 mb-4">
-              sucess: https://dbsh3737rh
+              success: https://dbsh3737rh
             </div>
             <button
               className="font-semibold font-family my-4 w-full h-[42px] transform bg-[#FA6631] text-black px-4 py-2 rounded cursor-pointer text-[14px] leading-[13px] bg-gradient-to-r from-[#FFEE00] to-[#FA6631]"

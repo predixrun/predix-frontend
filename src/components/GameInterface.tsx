@@ -121,21 +121,31 @@ function GameInterfaceComponent({
   const displayedGames = games.filter((game) => {
     const isCreatedGame = selectedCategory === "Created Game";
     const isHistory = selectedCategory === "History";
-  
-    const isUserGame = isCreatedGame ? game.user.userId === currentUserId : true;
-  
+
+    const isUserGame = isCreatedGame
+      ? game.user.userId === currentUserId
+      : true;
+
     if (isHistory) {
-      return game.joined.choiceKey !== "" && (statusFilter === "END" ? game.gameStatus === "EXPIRED" : game.gameStatus === "ONGOING");
+      return (
+        game.joined.choiceKey !== "" &&
+        (statusFilter === "END"
+          ? game.gameStatus === "EXPIRED"
+          : game.gameStatus === "ONGOING")
+      );
     }
-  
+
     if (isCreatedGame) {
-      return isUserGame && (statusFilter === "END" ? game.gameStatus === "EXPIRED" : game.gameStatus === "ONGOING");
+      return (
+        isUserGame &&
+        (statusFilter === "END"
+          ? game.gameStatus === "EXPIRED"
+          : game.gameStatus === "ONGOING")
+      );
     }
-  
+
     return game.gameStatus === filter;
   });
-  
-
 
   // 페이지네이션 설정
   const itemsPerPage = 8;
@@ -161,14 +171,14 @@ function GameInterfaceComponent({
   );
 
   return (
-    <div className="bg-black text-white rounded-lg font-family p-4 z-10">
-      <div className="mb-6 mt-6 flex justify-between items-center text-white gap-2">
+    <div className="bg-black  text-white rounded-lg font-family p-4 z-10">
+      <div className="mb-6 mt-6 w-[900px] flex justify-start text-white gap-2 transition-all duration-300">
         <div>
           {(selectedCategory === "Trending Game" ||
             selectedCategory === "Recent Game") && (
             <>
               <button
-                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
                   filter === "ONGOING" ? "border-[#D74713] text-white" : ""
                 }`}
                 onClick={() => {
@@ -179,7 +189,7 @@ function GameInterfaceComponent({
                 Ongoing
               </button>
               <button
-                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
                   filter === "EXPIRED" ? "border-[#D74713] text-white" : ""
                 }`}
                 onClick={() => {
@@ -195,7 +205,7 @@ function GameInterfaceComponent({
             selectedCategory === "Created Game") && (
             <>
               <button
-                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
                   statusFilter === "ONGOING"
                     ? "border-[#D74713] text-white"
                     : ""
@@ -208,7 +218,7 @@ function GameInterfaceComponent({
                 Ongoing
               </button>
               <button
-                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
                   statusFilter === "END" ? "border-[#D74713] text-white" : ""
                 }`}
                 onClick={() => {
@@ -221,15 +231,15 @@ function GameInterfaceComponent({
             </>
           )}
           <button
-            className="bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white"
+            className="bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white"
             onClick={changeParentsFunction}
           >
             close
           </button>
         </div>
-        <div>
-        </div>
+        <div></div>
       </div>
+
       <div className="grid grid-cols-2 gap-2 items-center justify-center">
         {currentItems.map((game) => (
           <>
