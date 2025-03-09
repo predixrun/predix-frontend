@@ -55,7 +55,7 @@ export const fetchGameHistory = async ({
         Authorization: `Bearer ${authToken}`,
       },
     });
-
+    console.log("response",response)
     if (response.data?.status === "SUCCESS") {
       return response.data.data;
     }

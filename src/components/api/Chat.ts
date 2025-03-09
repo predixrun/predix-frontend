@@ -1,9 +1,43 @@
 import axios from "axios";
 
-const BASE_URL = process.env.REACT_APP_BASE_URL;
-const authToken = localStorage.getItem("auth_token");
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-// 채팅 메시지 불러오기
+interface GameRelation {
+  key: string;
+  content: string;
+}
+
+interface GameData {
+  gameTitle: string;
+  gameContent: string;
+  extras: string;
+  gameStartAt: string;
+  gameExpriedAt: string;
+  fixtureId: number;
+  gameRelations: GameRelation[];
+  quantity: string;
+  key: string;
+  choiceType: string;
+}
+
+interface ChatMessage {
+  externalId: string | null;
+  content: string;
+  messageType: "CREATE_TR";
+  data: GameData;
+}
+
+const authToken = localStorage.getItem("auth_token");
+interface Chatting {
+  externalId?: string | null;
+  conversationExternalId?: string;
+  sender?: string | null;
+  content: string;
+  messageType: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any;
+}
+// Load chat messages
 export const getChatMessages = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/v1/chat`, {
@@ -18,17 +52,23 @@ export const getChatMessages = async () => {
   }
 };
 
-// 메시지 전송
-export const sendChatMessage = async (message: string) => {
+// send message
+export const sendChatMessage = async ({
+  externalId,
+  content,
+  messageType,
+}: Chatting) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/v1/chat/message`,
       {
-        message,
+        externalId,
+        content,
+        messageType,
       },
       {
         headers: {
-          Authorization: `Bearer ${authToken}`, 
+          Authorization: `Bearer ${authToken}`,
         },
       }
     );
@@ -38,3 +78,29 @@ export const sendChatMessage = async (message: string) => {
     throw error;
   }
 };
+
+export const creatChatMessage = async (message: ChatMessage) => {
+  try {
+    const authToken = localStorage.getItem("auth_token");
+    console.log("createmessage",message);
+    const response = await axios.post(`${BASE_URL}/v1/chat/message`, message, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    console.log("sign successfully:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("sign game:", error);
+    throw error;
+  }
+};
+
+const chatAPI = {
+  getChatMessages,
+  sendChatMessage,
+  creatChatMessage,
+};
+
+export default chatAPI;

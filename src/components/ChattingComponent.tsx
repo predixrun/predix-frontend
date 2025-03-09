@@ -1,5 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
-
+import chatAPI from "@/components/api/Chat";
+import "@/components/styles/game-dashboard-animations.css";
+import { Transaction } from "@solana/web3.js";
+import { useSolanaWallets } from "@privy-io/react-auth";
+import signGame from "@/components/api/Sign";
+interface Selection {
+  name: string;
+  type: string;
+  description: string;
+}
 interface Chatting {
   externalId?: string | null;
   conversationExternalId?: string;
@@ -7,7 +16,7 @@ interface Chatting {
   content: string;
   messageType: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data?: any;
+  data?: any | null;
 }
 
 interface ChattingComponentProps {
@@ -15,125 +24,105 @@ interface ChattingComponentProps {
   resetInput: () => void;
 }
 
+interface GameRelation {
+  key: string;
+  content: string;
+}
+
+interface GameData {
+  gameTitle: string;
+  gameContent: string;
+  extras: string;
+  gameStartAt: string;
+  gameExpriedAt: string;
+  fixtureId: number;
+  gameRelations: GameRelation[];
+  quantity: string;
+  key: string;
+  choiceType: string;
+}
+
+interface ChatMessage {
+  externalId: string | null;
+  content: string;
+  messageType: "CREATE_TR";
+  data: GameData;
+}
+
+const mockGameData: ChatMessage = {
+  externalId: "b153593c-ab24-4f7d-add5-356adc2f98f6", // null (새 채팅방 일경우) || "b153593c-ab24-4f7d-add5-356adc2f98f6"
+  content: "yes",
+  messageType: "CREATE_TR",
+  data: {
+    gameTitle: "맨유 vs 토트넘",
+    gameContent: "best football contest",
+    extras: "",
+    gameStartAt: "2025-03-01",
+    gameExpriedAt: "2025-11-11",
+    fixtureId: 12345,
+    gameRelations: [
+      { key: "A", content: "MAN" },
+      { key: "B", content: "TOT" },
+    ],
+    quantity: "0.001",
+    key: "A",
+    choiceType: "WIN",
+  },
+};
+
 function ChattingComponent({
   homeInputText,
   resetInput,
 }: ChattingComponentProps) {
-  const [messages, setMessages] = useState<Chatting[]>([
-    {
-      conversationExternalId: "b153593c-ab24-4f7d-add5-356adc2f98f6",
-      sender: "AGENT",
-      content: "Hello! How can I assist you today? 😊",
-      messageType: "text",
-      data: null,
-    },
-    {
-      conversationExternalId: "b153593c-ab24-4f7d-add5-356adc2f98f6",
-      sender: null,
-      content: "yes plz",
-      messageType: "text",
-      data: null,
-    },
-    {
-      conversationExternalId: "1q2w",
-      sender: "AGENT",
-      content:
-        "### 프리미어 리그 최근 경기 결과\n\n#### **맨체스터 더비 (Manchester City vs Manchester United)**\n🏆 **리그:** 프리미어 리그 (Premier League)  \n📅 **날짜:** 2025년 3월 7일  \n⚽ **결과:** 맨체스터 시티 3-2 맨체스터 유나이티드  \n📍 **라운드:** 정규 시즌 - 26라운드  \n👨‍⚖ **주심:** M. Oliver  \n\n**📊 경기 진행 상황:**  \n- **전반전:** 0-0  \n- **후반전:** 맨시티 3-2 맨유  \n\n🔗 ![프리미어 리그 로고](https://media.api-sports.io/football/leagues/39.png)  \n🔗 ![맨체스터 시티 로고](https://media.api-sports.io/football/teams/40.png)  \n🔗 ![맨체스터 유나이티드 로고](https://media.api-sports.io/football/teams/33.png)  \n\n📌 **최근 맞대결 결과:**  \n- **2025-03-06:** 맨유 4-2 맨시티  \n- **2025-03-05:** 맨시티 4-2 맨유  \n- **2025-03-04:** 맨유 4-1 맨시티  \n- **2025-03-03:** 맨시티 0-3 맨유  \n- **2025-03-02:** 맨유 4-3 맨시티  \n\n📢 **맨체스터 더비에서 치열한 접전이 이어지고 있습니다!** ⚡",
-      messageType: "sports_search",
-      data: {
-        fixtures: [
-          {
-            fixture: {
-              id: 901,
-              referee: "M. Oliver",
-              timezone: "UTC",
-              date: "2025-03-07T23:46:33+00:00",
-              timestamp: 1741358793,
-              status: {
-                long: "Match Finished",
-                short: "FT",
-              },
-            },
-            league: {
-              id: 39,
-              name: "Premier League",
-              country: "England",
-              logo: "https://media.api-sports.io/football/leagues/39.png",
-              flag: "https://media.api-sports.io/flags/gb.svg",
-              season: 2024,
-              round: "Regular Season - 26",
-            },
-            teams: {
-              home: {
-                id: 40,
-                name: "Manchester City",
-                logo: "https://media.api-sports.io/football/teams/40.png",
-              },
-              away: {
-                id: 33,
-                name: "Manchester United",
-                logo: "https://media.api-sports.io/football/teams/33.png",
-              },
-            },
-            goals: {
-              home: 3,
-              away: 2,
-            },
-            score: {
-              halftime: {
-                home: 0,
-                away: 0,
-              },
-              fulltime: {
-                home: 0,
-                away: 2,
-              },
-              extratime: {
-                home: null,
-                away: null,
-              },
-              penalty: {
-                home: null,
-                away: null,
-              },
-            },
-          },
-        ],
-      },
-    },
-  ]);
-  console.log("messages", messages);
+  const [messages, setMessages] = useState<Chatting[]>([]);
+  // const [marketOptions, setMarketOptions] = useState<Chatting[]>([]);
+  const { wallets } = useSolanaWallets();
+  const wallet = wallets.find((w) => w.walletClientType === "privy");
 
   const [inputText, setInputText] = useState<string>("");
   const [prevHomeInputText, setPrevHomeInputText] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [externalId, setExternalId] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState<string>("");
+
+  // useEffect(() => {
+  //   const filteredMessages = messages.filter(
+  //     (msg) => msg.messageType === "MARKET_OPTIONS"
+  //   );
+  //   setMarketOptions(filteredMessages);
+  // }, [messages]);
 
   useEffect(() => {
-    if (homeInputText.trim() !== "" && homeInputText !== prevHomeInputText) {
-      const newMessage: Chatting = {
-        externalId: null,
-        content: homeInputText,
-        messageType: "TEXT",
-        sender: null,
-      };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-      setPrevHomeInputText(homeInputText);
+    
+      if (homeInputText.trim() !== "" && homeInputText !== prevHomeInputText) {
+        const newMessage: Chatting = {
+          externalId: null,
+          content: homeInputText,
+          messageType: "TEXT",
+          sender: null,
+        };
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        setPrevHomeInputText(homeInputText);
 
-      resetInput(); // 입력 필드 초기화
-    }
+        homeSendMessage(newMessage);
+
+        resetInput();
+      }
+    
   }, [homeInputText, prevHomeInputText, resetInput]);
 
-  // 메시지 목록이 업데이트될 때 스크롤
+  // Scroll when the message list is updated
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // 내부 입력 필드 변경 핸들러
+  // Internal input field change handler
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(event.target.value);
   };
 
-  // 키 입력 핸들러
+  // key input handler
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -148,121 +137,253 @@ function ChattingComponent({
     }
   };
 
-  // 전송 버튼 클릭 핸들러
+  // Submit button click handler
   const handleSend = () => {
     sendMessage();
   };
 
-  // 메시지 전송 함수 (내부 입력 필드용)
-  const sendMessage = () => {
+  const homeSendMessage = async (homeMessage: Chatting) => {
+    if (!homeMessage) {
+      return;
+    }
+    setLoading(true);
+    try {
+
+      const data = await chatAPI.sendChatMessage(homeMessage);
+
+      if (data?.data?.message) {
+        const newMessage = data.data.message;
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+      } else {
+        console.log("No message data received.");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Message sending function
+  const sendMessage = async () => {
+    
     if (inputText.trim() === "") return;
     const newMessage: Chatting = {
-      externalId: null, // response 해서 받아온 id 넣어야함
+      externalId: externalId, // need ID received in response
       content: inputText,
       messageType: "TEXT",
       sender: null,
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
     setInputText("");
+    setLoading(true);
+    try {
+      const data = await chatAPI.sendChatMessage(newMessage);
+
+      if (data?.data?.message && showSuccess!=="") {
+        const newMessage = data.data.message;
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        setExternalId(data?.data?.conversationExternalId);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleButtonClick = (button: string) => {
-    console.log(`Button clicked: ${button}`);
+  const handleButtonClick = (buttonText: string) => {
+    if (!buttonText) {
+      return;
+    }
+    const newMessage: Chatting = {
+      externalId: externalId,
+      content: `SELECTION: ${buttonText}`,
+      messageType: "TEXT",
+      sender: null,
+    };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    homeSendMessage(newMessage);
+
+    if (buttonText === "Yes") {
+      CreateMessage();
+      setTimeout(() => {}, 2000);
+    }
+  };
+  const CreateMessage = async () => {
+    setLoading(true);
+
+    try {
+      const response = await chatAPI.creatChatMessage(mockGameData);
+      setShowSuccess(response.data.message.content);
+      if (response?.data?.message?.content) {
+        const newMessage: Chatting = {
+          externalId: externalId,
+          content: response.data.message.content,
+          messageType: "TEXT",
+          sender: "AGENT",
+        };
+
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+      }
+
+      const { tr, transId } = response.data.message.data;
+
+      const transactionBuffer = Buffer.from(tr, "base64");
+
+      const deserializedTransaction = Transaction.from(transactionBuffer);
+
+      const signedTx = await wallet?.signTransaction(deserializedTransaction);
+
+      const signedTransaction = signedTx?.serialize();
+      const rawTransaction = signedTransaction?.toString("base64");
+      const result = await signGame(transId, rawTransaction);
+
+      console.log("response", result);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex flex-col h-screen text-white w-[700px] font-family text">
-      {/* 채팅 메시지 영역 */}
-      <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden pb-[150px]">
-        {messages.map((msg) => (
-          <div
-            key={msg.externalId}
-            className={`flex ${msg.sender === null ? "justify-end" : ""} my-5`}
-          >
+    <>
+      <div className="flex flex-col h-screen text-white w-[700px] font-family text">
+        {/* Chat message area */}
+        <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden pb-[150px]">
+          {messages.map((msg, index) => (
             <div
-              className={`text-lg ${
-                msg.sender === null ? "mr-3 max-w-[50ch]" : "ml-3"
-              }`}
+              key={index}
+              className={`flex ${
+                msg.sender === null ? "justify-end" : ""
+              } my-5`}
             >
               <div
-                className={`p-3 mt-2 ${
-                  msg.sender === null
-                    ? `${
-                        msg.content.length > 50 ? "rounded-lg" : "rounded-full"
-                      } bg-[#2C2C2C] break-words text-left`
-                    : ""
+                className={`text-lg ${
+                  msg.sender === null ? "mr-3 max-w-[50ch]" : "ml-3"
                 }`}
               >
-                {/* 메시지 내용 표시 */}
-                <span className="text-base">
-                  {msg.content.split("\n").map((line, index) => (
-                    <span key={index}>
-                      {line}
-                      <br />
-                    </span>
-                  ))}
-                </span>
-
-                {/* 데이터가 있을 경우 */}
-                {msg.data?.fixture?.status && (
-                  <div className="mt-3">
-                    {msg.data?.fixture.status.map(
-                      (
-                        fixture: string,
-                        index: React.Key | null | undefined
-                      ) => (
-                        <button
-                          key={index}
-                          className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
-                          onClick={() => handleButtonClick(fixture)}
-                        >
-                          {fixture}
-                        </button>
-                      )
-                    )}
-                  </div>
-                )}
+                <div
+                  className={`p-3 mt-2 ${
+                    msg.sender === null
+                      ? `${
+                          msg.content.length > 50
+                            ? "rounded-lg"
+                            : "rounded-full"
+                        } bg-[#2C2C2C] break-words text-left`
+                      : ""
+                  }`}
+                >
+                  {/* Show message content*/}
+                  <span className="text-base">
+                    {msg.content.split("\n").map((line, index) => (
+                      <span key={index}>
+                        {line}
+                        <br />
+                      </span>
+                    ))}
+                  </span>
+                  {msg.data?.selections && (
+                    <div className="mt-3">
+                      {msg.data.selections.map(
+                        (
+                          selection: Selection,
+                          index: React.Key | null | undefined
+                        ) => (
+                          <button
+                            key={index}
+                            className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                            onClick={() => handleButtonClick(selection.name)}
+                          >
+                            {selection.name}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  )}
+                  {msg.data?.selected_option && (
+                    <div className="mt-3">
+                      {msg.data.selected_option.length > 0 && (
+                        <>
+                          <button
+                            className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                            onClick={() => handleButtonClick("Yes")}
+                          >
+                            Yes
+                          </button>
+                          <button
+                            className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                            onClick={() =>
+                              handleButtonClick(
+                                msg.data.selected_option[0].includes(
+                                  "Draw/Lose"
+                                )
+                                  ? "Win"
+                                  : "Draw/Lose"
+                              )
+                            }
+                          >
+                            {msg.data.selected_option[0].includes("Draw/Lose")
+                              ? "Win"
+                              : "Draw/Lose"}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-        <div ref={chatEndRef} />
-      </div>
+          ))}
+          <div ref={chatEndRef} />
+        </div>
 
-      {/* 입력 구간 */}
-      <div className="p-4 bg-[#1E1E1E] fixed bottom-5 left-0 right-0 mx-auto max-w-[700px] rounded-lg border-2 border-[#2C2C2C]">
-        <div className="flex flex-col h-full">
-          <textarea
-            className="p-3 rounded-lg resize-none"
-            value={inputText}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onKeyUp={handleKeyUp}
-            placeholder="Sent to message"
-            rows={1}
-          />
-          <div className="flex justify-between mt-2">
-            <button
-              className="px-3 py-3 bg-[#2C2C2C] rounded-lg cursor-pointer"
-              onClick={handleSend}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                className="size-4"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8 14a.75.75 0 0 1-.75-.75V4.56L4.03 7.78a.75.75 0 0 1-1.06-1.06l4.5-4.5a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.75 4.56v8.69A.75.75 0 0 1 8 14Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
+        {/* input section */}
+        <div className="p-4 bg-[#1E1E1E] fixed bottom-5 left-0 right-0 mx-auto max-w-[700px] rounded-lg border-2 border-[#2C2C2C]">
+          <div className="flex flex-col h-full">
+            <textarea
+              className="p-3 rounded-lg resize-none"
+              value={inputText}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              onKeyUp={handleKeyUp}
+              placeholder="Sent to message"
+              rows={1}
+              disabled={loading}
+            />
+            {!loading ? (
+              <div className="flex justify-between mt-2">
+                <div></div>
+                <button
+                  className="px-3 py-3 bg-[#2C2C2C] rounded-lg cursor-pointer"
+                  onClick={handleSend}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="size-4"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8 14a.75.75 0 0 1-.75-.75V4.56L4.03 7.78a.75.75 0 0 1-1.06-1.06l4.5-4.5a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.75 4.56v8.69A.75.75 0 0 1 8 14Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="bg-opacity-50 w-full h-full fixed top-0 left-0 backdrop-blur-[1px]">
+                <div className="rounded-lg shadow-[0_0_10px_#ffffff] fixed top-4/5 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] bg-black p-5 text-white items-center flex justify-center">
+                  <div className="loading-spinner loading-spinner--js"></div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

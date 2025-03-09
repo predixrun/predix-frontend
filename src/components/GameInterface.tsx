@@ -73,8 +73,8 @@ function GameInterfaceComponent({
     const loadGames = async () => {
       const gameData = await gameAPI.fetchGameHistory({
         category: selectedCategory,
-        page: 1,
-        take: 5,
+        page: 2,
+        take: 9,
         status:
           selectedCategory === "History" || selectedCategory === "Created Game"
             ? statusFilter
@@ -117,6 +117,7 @@ function GameInterfaceComponent({
     loadGames();
   }, [selectedCategory, statusFilter]);
   const games: Game[] = gamesData;
+  console.log("games", games);
 
   const displayedGames = games.filter((game) => {
     const isCreatedGame = selectedCategory === "Created Game";
@@ -146,14 +147,14 @@ function GameInterfaceComponent({
 
     return game.gameStatus === filter;
   });
-
-  // 페이지네이션 설정
+  console.log(displayedGames);
+  // Pagination settings
   const itemsPerPage = 8;
-  const pageCount = Math.ceil(displayedGames.length / itemsPerPage);
+  const pageCount = Math.ceil(gamesData.length / itemsPerPage);
   const offset = currentPage * itemsPerPage;
-  const currentItems = displayedGames.slice(offset, offset + itemsPerPage);
-
-  // 페이지 변경 핸들러
+  const currentItems = gamesData.slice(offset, offset + itemsPerPage);
+  console.log("currentItems", currentItems);
+  // page change handler
   const handlePageClick = (event: { selected: number }) => {
     setCurrentPage(event.selected);
   };
@@ -305,11 +306,14 @@ function GameInterfaceComponent({
                 </div>
               </div>
             </div>
+
             {selectedGame === game.gameId && selectedGameData && (
-              <GameDashboard
-                gameData={selectedGameData}
-                onClose={closeDashboard}
-              />
+              <div className="z-100">
+                <GameDashboard
+                  gameData={selectedGameData}
+                  onClose={closeDashboard}
+                />
+              </div>
             )}
           </>
         ))}
