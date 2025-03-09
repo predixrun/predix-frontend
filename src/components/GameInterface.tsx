@@ -117,7 +117,6 @@ function GameInterfaceComponent({
     loadGames();
   }, [selectedCategory, statusFilter]);
   const games: Game[] = gamesData;
-  console.log("games", games);
 
   const displayedGames = games.filter((game) => {
     const isCreatedGame = selectedCategory === "Created Game";
@@ -147,13 +146,11 @@ function GameInterfaceComponent({
 
     return game.gameStatus === filter;
   });
-  console.log(displayedGames);
   // Pagination settings
   const itemsPerPage = 8;
   const pageCount = Math.ceil(gamesData.length / itemsPerPage);
   const offset = currentPage * itemsPerPage;
   const currentItems = gamesData.slice(offset, offset + itemsPerPage);
-  console.log("currentItems", currentItems);
   // page change handler
   const handlePageClick = (event: { selected: number }) => {
     setCurrentPage(event.selected);
