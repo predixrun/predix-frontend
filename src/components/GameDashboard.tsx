@@ -68,7 +68,6 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
     try {
       const gameId = gameData.gameId;
       const result = await joinGame(gameId);
-      console.log("result", result);
 
       const { tr, transId } = result.data;
 

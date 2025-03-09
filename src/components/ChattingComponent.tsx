@@ -233,9 +233,8 @@ function ChattingComponent({
 
       const signedTransaction = signedTx?.serialize();
       const rawTransaction = signedTransaction?.toString("base64");
-      const result = await signGame(transId, rawTransaction);
+      await signGame(transId, rawTransaction);
 
-      console.log("response", result);
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
