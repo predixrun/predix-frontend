@@ -35,7 +35,6 @@ function DelegateWalletButton({ setCurrentState }: DelegateWalletButtonProps) {
         chainType,
       });
 
-      console.log("Delegation successful!");
       setCurrentState("deposit");
     } catch (error) {
       console.error("Delegation failed:", error);

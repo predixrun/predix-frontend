@@ -19,7 +19,7 @@ const PrivyProviderComponent = ({
         appearance: {
           theme: "light",
           accentColor: "#676FFF",
-          logo: "https://thumbs.dreamstime.com/b/demo-rubber-stamp-grunge-design-dust-scratches-effects-can-be-easily-removed-clean-crisp-look-color-easily-changed-82616276.jpg",
+
         },
         externalWallets: {
           solana: {
