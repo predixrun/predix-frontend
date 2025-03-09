@@ -149,8 +149,9 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
           <CardContent className="mt-5">
             <div className="flex-col flex items-center gap-2 border rounded-lg bg-[#1B191E] text-base px-6 py-5">
               <div>Your answer is '{gameData.joined.choiceType || ""}'</div>
-              <div className="text-xs text-[#767676]">
-                Title: {gameData.gameTitle}
+              <div className="text-xs text-[#767676] text-center">
+                Title: {gameData.gameTitle}<br/>
+                "{gameData.gameContent}"
               </div>
               <div
                 className="gap-1 text-sm bg-black w-[120px] h-[32px] items-center flex justify-center rounded-full border-2 border-[#D74713] cursor-pointer"
@@ -184,6 +185,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                 </div>
               </div>
               <div className="flex text-center text-xs text-[#767676]">
+
                 After confirming the results, the smart contract is
                 automatically distributed (3% deduction for platform fees)
               </div>
