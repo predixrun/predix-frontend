@@ -91,7 +91,6 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
         return true;
       }
 
-      console.log("로그인 실패: 응답에서 토큰이 없음");
       return false;
     } catch (error) {
       console.log("로그인 실패", error);
@@ -112,7 +111,6 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
         return true;
       }
 
-      console.log("회원가입 실패: 응답에서 토큰이 없음");
       return false;
     } catch (error) {
       console.log("회원가입 실패", error);

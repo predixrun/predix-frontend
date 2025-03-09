@@ -4,6 +4,7 @@ import "@/components/styles/game-dashboard-animations.css";
 import { Transaction } from "@solana/web3.js";
 import { useSolanaWallets } from "@privy-io/react-auth";
 import signGame from "@/components/api/Sign";
+import gameAPI from "@/components/api/Game";
 interface Selection {
   name: string;
   type: string;
@@ -22,6 +23,7 @@ interface Chatting {
 interface ChattingComponentProps {
   homeInputText: string;
   resetInput: () => void;
+  changeParentsFunction: () => void;
 }
 
 interface GameRelation {
@@ -49,47 +51,30 @@ interface ChatMessage {
   data: GameData;
 }
 
-const mockGameData: ChatMessage = {
-  externalId: "b153593c-ab24-4f7d-add5-356adc2f98f6", // null (새 채팅방 일경우) || "b153593c-ab24-4f7d-add5-356adc2f98f6"
-  content: "yes",
-  messageType: "CREATE_TR",
-  data: {
-    gameTitle: "맨유 vs 토트넘",
-    gameContent: "best football contest",
-    extras: "",
-    gameStartAt: "2025-03-01",
-    gameExpriedAt: "2025-11-11",
-    fixtureId: 12345,
-    gameRelations: [
-      { key: "A", content: "MAN" },
-      { key: "B", content: "TOT" },
-    ],
-    quantity: "0.001",
-    key: "A",
-    choiceType: "WIN",
-  },
-};
-
 function ChattingComponent({
   homeInputText,
   resetInput,
+  changeParentsFunction,
 }: ChattingComponentProps) {
   const [messages, setMessages] = useState<Chatting[]>([]);
-  // const [marketOptions, setMarketOptions] = useState<Chatting[]>([]);
+  const [marketOptions, setMarketOptions] = useState<Chatting[]>([]);
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
 
   const [inputText, setInputText] = useState<string>("");
   const [prevHomeInputText, setPrevHomeInputText] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [externalId, setExternalId] = useState<string | null>(null);
-  // useEffect(() => {
-  //   const filteredMessages = messages.filter(
-  //     (msg) => msg.messageType === "MARKET_OPTIONS"
-  //   );
-  //   setMarketOptions(filteredMessages);
-  // }, [messages]);
+
+  useEffect(() => {
+    const filteredMessages = messages.filter(
+      (msg) => msg.messageType === "MARKET_OPTIONS"
+    );
+    setMarketOptions(filteredMessages);
+  }, [messages]);
+
 
   useEffect(() => {
     if (homeInputText.trim() !== "" && homeInputText !== prevHomeInputText) {
@@ -106,6 +91,7 @@ function ChattingComponent({
 
       resetInput();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeInputText, prevHomeInputText, resetInput]);
 
   // Scroll when the message list is updated
@@ -142,7 +128,7 @@ function ChattingComponent({
     if (!homeMessage) {
       return;
     }
-    console.log(1)
+
     setLoading(true);
     try {
       const data = await chatAPI.sendChatMessage(homeMessage);
@@ -150,6 +136,9 @@ function ChattingComponent({
       if (data?.data?.message) {
         const newMessage = data.data.message;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
+        if (!externalId && newMessage.conversationExternalId) {
+          setExternalId(newMessage.conversationExternalId);
+        }
       } else {
         console.log("No message data received.");
       }
@@ -178,7 +167,6 @@ function ChattingComponent({
       if (data?.data?.message) {
         const newMessage = data.data.message;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
-        setExternalId(data?.data?.conversationExternalId);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -190,6 +178,12 @@ function ChattingComponent({
   const handleButtonClick = (buttonText: string) => {
     if (!buttonText) {
       return;
+    }
+
+    if (buttonText.includes("Win") || buttonText.includes("Draw/Lose")) {
+      const extractedChoice = buttonText.split(" ").slice(-1)[0];
+
+      setSelectedChoice(extractedChoice);
     }
 
     const newMessage: Chatting = {
@@ -212,7 +206,31 @@ function ChattingComponent({
     setLoading(true);
 
     try {
-      const response = await chatAPI.creatChatMessage(mockGameData);
+      const userGameSelectionData: ChatMessage = {
+        externalId: marketOptions[0]?.conversationExternalId ?? null,
+        content: marketOptions[0].content,
+        messageType: "CREATE_TR",
+        data: {
+          gameTitle: `${marketOptions[0]?.data?.event?.home_team?.name} VS ${marketOptions[0]?.data?.event?.away_team?.name}`,
+          gameContent: marketOptions[0]?.data?.market?.description,
+          extras: "",
+          gameStartAt: marketOptions[0]?.data?.event?.start_time,
+          gameExpriedAt: marketOptions[0]?.data?.market?.close_date,
+          fixtureId: marketOptions[0]?.data?.event?.fixture_id,
+          gameRelations: marketOptions[0]?.data?.selections?.map(
+            (selection: { name: string }, index: number) => ({
+              key: index === 0 ? "A" : "B",
+              content: selection.name.includes("Win") ? "WIN" : "DRAW_LOSE",
+            })
+          ),
+          quantity: marketOptions[0]?.data.market?.amount?.toString(),
+          key: selectedChoice === "Draw/Lose" ? "B" : "A",
+          choiceType: selectedChoice ?? "WIN",
+        },
+      };
+
+      const response = await chatAPI.creatChatMessage(userGameSelectionData);
+
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
           externalId: externalId,
@@ -235,10 +253,22 @@ function ChattingComponent({
       const signedTransaction = signedTx?.serialize();
       const rawTransaction = signedTransaction?.toString("base64");
       await signGame(transId, rawTransaction);
-
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
+      changeParentsFunction();
+
+      setTimeout(async () => {
+        try {
+          await gameAPI.fetchGameHistory({
+            category: "Trending Game",
+            page: 1,
+            take: 9,
+          });
+        } catch (error) {
+          console.error("error:", error);
+        }
+      }, 1000);
       setLoading(false);
     }
   };

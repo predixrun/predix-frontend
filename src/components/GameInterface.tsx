@@ -73,13 +73,14 @@ function GameInterfaceComponent({
     const loadGames = async () => {
       const gameData = await gameAPI.fetchGameHistory({
         category: selectedCategory,
-        page: 2,
+        page: 1,
         take: 9,
         status:
           selectedCategory === "History" || selectedCategory === "Created Game"
             ? statusFilter
             : undefined,
       });
+
       if (gameData && gameData.items) {
         const formattedGames = gameData.items.map((game: Game) => ({
           gameId: game.gameId,
@@ -121,7 +122,6 @@ function GameInterfaceComponent({
   const displayedGames = games.filter((game) => {
     const isCreatedGame = selectedCategory === "Created Game";
     const isHistory = selectedCategory === "History";
-
     const isUserGame = isCreatedGame
       ? game.user.userId === currentUserId
       : true;
@@ -131,7 +131,7 @@ function GameInterfaceComponent({
         game.joined.choiceKey !== "" &&
         (statusFilter === "END"
           ? game.gameStatus === "EXPIRED"
-          : game.gameStatus === "ONGOING")
+          : game.gameStatus === "ONGOING" || game.gameStatus === "READY")
       );
     }
 
@@ -140,17 +140,21 @@ function GameInterfaceComponent({
         isUserGame &&
         (statusFilter === "END"
           ? game.gameStatus === "EXPIRED"
-          : game.gameStatus === "ONGOING")
+          : game.gameStatus === "ONGOING" || game.gameStatus === "READY")
       );
     }
 
-    return game.gameStatus === filter;
+    const isValidStatus =
+      game.gameStatus === filter || game.gameStatus === "READY";
+
+    return isValidStatus;
   });
   // Pagination settings
   const itemsPerPage = 8;
-  const pageCount = Math.ceil(gamesData.length / itemsPerPage);
+  const pageCount = Math.ceil(displayedGames.length / itemsPerPage);
   const offset = currentPage * itemsPerPage;
-  const currentItems = gamesData.slice(offset, offset + itemsPerPage);
+  const currentItems = displayedGames.slice(offset, offset + itemsPerPage);
+
   // page change handler
   const handlePageClick = (event: { selected: number }) => {
     setCurrentPage(event.selected);
@@ -163,6 +167,12 @@ function GameInterfaceComponent({
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
+  };
+
+  const truncateMiddle = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    const halfLength = Math.floor(maxLength / 2);
+    return `${text.slice(0, halfLength)}...${text.slice(-halfLength)}`;
   };
   const selectedGameData = gamesData.find(
     (game) => game.gameId === selectedGame
@@ -249,9 +259,21 @@ function GameInterfaceComponent({
               <div className="animated-card-inner">
                 {/* 상단 섹션 */}
                 <div className="title-line flex items-center rounded-full w-full h-[42px] justify-between bg-[#1B191E] px-3">
-                  <div className="title-text">{game.gameTitle}</div>
-                  <div className="mr-3">
-                    {game.gameContent}{" "}
+                  <div className="title-text text-xs">{game.gameTitle}</div>
+                  <div className="mr-3 text-xs">
+                    {truncateMiddle(game.gameContent, 10)}
+                    {game.gameStatus === "EXPIRED" &&
+                      game.joined.choiceResult && (
+                        <div
+                          className={
+                            game.joined.choiceResult === "Win"
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }
+                        >
+                          {game.joined.choiceResult}
+                        </div>
+                      )}
                     {game.gameStatus === "EXPIRED" &&
                       game.joined.choiceResult && (
                         <div
@@ -305,19 +327,17 @@ function GameInterfaceComponent({
             </div>
 
             {selectedGame === game.gameId && selectedGameData && (
-              <div className="z-100">
-                <GameDashboard
-                  gameData={selectedGameData}
-                  onClose={closeDashboard}
-                />
-              </div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-100">
+              <GameDashboard gameData={selectedGameData} onClose={closeDashboard} />
+            </div>
+            
             )}
           </>
         ))}
       </div>
 
       {/* react-paginate 컴포넌트 */}
-      {displayedGames.length > itemsPerPage && (
+      {gamesData.length > itemsPerPage && (
         <div className="flex justify-end mt-4 relative">
           <div className="flex justify-center items-center bg-black rounded-lg p-2">
             <ReactPaginate
