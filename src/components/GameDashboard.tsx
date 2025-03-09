@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import "@/components/styles/game-dashboard-animations.css";
+import joinGame from "@/components/api/Join";
+import signGame from "@/components/api/Sign";
+
+import { useSolanaWallets } from "@privy-io/react-auth/solana";
+import { Transaction } from "@solana/web3.js";
 
 interface GameRelation {
   key: string;
@@ -40,9 +45,15 @@ interface GameDashboardProps {
 
 function GameDashboard({ gameData, onClose }: GameDashboardProps) {
   const [closing, setClosing] = useState(false);
-  const [betStatus, setBetStatus] = useState<"pending" | "success" | "fail" | "">("");
+  const [betStatus, setBetStatus] = useState<
+    "pending" | "success" | "fail" | ""
+  >("");
   const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
   const currentUserId = userProfile?.data?.id || null;
+
+  const { wallets } = useSolanaWallets();
+
+  const wallet = wallets.find((w) => w.walletClientType === "privy");
 
   const handleClose = () => {
     setClosing(true);
@@ -51,14 +62,38 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
     }, 300);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setBetStatus("pending");
-    setTimeout(() => {
+
+    try {
+      const gameId = gameData.gameId;
+      const result = await joinGame(gameId);
+      console.log("result", result);
+
+      const { tr, transId } = result.data;
+
+      const transactionBuffer = Buffer.from(tr, "base64");
+
+      const deserializedTransaction = Transaction.from(transactionBuffer);
+
+      const signedTx = await wallet?.signTransaction(deserializedTransaction);
+
+      const signedTransaction = signedTx?.serialize();
+      const rawTransaction = signedTransaction?.toString("base64");
+      await signGame(transId, rawTransaction);
+
       setBetStatus("success");
+
       setTimeout(() => {
         setBetStatus("");
       }, 1000);
-    }, 1000);
+    } catch (error) {
+      console.log(error);
+      setBetStatus("fail");
+      setTimeout(() => {
+        setBetStatus("");
+      }, 1000);
+    }
   };
 
   const handleFail = () => {
@@ -68,12 +103,20 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
     }, 1000);
   };
 
-
   const isUserMatch = gameData.user.userId === currentUserId;
-  
 
-  const quantity = gameData.joined.choiceKey === "" ? "" : (isUserMatch ? parseFloat(gameData.gameQuantity) : parseFloat(gameData.joined.quantity));
-  const potentialReward = gameData.joined.choiceKey === "" ? "" : (isUserMatch ? parseFloat(gameData.gameQuantity) * 2 : parseFloat(gameData.joined.quantity) * 2);
+  const quantity =
+    gameData.joined.choiceKey === ""
+      ? ""
+      : isUserMatch
+      ? parseFloat(gameData.gameQuantity)
+      : parseFloat(gameData.joined.quantity);
+  const potentialReward =
+    gameData.joined.choiceKey === ""
+      ? ""
+      : isUserMatch
+      ? parseFloat(gameData.gameQuantity) * 2
+      : parseFloat(gameData.joined.quantity) * 2;
 
   return (
     <>

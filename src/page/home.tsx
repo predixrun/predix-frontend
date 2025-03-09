@@ -17,6 +17,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { CopyQRClipboard } from "@/components/CopyQRClipboard";
 import * as web3 from "@solana/web3.js";
 
+
 function Home() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [currentState, setCurrentState] = useState<string>("delegate");
@@ -35,7 +36,7 @@ function Home() {
     referralCode = userProfile.data.referral.code;
   }
 
-  // qr & referralCode 복사기능 분리 필요
+
   const copyToReferralCode = () => {
     if (referralCode) {
       navigator.clipboard
@@ -49,7 +50,7 @@ function Home() {
     }
   };
 
-  // 사용자 내장 지갑 delegate체크 부분 임시 제거
+
   const walletToDelegate = user?.linkedAccounts.find(
     (wallet) =>
       wallet.type === "wallet" &&
@@ -68,8 +69,7 @@ function Home() {
           );
           const publicKey = new web3.PublicKey(walletToDelegate.address);
           const balance = await connection.getBalance(publicKey);
-          setWalletBalance((balance / 1000000000).toFixed(2)); // Solana의 기본 단위는 lamport이므로 10억으로 나누기
-          console.log(walletBalance);
+          setWalletBalance((balance / 1000000000).toFixed(2)); 
         } catch (err) {
           console.error(err);
         }
@@ -80,9 +80,9 @@ function Home() {
             "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
           );
           const data = await response.json();
-          setSolPrice(data.solana.usd); // SOL 가격을 USD로 저장
+          setSolPrice(data.solana.usd); 
         } catch (err) {
-          console.error("SOL 가격을 가져오는 데 실패했습니다.", err);
+          console.error("SOL Failed to retrieve", err);
         }
       };
       fetchSolPrice();
@@ -99,12 +99,12 @@ function Home() {
     });
   }, [walletBalance, walletToDelegate]);
 
-  // 사용자 닉네임 찾기
+  // Find user name
   const twitterAccount = user?.linkedAccounts[0] as
     | { username: string }
     | undefined;
   const username = twitterAccount?.username;
-  // 사용자 이미지 찾기
+  // Find user image
   const twitterProfileUrl = user?.linkedAccounts[0] as
     | { profilePictureUrl: string }
     | undefined;
@@ -133,6 +133,7 @@ function Home() {
   };
   return (
     <>
+
       {presseSearch && (
         <>
           <div
@@ -158,7 +159,7 @@ function Home() {
         <ChattingComponent homeInputText={inputText} resetInput={resetInput} />
       ) : (
         <div className="flex flex-col items-center justify-center font-dd font-family scrollbar-width: none">
-          {/* 기본 UI */}
+          {/* base UI */}
           <div
             className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center ${
               isConnected ? "absolute fade-out" : ""
@@ -188,7 +189,7 @@ function Home() {
             </div>
           </div>
 
-          {/* 새로운 UI */}
+          {/* new UI */}
           <div
             className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center ${
               !selectedCategory ? "ml-60" : ""
@@ -237,11 +238,10 @@ function Home() {
           )}
         </div>
       )}
-      {/* 지갑 UI */}
-
+      {/* wallet UI */}
       {isConnected && !isMinimized && (
         <Card
-          className={`py-6 absolute top-3 left-3 flex items-start min-w-[320px] bg-[#1E1E1E] text-[#767676] z-20 font-family font-semibold ${
+          className={`py-4 absolute top-3 left-3 flex items-start min-w-[320px] bg-[#1E1E1E] text-[#767676] z-20 font-family font-semibold ${
             presseSearch ? "mt-10" : "mt-0"
           }`}
         >
@@ -313,21 +313,6 @@ function Home() {
                   <div className="text-[36px] font-bold">${solPrice}</div>
                   <div className="text-sl flex">
                     <span className="text-lg text-[#7FED58] flex">
-                      {/* <div>+$45</div>
-                      <div className="flex items-center">
-                        <p>{"("}</p>
-                        <div className="size-5">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M12 8L18 14H6L12 8Z"></path>
-                          </svg>
-                        </div>
-                        <p>1St{")"}</p>
-                      </div> */}
                     </span>
                   </div>
                   <div className="flex items-center mt-2 bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between">
@@ -389,7 +374,7 @@ function Home() {
         <div
           className={`fade-in-from-left gap-2 font-prme absolute  min-w-[261px] h-[100px] text-white rounded-lg shadow-lg flex flex-col items-center justify-center bg-black ${
             presseSearch ? "top-15 -left-2" : "top-5 -left-2"
-          } rounded-lgc`}
+          } rounded-lg`}
         >
           {" "}
           <CardHeader>
@@ -402,21 +387,7 @@ function Home() {
               <div className="flex flex-col ml-2">
                 <span>@{username}</span>
                 <span className="text-lg text-[#7FED58] flex">
-                  {/* <div>+$45</div>
-                  <div className="flex items-center">
-                    <p>{"("}</p>
-                    <div className="size-5">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path fill="none" d="M0 0h24v24H0z"></path>
-                        <path d="M12 8L18 14H6L12 8Z"></path>
-                      </svg>
-                    </div>
-                    <p>1St{")"}</p>
-                  </div> */}
+
                 </span>
               </div>
             </div>

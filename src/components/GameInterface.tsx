@@ -73,8 +73,8 @@ function GameInterfaceComponent({
     const loadGames = async () => {
       const gameData = await gameAPI.fetchGameHistory({
         category: selectedCategory,
-        page: 1,
-        take: 5,
+        page: 2,
+        take: 9,
         status:
           selectedCategory === "History" || selectedCategory === "Created Game"
             ? statusFilter
@@ -117,6 +117,7 @@ function GameInterfaceComponent({
     loadGames();
   }, [selectedCategory, statusFilter]);
   const games: Game[] = gamesData;
+  console.log("games", games);
 
   const displayedGames = games.filter((game) => {
     const isCreatedGame = selectedCategory === "Created Game";
@@ -146,14 +147,14 @@ function GameInterfaceComponent({
 
     return game.gameStatus === filter;
   });
-
-  // 페이지네이션 설정
+  console.log(displayedGames);
+  // Pagination settings
   const itemsPerPage = 8;
-  const pageCount = Math.ceil(displayedGames.length / itemsPerPage);
+  const pageCount = Math.ceil(gamesData.length / itemsPerPage);
   const offset = currentPage * itemsPerPage;
-  const currentItems = displayedGames.slice(offset, offset + itemsPerPage);
-
-  // 페이지 변경 핸들러
+  const currentItems = gamesData.slice(offset, offset + itemsPerPage);
+  console.log("currentItems", currentItems);
+  // page change handler
   const handlePageClick = (event: { selected: number }) => {
     setCurrentPage(event.selected);
   };
@@ -252,7 +253,21 @@ function GameInterfaceComponent({
                 {/* 상단 섹션 */}
                 <div className="title-line flex items-center rounded-full w-full h-[42px] justify-between bg-[#1B191E] px-3">
                   <div className="title-text">{game.gameTitle}</div>
-                  <div className="mr-3">{game.gameContent}</div>
+                  <div className="mr-3">
+                    {game.gameContent}{" "}
+                    {game.gameStatus === "EXPIRED" &&
+                      game.joined.choiceResult && (
+                        <div
+                          className={
+                            game.joined.choiceResult === "Win"
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }
+                        >
+                          {game.joined.choiceResult}
+                        </div>
+                      )}
+                  </div>
                 </div>
                 {/* 하단 섹션 */}
                 <div className="mt-2 mb-2 flex text-left justify-between text-[13px]">
@@ -272,18 +287,7 @@ function GameInterfaceComponent({
                         className="size-6 rounded-full"
                       />
                     </div>
-                    {game.gameStatus === "EXPIRED" &&
-                      game.joined.choiceResult && (
-                        <div
-                          className={
-                            game.joined.choiceResult === "Win"
-                              ? "text-green-500"
-                              : "text-red-500"
-                          }
-                        >
-                          {game.joined.choiceResult}
-                        </div>
-                      )}
+
                     <div className="title-text">{game.user.name}</div>
                     <div>|</div>
                     <div className="title-text">Ends: {game.gameExpiredAt}</div>
@@ -302,11 +306,14 @@ function GameInterfaceComponent({
                 </div>
               </div>
             </div>
+
             {selectedGame === game.gameId && selectedGameData && (
-              <GameDashboard
-                gameData={selectedGameData}
-                onClose={closeDashboard}
-              />
+              <div className="z-100">
+                <GameDashboard
+                  gameData={selectedGameData}
+                  onClose={closeDashboard}
+                />
+              </div>
             )}
           </>
         ))}

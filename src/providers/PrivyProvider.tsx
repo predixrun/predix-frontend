@@ -29,10 +29,10 @@ const PrivyProviderComponent = ({
         loginMethods: ["twitter"],
         embeddedWallets: {
           solana: {
-            createOnLogin: "users-without-wallets", // defaults to 'off'
+            createOnLogin: "users-without-wallets",
           },
           ethereum: {
-            createOnLogin: "users-without-wallets", // defaults to 'off'
+            createOnLogin: "users-without-wallets",
           },
         },
       }}
