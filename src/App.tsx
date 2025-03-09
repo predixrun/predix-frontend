@@ -1,11 +1,16 @@
+import { lazy, Suspense } from 'react';
+import Spinner from './components/styles/Spiner';
 
-import Home from "./page/home";
+
+const Home = lazy(() => import('./page/home'));
 
 function App() {
   return (
     <div className="flex flex-col items-center justify-center min-h-svh">
-      <Home/>
 
+      <Suspense fallback={<Spinner />}>
+        <Home />
+      </Suspense>
     </div>
   );
 }

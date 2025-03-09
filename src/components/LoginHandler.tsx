@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
 import authAPI from "@/components/api/Login";
 
@@ -14,43 +14,44 @@ interface UserAuthInfo {
 const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
   setIsConnected,
 }) => {
-  const { login, ready, authenticated, user, getAccessToken } = usePrivy();
+  const { login, ready, authenticated, user, } = usePrivy();
   const { wallets } = useSolanaWallets();
   const externalWallet = wallets.find(
     (wallet) => wallet.walletClientType !== "privy"
   );
+  function getCookie(name: string) {
+    return document.cookie
+      .split("; ")
+      .find((row) => row.startsWith(name + "="))
+      ?.split("=")[1];
+  }
+  const privyToken = getCookie("privy-token");
 
   const handleConnectWallet = async () => {
     if (!ready) return;
-
     login();
-
-
-
-    if (authenticated && user) {
-      await getAccessToken();
-      function getCookie(name: string) {
-        return document.cookie
-          .split("; ")
-          .find((row) => row.startsWith(name + "="))
-          ?.split("=")[1];
-      }
-  
-      const privyToken = getCookie("privy-token");
-      console.log("privyToken",privyToken)
-
-      const userAuthInfo: UserAuthInfo = {
-        token: privyToken || "",
-        authType: "privy-twitter",
-        name: user.twitter?.username || "",
-        profileImage: user.twitter?.profilePictureUrl || "",
-        evmAddress: user.wallet?.address || "",
-        solanaAddress: externalWallet?.address || "",
-      };
-
-      await handleSignUpVerify(userAuthInfo);
-    }
   };
+
+  const handlePostLogin = async () => {
+    if (!authenticated || !user) return;
+
+    const userAuthInfo: UserAuthInfo = {
+      token: privyToken || "",
+      authType: "privy-twitter",
+      name: user.twitter?.username || "",
+      profileImage: user.twitter?.profilePictureUrl || "",
+      evmAddress: user.wallet?.address || "",
+      solanaAddress: externalWallet?.address || "",
+    };
+
+    await handleSignUpVerify(userAuthInfo);
+  };
+  useEffect(() => {
+    if (authenticated && user) {
+      handlePostLogin();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated, user]);
 
   const handleSignUpVerify = async (userAuthInfo: UserAuthInfo) => {
     try {
@@ -72,7 +73,7 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
       setIsConnected(false);
     }
   };
-  // New data and changes required
+
   const handleSignIn = async (userAuthInfo: UserAuthInfo) => {
     try {
       const signInResponse = await authAPI.signIn({
