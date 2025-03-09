@@ -10,11 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@privy-io/react-auth": "^2.6.2",
     "@radix-ui/react-slot": "^1.1.2",
+    "@rollup/plugin-inject": "^5.0.5",
+    "@solana/web3.js": "^1.95.3",
     "@tailwindcss/vite": "^4.0.9",
+    "axios": "^1.8.2",
+    "buffer": "6.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.477.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-paginate": "^8.3.0",

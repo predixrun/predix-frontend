@@ -1,28 +1,65 @@
 import "@/components/styles/gameinterface-animations.css";
 import GameDashboard from "./GameDashboard";
-import { useState } from "react";
-import gamesData from "@/components/Game.json";
-import ReactPaginate from "react-paginate"; 
+import { useEffect, useState } from "react";
+import ReactPaginate from "react-paginate";
+import gameAPI from "@/components/api/Game";
 
 interface GameInterfaceProps {
   changeParentsFunction: () => void;
+  selectedCategory: string;
+}
+interface GameRelation {
+  key: string;
+  content: string;
+  thumbnail: string;
+  count: number;
 }
 
 interface Game {
-  title: string;
-  match: string;
-  username: string;
-  endDate: string;
-  wagerSize: string;
-  status?: string;
-  result?: string;
+  gameId: number;
+  gameTitle: string;
+  gameContent: string;
+  gameQuantity: string;
+  gameStatus: string;
+  gameExpiredAt: string;
+  gameRelation: {
+    key: string;
+    content: string;
+    thumbnail: string;
+    count: number;
+  }[];
+  joined: {
+    choiceKey: string;
+    quantity: string;
+    choiceType: string;
+    choiceResult?: string | null;
+    rewardResult?: string | null;
+  };
+  user: {
+    userId: number;
+    name: string;
+    profileImg: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
-function GameInterfaceComponent({ changeParentsFunction }: GameInterfaceProps) {
+function GameInterfaceComponent({
+  changeParentsFunction,
+  selectedCategory,
+}: GameInterfaceProps) {
   const [selectedGame, setSelectedGame] = useState<number | null>(null);
-  const [filter, setFilter] = useState<"Ongoing" | "End">("Ongoing");
+  const [filter, setFilter] = useState<"ONGOING" | "EXPIRED">("ONGOING");
   const [currentPage, setCurrentPage] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [gamesData, setGamesData] = useState<Game[]>([]);
+
+  const [statusFilter, setStatusFilter] = useState<"ONGOING" | "END">(
+    "ONGOING"
+  );
+  const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
+  const currentUserId = userProfile?.data?.id || null;
+
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -32,126 +69,255 @@ function GameInterfaceComponent({ changeParentsFunction }: GameInterfaceProps) {
   const closeDashboard = () => {
     setSelectedGame(null);
   };
+  useEffect(() => {
+    const loadGames = async () => {
+      const gameData = await gameAPI.fetchGameHistory({
+        category: selectedCategory,
+        page: 2,
+        take: 9,
+        status:
+          selectedCategory === "History" || selectedCategory === "Created Game"
+            ? statusFilter
+            : undefined,
+      });
+      if (gameData && gameData.items) {
+        const formattedGames = gameData.items.map((game: Game) => ({
+          gameId: game.gameId,
+          gameTitle: game.gameTitle,
+          gameContent: game.gameContent,
+          gameQuantity: game.gameQuantity,
+          gameStatus: game.gameStatus,
+          gameExpiredAt: calculateTimeRemaining(game.gameExpiredAt),
+          gameRelation: game.gameRelation.map((relation: GameRelation) => ({
+            key: relation.key,
+            content: relation.content,
+            thumbnail: relation.thumbnail,
+            count: relation.count,
+          })),
+          joined: {
+            choiceKey: game.joined.choiceKey,
+            quantity: game.joined.quantity,
+            choiceType: game.joined.choiceType,
+            choiceResult: game.joined.choiceResult,
+            rewardResult: game.joined.rewardResult,
+          },
+          user: {
+            userId: game.user.userId,
+            name: game.user.name,
+            profileImg: game.user.profileImg,
+          },
+          createdAt: game.createdAt,
+          updatedAt: game.updatedAt,
+        }));
 
+        setGamesData(formattedGames);
+      }
+    };
+
+    loadGames();
+  }, [selectedCategory, statusFilter]);
   const games: Game[] = gamesData;
-  console.log("gamesData:", gamesData);
-  const displayedGames = games.filter((game) => game.status === filter);
-  console.log("Rendering displayedGames:", displayedGames);
+  console.log("games", games);
 
-  // 페이지네이션 설정
+  const displayedGames = games.filter((game) => {
+    const isCreatedGame = selectedCategory === "Created Game";
+    const isHistory = selectedCategory === "History";
+
+    const isUserGame = isCreatedGame
+      ? game.user.userId === currentUserId
+      : true;
+
+    if (isHistory) {
+      return (
+        game.joined.choiceKey !== "" &&
+        (statusFilter === "END"
+          ? game.gameStatus === "EXPIRED"
+          : game.gameStatus === "ONGOING")
+      );
+    }
+
+    if (isCreatedGame) {
+      return (
+        isUserGame &&
+        (statusFilter === "END"
+          ? game.gameStatus === "EXPIRED"
+          : game.gameStatus === "ONGOING")
+      );
+    }
+
+    return game.gameStatus === filter;
+  });
+  console.log(displayedGames);
+  // Pagination settings
   const itemsPerPage = 8;
-  const pageCount = Math.ceil(displayedGames.length / itemsPerPage);
+  const pageCount = Math.ceil(gamesData.length / itemsPerPage);
   const offset = currentPage * itemsPerPage;
-  const currentItems = displayedGames.slice(offset, offset + itemsPerPage);
-
-  // 페이지 변경 핸들러
+  const currentItems = gamesData.slice(offset, offset + itemsPerPage);
+  console.log("currentItems", currentItems);
+  // page change handler
   const handlePageClick = (event: { selected: number }) => {
     setCurrentPage(event.selected);
   };
+  const calculateTimeRemaining = (expiryDate: string) => {
+    const now = new Date().getTime();
+    const expiry = new Date(expiryDate).getTime();
+    const diff = expiry - now;
+    if (diff <= 0) return "End";
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+  };
+  const selectedGameData = gamesData.find(
+    (game) => game.gameId === selectedGame
+  );
 
   return (
-    <div className="bg-black text-white rounded-lg font-family p-4 z-10">
-      <div className="mb-6 mt-6 flex justify-between items-center text-white gap-2">
+    <div className="bg-black  text-white rounded-lg font-family p-4 z-10">
+      <div className="mb-6 mt-6 w-[900px] flex justify-start text-white gap-2 transition-all duration-300">
         <div>
+          {(selectedCategory === "Trending Game" ||
+            selectedCategory === "Recent Game") && (
+            <>
+              <button
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                  filter === "ONGOING" ? "border-[#D74713] text-white" : ""
+                }`}
+                onClick={() => {
+                  setFilter("ONGOING");
+                  setCurrentPage(0);
+                }}
+              >
+                Ongoing
+              </button>
+              <button
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                  filter === "EXPIRED" ? "border-[#D74713] text-white" : ""
+                }`}
+                onClick={() => {
+                  setFilter("EXPIRED");
+                  setCurrentPage(0);
+                }}
+              >
+                End
+              </button>
+            </>
+          )}
+          {(selectedCategory === "History" ||
+            selectedCategory === "Created Game") && (
+            <>
+              <button
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                  statusFilter === "ONGOING"
+                    ? "border-[#D74713] text-white"
+                    : ""
+                }`}
+                onClick={() => {
+                  setStatusFilter("ONGOING");
+                  setCurrentPage(0);
+                }}
+              >
+                Ongoing
+              </button>
+              <button
+                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                  statusFilter === "END" ? "border-[#D74713] text-white" : ""
+                }`}
+                onClick={() => {
+                  setStatusFilter("END");
+                  setCurrentPage(0);
+                }}
+              >
+                End
+              </button>
+            </>
+          )}
           <button
-            className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
-              filter === "Ongoing" ? "active-button" : ""
-            }`}
-            onClick={() => {
-              setFilter("Ongoing");
-              setCurrentPage(0);
-            }}
-          >
-            ongoing
-          </button>
-          <button
-            className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
-              filter === "End" ? "active-button" : ""
-            }`}
-            onClick={() => {
-              setFilter("End");
-              setCurrentPage(0); // 필터 변경 시 첫 페이지로 리셋
-            }}
-          >
-            End
-          </button>
-          <button
-            className="bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-colors duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white"
+            className="bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white"
             onClick={changeParentsFunction}
           >
             close
           </button>
         </div>
-        <div className="flex">
-          <span className="text-gray-500">Recent ↓</span>
-        </div>
+        <div></div>
       </div>
+
       <div className="grid grid-cols-2 gap-2 items-center justify-center">
-        {currentItems.map((game, index) => (
-          <div
-            key={index}
-            className="animated-card w-[450px]"
-            onClick={() => handleCardClick(offset + index)} // 전체 인덱스로 조정
-          >
-            <div className="animated-card-inner">
-              {/* 상단 섹션 */}
-              <div className="title-line flex items-center rounded-full w-full h-[42px] justify-between bg-[#1B191E] px-3">
-                <div className="title-text">{game.title}</div>
-                <div className="mr-3">{game.match}</div>
-              </div>
-              {/* 하단 섹션 */}
-              <div className="mt-2 mb-2 flex text-left justify-between text-[13px]">
-                <div className="flex gap-1 items-center">
-                  <div
-                    className={`status-circle ${
-                      game.status === "End"
-                        ? game.result === "Win!"
-                          ? "win"
-                          : "lose"
-                        : "ongoing"
-                    }`}
-                  >
-                    $
+        {currentItems.map((game) => (
+          <>
+            <div
+              key={game.gameId}
+              className="animated-card w-[450px]"
+              onClick={() => handleCardClick(game.gameId)}
+            >
+              <div className="animated-card-inner">
+                {/* 상단 섹션 */}
+                <div className="title-line flex items-center rounded-full w-full h-[42px] justify-between bg-[#1B191E] px-3">
+                  <div className="title-text">{game.gameTitle}</div>
+                  <div className="mr-3">
+                    {game.gameContent}{" "}
+                    {game.gameStatus === "EXPIRED" &&
+                      game.joined.choiceResult && (
+                        <div
+                          className={
+                            game.joined.choiceResult === "Win"
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }
+                        >
+                          {game.joined.choiceResult}
+                        </div>
+                      )}
                   </div>
-                  {game.status === "End" && game.result && (
+                </div>
+                {/* 하단 섹션 */}
+                <div className="mt-2 mb-2 flex text-left justify-between text-[13px]">
+                  <div className="flex gap-1 items-center">
                     <div
-                      className={
-                        game.result === "Win!"
+                      className={`status-circle ${
+                        game.gameStatus === "EXPIRED"
+                          ? game.joined.choiceResult === "Win"
+                            ? "win"
+                            : "lose"
+                          : "ongoing"
+                      }`}
+                    >
+                      <img
+                        src={game.user.profileImg}
+                        alt=""
+                        className="size-6 rounded-full"
+                      />
+                    </div>
+
+                    <div className="title-text">{game.user.name}</div>
+                    <div>|</div>
+                    <div className="title-text">Ends: {game.gameExpiredAt}</div>
+                  </div>
+                  <div
+                    className={
+                      game.gameStatus === "EXPIRED"
+                        ? game.joined.choiceResult === "Win"
                           ? "text-green-500"
                           : "text-red-500"
-                      }
-                    >
-                      {game.result}
-                    </div>
-                  )}
-                  <div className="title-text">{game.username}</div>
-                  <div>|</div>
-                  <div className="title-text">Ends: {game.endDate}</div>
-                </div>
-                <div
-                  className={
-                    game.status === "End"
-                      ? game.result === "Win!"
-                        ? "text-green-500"
-                        : "text-red-500"
-                      : ""
-                  }
-                >
-                  Wager Size (
-                  {game.result === "Win!"
-                    ? `+${game.wagerSize}`
-                    : game.result === "Lose!"
-                    ? `-${game.wagerSize}`
-                    : game.wagerSize}
-                  )
+                        : ""
+                    }
+                  >
+                    Wager Size ({parseFloat(game.gameQuantity)} SOL)
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+
+            {selectedGame === game.gameId && selectedGameData && (
+              <div className="z-100">
+                <GameDashboard
+                  gameData={selectedGameData}
+                  onClose={closeDashboard}
+                />
+              </div>
+            )}
+          </>
         ))}
       </div>
-
-      {selectedGame !== null && <GameDashboard onClose={closeDashboard} />}
 
       {/* react-paginate 컴포넌트 */}
       {displayedGames.length > itemsPerPage && (

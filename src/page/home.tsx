@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Category } from "@/components/Category";
 import "@/components/styles/home-animations.css";
 import {
@@ -10,6 +10,13 @@ import {
 } from "@/components/ui/card";
 import GameInterfaceComponent from "@/components/GameInterface";
 import ChattingComponent from "@/components/ChattingComponent";
+import LoginHandler from "@/components/LoginHandler";
+import { usePrivy } from "@privy-io/react-auth";
+import DelegateWalletButton from "@/components/DelegateWallet";
+import { QRCodeCanvas } from "qrcode.react";
+import { CopyQRClipboard } from "@/components/CopyQRClipboard";
+import * as web3 from "@solana/web3.js";
+
 
 function Home() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -17,8 +24,91 @@ function Home() {
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
 
+  const [walletBalance, setWalletBalance] = useState<string>("");
+  const [solPrice, setSolPrice] = useState<number>(0);
   const [presseSearch, setPresseSearch] = useState<boolean>(false);
   const [inputText, setInputText] = useState<string>("");
+
+  const { user } = usePrivy();
+  const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
+  let referralCode = "";
+  if (userProfile?.data?.referral?.code) {
+    referralCode = userProfile.data.referral.code;
+  }
+
+
+  const copyToReferralCode = () => {
+    if (referralCode) {
+      navigator.clipboard
+        .writeText(referralCode)
+        .then(() => {
+          alert("Invite code copied to clipboard!");
+        })
+        .catch((err) => {
+          console.error("Failed to copy text:", err);
+        });
+    }
+  };
+
+
+  const walletToDelegate = user?.linkedAccounts.find(
+    (wallet) =>
+      wallet.type === "wallet" &&
+      wallet.walletClientType === "privy" &&
+      wallet.chainType === "solana"
+  ) as { delegated: boolean; address: string } | undefined;
+
+  useEffect(() => {
+    if (!walletToDelegate) return;
+    if (walletToDelegate) {
+      const fetchBalance = async () => {
+        try {
+          const connection = new web3.Connection(
+            web3.clusterApiUrl("devnet"),
+            "confirmed"
+          );
+          const publicKey = new web3.PublicKey(walletToDelegate.address);
+          const balance = await connection.getBalance(publicKey);
+          setWalletBalance((balance / 1000000000).toFixed(2)); 
+        } catch (err) {
+          console.error(err);
+        }
+      };
+      const fetchSolPrice = async () => {
+        try {
+          const response = await fetch(
+            "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
+          );
+          const data = await response.json();
+          setSolPrice(data.solana.usd); 
+        } catch (err) {
+          console.error("SOL Failed to retrieve", err);
+        }
+      };
+      fetchSolPrice();
+      fetchBalance();
+    }
+    setCurrentState((prevState) => {
+      if (walletToDelegate.delegated && prevState !== "deposit") {
+        return "deposit";
+      }
+      if (!walletToDelegate.delegated && prevState !== "delegate") {
+        return "delegate";
+      }
+      return prevState;
+    });
+  }, [walletBalance, walletToDelegate]);
+
+  // Find user name
+  const twitterAccount = user?.linkedAccounts[0] as
+    | { username: string }
+    | undefined;
+  const username = twitterAccount?.username;
+  // Find user image
+  const twitterProfileUrl = user?.linkedAccounts[0] as
+    | { profilePictureUrl: string }
+    | undefined;
+  const ProfileUrl = twitterProfileUrl?.profilePictureUrl;
 
   const handleMinimizeToggle = () => {
     setIsMinimized(!isMinimized);
@@ -26,7 +116,7 @@ function Home() {
   const changeParents = () => {
     setSelectedCategory("");
   };
-  console.log(selectedCategory)
+
   const homeSendMessage = () => {
     setPresseSearch(!presseSearch);
   };
@@ -43,11 +133,33 @@ function Home() {
   };
   return (
     <>
+
+      {presseSearch && (
+        <>
+          <div
+            className="peer gap-2 p-3 opacity-30 hover:opacity-100 transition-all duration-300 text-[#B3B3B3] hover:text-white flex items-center font-family font-semibold left-0 top-0 absolute cursor-pointer"
+            onClick={homeSendMessage}
+          >
+            <img
+              src="PrediX-logo.webp"
+              alt="logo"
+              className="size-8 "
+            />
+            <p>PrediX</p>
+          </div>
+
+          <div className="absolute left-60 top-2 hidden peer-hover:block p-2 bg-[#1E1E1E] text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)]">
+            <div className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[10px] border-b-[10px] border-r-[10px] border-transparent border-r-[#1E1E1E]"></div>
+            Back home
+          </div>
+        </>
+      )}
+
       {presseSearch ? (
         <ChattingComponent homeInputText={inputText} resetInput={resetInput} />
       ) : (
         <div className="flex flex-col items-center justify-center font-dd font-family scrollbar-width: none">
-          {/* 기본 UI */}
+          {/* base UI */}
           <div
             className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center ${
               isConnected ? "absolute fade-out" : ""
@@ -60,13 +172,7 @@ function Home() {
                     <span className="pl-8 text-white text-lg">
                       Please connect wallet {"->"}
                     </span>
-                    <button
-                      className="w-[178px] h-[45px] rounded-[6px] bg-[#383838] text-white mr-[35px] hover:cursor-pointer text-base"
-                      type="button"
-                      onClick={() => setIsConnected(true)}
-                    >
-                      Connect wallet
-                    </button>
+                    <LoginHandler setIsConnected={setIsConnected} />
                   </div>
                 </div>
               </div>
@@ -81,10 +187,9 @@ function Home() {
             <div className="mt-6 text-base">
               <Category onSelect={setSelectedCategory} />
             </div>
-
           </div>
 
-          {/* 새로운 UI */}
+          {/* new UI */}
           <div
             className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center ${
               !selectedCategory ? "ml-60" : ""
@@ -121,65 +226,35 @@ function Home() {
             <div className="mt-6 text-base">
               <Category onSelect={setSelectedCategory} />
             </div>
-         
           </div>
 
-          {selectedCategory === "Trending Game" && (
-            <GameInterfaceComponent changeParentsFunction={changeParents} />
+          {["Trending Game", "Recent Game", "History", "Created Game"].includes(
+            selectedCategory
+          ) && (
+            <GameInterfaceComponent
+              changeParentsFunction={changeParents}
+              selectedCategory={selectedCategory}
+            />
           )}
         </div>
       )}
-      {/* 지갑 UI */}
+      {/* wallet UI */}
       {isConnected && !isMinimized && (
-        <Card className="fade-in-from-left py-6 absolute top-3 left-3 flex items-start min-w-[320px] min-h-[363px] bg-[#1E1E1E] text-[#767676]">
+        <Card
+          className={`py-4 absolute top-3 left-3 flex items-start min-w-[320px] bg-[#1E1E1E] text-[#767676] z-20 font-family font-semibold ${
+            presseSearch ? "mt-10" : "mt-0"
+          }`}
+        >
           <CardHeader>
             <div className="flex items-center">
               <img
-                src="money.webp"
+                src={ProfileUrl}
                 alt="Profile"
                 className="rounded-full w-10 h-10"
               />
-              <span className="ml-2 text-sm">@3454ffdg</span>
+              <span className="ml-2 text-sm">@{username}</span>
             </div>
-            <div className="flex items-center gap-5">
-              {presseSearch && (
-                <button onClick={homeSendMessage}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 16 16"
-                    fill="currentColor"
-                    className="size-4"
-                  >
-                    <path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h6A1.5 1.5 0 0 1 14 6.5v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 5 12.5v-6Z" />
-                    <path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11V6.5a3 3 0 0 1 3-3H11A1.5 1.5 0 0 0 9.5 2h-6Z" />
-                  </svg>
-                </button>
-              )}
-              <span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 2a6 6 0 0 0-6 6c0 1.887-.454 3.665-1.257 5.234a.75.75 0 0 0 .515 1.076 32.91 32.91 0 0 0 3.256.508 3.5 3.5 0 0 0 6.972 0 32.903 32.903 0 0 0 3.256-.508.75.75 0 0 0 .515-1.076A11.448 11.448 0 0 1 16 8a6 6 0 0 0-6-6ZM8.05 14.943a33.54 33.54 0 0 0 3.9 0 2 2 0 0 1-3.9 0Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-              <span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.897 28.897 0 0 0 15.293-7.155.75.75 0 0 0 0-1.114A28.897 28.897 0 0 0 3.105 2.288Z" />
-                </svg>
-              </span>
-            </div>
+            <div></div>
           </CardHeader>
           <CardTitle>
             <>
@@ -194,11 +269,8 @@ function Home() {
                   }`}
                 >
                   {currentState === "delegate" && (
-                    <div
-                      className="h-full flex justify-center items-center font-prme text-[36px] text-white cursor-pointer"
-                      onClick={() => setCurrentState("deposit")}
-                    >
-                      Delegate
+                    <div className="h-full flex justify-center items-center font-prme text-[36px] text-white cursor-pointer">
+                      <DelegateWalletButton setCurrentState={setCurrentState} />
                     </div>
                   )}
                   {currentState === "deposit" && (
@@ -214,25 +286,17 @@ function Home() {
                   )}
                   {currentState === "qrCode" && (
                     <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-family text-white">
-                      <img
-                        src="money.webp"
-                        alt="QR Code"
-                        className="w-[86px] h-[86px]"
-                      />
+                      <div className="p-2 bg-white rounded-lg inline-block">
+                        <QRCodeCanvas
+                          value={walletToDelegate?.address ?? ""}
+                          size={100}
+                          level="H"
+                          bgColor="#FFFFFF"
+                          fgColor="#000000"
+                        />
+                      </div>
                       <div className="mt-4 mb-2 flex items-center gap-4">
-                        <p>Aqwr...0xre</p>
-                        <span>
-                          {" "}
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="size-5 text-white"
-                          >
-                            <path d="M2 4.25A2.25 2.25 0 0 1 4.25 2h6.5A2.25 2.25 0 0 1 13 4.25V5.5H9.25A3.75 3.75 0 0 0 5.5 9.25V13H4.25A2.25 2.25 0 0 1 2 10.75v-6.5Z" />
-                            <path d="M9.25 7A2.25 2.25 0 0 0 7 9.25v6.5A2.25 2.25 0 0 0 9.25 18h6.5A2.25 2.25 0 0 0 18 15.75v-6.5A2.25 2.25 0 0 0 15.75 7h-6.5Z" />
-                          </svg>
-                        </span>
+                        <CopyQRClipboard />
                       </div>
                       <button
                         className="mt-4 bg-[#161414] text-[#B3B3B3] px-4 py-2 rounded text-[14px] w-[264px] cursor-pointer"
@@ -246,24 +310,9 @@ function Home() {
               )}
               {currentState === "confirmed" && (
                 <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white">
-                  <div className="text-[36px] font-bold">$126</div>
+                  <div className="text-[36px] font-bold">${solPrice}</div>
                   <div className="text-sl flex">
                     <span className="text-lg text-[#7FED58] flex">
-                      <div>+$45</div>
-                      <div className="flex items-center">
-                        <p>{"("}</p>
-                        <div className="size-5">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M12 8L18 14H6L12 8Z"></path>
-                          </svg>
-                        </div>
-                        <p>1St{")"}</p>
-                      </div>
                     </span>
                   </div>
                   <div className="flex items-center mt-2 bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between">
@@ -275,32 +324,11 @@ function Home() {
                           className="size-5"
                         />
                       </span>
-                      <span>0.1567 SOL</span>
+                      <span>{parseFloat(walletBalance)} SOL</span>
                     </div>
                     <div className="mr-4">
-                      <span className="text-sm ml-2">$126</span>
+                      <span className="text-sm ml-2">${solPrice}</span>
                     </div>
-                  </div>
-                  <div className="mt-1.5 flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2">
-                    <span className="ml-4 mr-2 text-[18px]">1 </span>
-                    <div className="ml-1 flex gap-0.5 items-center">
-                      <span>&#128170;</span>
-                      <span className="text-[#767676]">@fdd520</span>
-                    </div>
-                    <div className="text-[#E8B931]">+45</div>
-                    <span className="text-sm text-[#7FED58] flex items-center">
-                      <div className="size-4">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path fill="none" d="M0 0h24v24H0z"></path>
-                          <path d="M12 8L18 14H6L12 8Z"></path>
-                        </svg>
-                      </div>
-                      <div>1</div>
-                    </span>
                   </div>
                 </div>
               )}
@@ -308,83 +336,23 @@ function Home() {
           </CardTitle>
           <CardContent>
             <div className="text-sm mb-3 flex justify-between">
-              <div className="ml-2">Invite code: UC08FS973gv</div>
-              <div className="mr-2">
+              <div className="ml-2">Invite code: {referralCode}</div>
+              <div className="mr-2 cursor-pointer">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                   className="size-5 fill-[#767676]"
+                  onClick={copyToReferralCode}
                 >
                   <path d="M2 4.25A2.25 2.25 0 0 1 4.25 2h6.5A2.25 2.25 0 0 1 13 4.25V5.5H9.25A3.75 3.75 0 0 0 5.5 9.25V13H4.25A2.25 2.25 0 0 1 2 10.75v-6.5Z" />
                   <path d="M9.25 7A2.25 2.25 0 0 0 7 9.25v6.5A2.25 2.25 0 0 0 9.25 18h6.5A2.25 2.25 0 0 0 18 15.75v-6.5A2.25 2.25 0 0 0 15.75 7h-6.5Z" />
                 </svg>
               </div>
             </div>
-            <div className="relative flex flex-col items-center">
-              <input
-                type="text"
-                className="peer w-full bg-[#2C2C2C] text-[#767676] pr-14 p-2 rounded text-[12px] text-left placeholder:text-center focus:outline-none focus:ring-gradient-to-r ring-gradient-base focus:placeholder-transparent focus:bg-black"
-                placeholder="Input of the recommended code"
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 items-center justify-center hidden peer-focus:block peer-focus:cursor-pointer text-[#D74713]"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-6"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
           </CardContent>
           <CardFooter>
-            <div className="flex gap-4 text-[#B3B3B3]">
-              <span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M6 4.75A.75.75 0 0 1 6.75 4h10.5a.75.75 0 0 1 0 1.5H6.75A.75.75 0 0 1 6 4.75ZM6 10a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H6.75A.75.75 0 0 1 6 10Zm0 5.25a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H6.75a.75.75 0 0 1-.75-.75ZM1.99 4.75a1 1 0 0 1 1-1H3a1 1 0 0 1 1 1v.01a1 1 0 0 1-1 1h-.01a1 1 0 0 1-1-1v-.01ZM1.99 15.25a1 1 0 0 1 1-1H3a1 1 0 0 1 1 1v.01a1 1 0 0 1-1 1h-.01a1 1 0 0 1-1-1v-.01ZM1.99 10a1 1 0 0 1 1-1H3a1 1 0 0 1 1 1v.01a1 1 0 0 1-1 1h-.01a1 1 0 0 1-1-1V10Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-              <span className="">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 512 512"
-                  className="size-5"
-                  fill="#B3B3B3"
-                >
-                  <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z" />
-                </svg>
-              </span>
-              <span>
-                <span className="">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 496 512"
-                    className="size-5"
-                    fill="#B3B3B3"
-                  >
-                    <path d="M248 8C111 8 0 119 0 256S111 504 248 504 496 393 496 256 385 8 248 8zM363 176.7c-3.7 39.2-19.9 134.4-28.1 178.3-3.5 18.6-10.3 24.8-16.9 25.4-14.4 1.3-25.3-9.5-39.3-18.7-21.8-14.3-34.2-23.2-55.3-37.2-24.5-16.1-8.6-25 5.3-39.5 3.7-3.8 67.1-61.5 68.3-66.7 .2-.7 .3-3.1-1.2-4.4s-3.6-.8-5.1-.5q-3.3 .7-104.6 69.1-14.8 10.2-26.9 9.9c-8.9-.2-25.9-5-38.6-9.1-15.5-5-27.9-7.7-26.8-16.3q.8-6.7 18.5-13.7 108.4-47.2 144.6-62.3c68.9-28.6 83.2-33.6 92.5-33.8 2.1 0 6.6 .5 9.6 2.9a10.5 10.5 0 0 1 3.5 6.7A43.8 43.8 0 0 1 363 176.7z" />
-                  </svg>
-                </span>
-              </span>
-            </div>
+            <div className="flex gap-4 text-[#B3B3B3]"></div>
             <div onClick={handleMinimizeToggle} style={{ cursor: "pointer" }}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -403,61 +371,27 @@ function Home() {
         </Card>
       )}
       {isConnected && isMinimized && (
-        <div className="fade-in-from-left gap-2 font-prme absolute top-3 left-3 min-w-[261px] h-[134px] p-3 text-white rounded-lg shadow-lg flex flex-col items-center justify-center">
+        <div
+          className={`fade-in-from-left gap-2 font-prme absolute  min-w-[261px] h-[100px] text-white rounded-lg shadow-lg flex flex-col items-center justify-center bg-black ${
+            presseSearch ? "top-15 -left-2" : "top-5 -left-2"
+          } rounded-lg`}
+        >
+          {" "}
           <CardHeader>
             <div className="flex items-center">
               <img
-                src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
+                src={ProfileUrl}
                 alt="Profile"
-                className="w-[42px] h-[42px]"
+                className="rounded-full w-10 h-10"
               />
               <div className="flex flex-col ml-2">
-                <span>@3454ffdg</span>
+                <span>@{username}</span>
                 <span className="text-lg text-[#7FED58] flex">
-                  <div>+$45</div>
-                  <div className="flex items-center">
-                    <p>{"("}</p>
-                    <div className="size-5">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path fill="none" d="M0 0h24v24H0z"></path>
-                        <path d="M12 8L18 14H6L12 8Z"></path>
-                      </svg>
-                    </div>
-                    <p>1St{")"}</p>
-                  </div>
+
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-4 text-[#B3B3B3]">
-              <span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 2a6 6 0 0 0-6 6c0 1.887-.454 3.665-1.257 5.234a.75.75 0 0 0 .515 1.076 32.91 32.91 0 0 0 3.256.508 3.5 3.5 0 0 0 6.972 0 32.903 32.903 0 0 0 3.256-.508.75.75 0 0 0 .515-1.076A11.448 11.448 0 0 1 16 8a6 6 0 0 0-6-6ZM8.05 14.943a33.54 33.54 0 0 0 3.9 0 2 2 0 0 1-3.9 0Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-              <span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5"
-                >
-                  <path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.897 28.897 0 0 0 15.293-7.155.75.75 0 0 0 0-1.114A28.897 28.897 0 0 0 3.105 2.288Z" />
-                </svg>
-              </span>
-            </div>
+            <div className="flex items-center gap-4 text-[#B3B3B3]"></div>
           </CardHeader>
           <CardFooter>
             <div className="min-w-[261px] h-[54px] rounded bg-[#1E1E1E] flex items-center justify-between">
@@ -470,9 +404,9 @@ function Home() {
                   />
                 </span>
                 <div className="flex flex-col">
-                  <span>0.1567 SOL</span>
+                  <span>{parseFloat(walletBalance)} SOL</span>
                   <span className="text-sm text-[#B3B3B3] text-[14px]">
-                    $126
+                    ${solPrice}
                   </span>
                 </div>
               </div>
