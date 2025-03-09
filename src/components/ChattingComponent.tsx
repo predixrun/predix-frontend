@@ -142,6 +142,7 @@ function ChattingComponent({
     if (!homeMessage) {
       return;
     }
+    console.log(1)
     setLoading(true);
     try {
       const data = await chatAPI.sendChatMessage(homeMessage);
