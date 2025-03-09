@@ -17,7 +17,6 @@ const joinGame = async (gameId: number) => {
       }
     );
 
-    console.log("Game joined successfully:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error joining game:", error);

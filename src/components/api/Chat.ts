@@ -82,14 +82,13 @@ export const sendChatMessage = async ({
 export const creatChatMessage = async (message: ChatMessage) => {
   try {
     const authToken = localStorage.getItem("auth_token");
-    console.log("createmessage",message);
+
     const response = await axios.post(`${BASE_URL}/v1/chat/message`, message, {
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
     });
 
-    console.log("sign successfully:", response.data);
     return response.data;
   } catch (error) {
     console.error("sign game:", error);
