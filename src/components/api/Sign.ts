@@ -21,7 +21,6 @@ const SignGame = async (
       }
     );
 
-    console.log("sign successfully:", response.data);
     return response.data;
   } catch (error) {
     console.error("sign game:", error);
