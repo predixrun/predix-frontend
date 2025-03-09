@@ -16,9 +16,12 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
 }) => {
   const { login, ready, authenticated, user, } = usePrivy();
   const { wallets } = useSolanaWallets();
+
   const externalWallet = wallets.find(
-    (wallet) => wallet.walletClientType !== "privy"
+    (wallet) => wallet.walletClientType === "privy"
   );
+
+
   function getCookie(name: string) {
     return document.cookie
       .split("; ")
