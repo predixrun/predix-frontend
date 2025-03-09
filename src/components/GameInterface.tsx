@@ -252,7 +252,21 @@ function GameInterfaceComponent({
                 {/* 상단 섹션 */}
                 <div className="title-line flex items-center rounded-full w-full h-[42px] justify-between bg-[#1B191E] px-3">
                   <div className="title-text">{game.gameTitle}</div>
-                  <div className="mr-3">{game.gameContent}</div>
+                  <div className="mr-3">
+                    {game.gameContent}{" "}
+                    {game.gameStatus === "EXPIRED" &&
+                      game.joined.choiceResult && (
+                        <div
+                          className={
+                            game.joined.choiceResult === "Win"
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }
+                        >
+                          {game.joined.choiceResult}
+                        </div>
+                      )}
+                  </div>
                 </div>
                 {/* 하단 섹션 */}
                 <div className="mt-2 mb-2 flex text-left justify-between text-[13px]">
@@ -272,18 +286,7 @@ function GameInterfaceComponent({
                         className="size-6 rounded-full"
                       />
                     </div>
-                    {game.gameStatus === "EXPIRED" &&
-                      game.joined.choiceResult && (
-                        <div
-                          className={
-                            game.joined.choiceResult === "Win"
-                              ? "text-green-500"
-                              : "text-red-500"
-                          }
-                        >
-                          {game.joined.choiceResult}
-                        </div>
-                      )}
+
                     <div className="title-text">{game.user.name}</div>
                     <div>|</div>
                     <div className="title-text">Ends: {game.gameExpiredAt}</div>

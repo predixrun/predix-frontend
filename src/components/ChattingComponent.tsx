@@ -1,58 +1,109 @@
 import React, { useState, useRef, useEffect } from "react";
 
 interface Chatting {
-  id: number;
-  chatting: string;
-  isMe: boolean;
+  externalId?: string | null;
+  conversationExternalId?: string;
+  sender?: string | null;
+  content: string;
+  messageType: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any;
 }
 
 interface ChattingComponentProps {
   homeInputText: string;
   resetInput: () => void;
 }
+
 function ChattingComponent({
   homeInputText,
   resetInput,
 }: ChattingComponentProps) {
   const [messages, setMessages] = useState<Chatting[]>([
     {
-      id: 1,
-      chatting: `If you want me to gather data from specific accounts on X that you think might provide insights into potential tickers, please provide their usernames, and I'll assist you! (디테일 설명)`,
-      isMe: false,
+      conversationExternalId: "b153593c-ab24-4f7d-add5-356adc2f98f6",
+      sender: "AGENT",
+      content: "Hello! How can I assist you today? 😊",
+      messageType: "text",
+      data: null,
     },
     {
-      id: 2,
-      chatting: `Howmake a prediction for mc and mu game on this Sunday. And the wager size is 1 SOL`,
-      isMe: true,
+      conversationExternalId: "b153593c-ab24-4f7d-add5-356adc2f98f6",
+      sender: null,
+      content: "yes plz",
+      messageType: "text",
+      data: null,
     },
     {
-      id: 3,
-      chatting: `OK,prediction has made "Which team will be the winner of this Sunday's dubby?"`,
-      isMe: false,
-    },
-    {
-      id: 4,
-      chatting: `make a bet on mu win`,
-      isMe: true,
-    },
-    {
-      id: 5,
-      chatting: `“you have selected mu win and the wager is 1 SOL" "would you like to proceed?"`,
-      isMe: false,
-    },
-    {
-      id: 6,
-      chatting: `Yes`,
-      isMe: true,
-    },
-    {
-      id: 7,
-      chatting: `market is open and this participation link to share: https://dbsh3737rh`,
-      isMe: false,
+      conversationExternalId: "1q2w",
+      sender: "AGENT",
+      content:
+        "### 프리미어 리그 최근 경기 결과\n\n#### **맨체스터 더비 (Manchester City vs Manchester United)**\n🏆 **리그:** 프리미어 리그 (Premier League)  \n📅 **날짜:** 2025년 3월 7일  \n⚽ **결과:** 맨체스터 시티 3-2 맨체스터 유나이티드  \n📍 **라운드:** 정규 시즌 - 26라운드  \n👨‍⚖ **주심:** M. Oliver  \n\n**📊 경기 진행 상황:**  \n- **전반전:** 0-0  \n- **후반전:** 맨시티 3-2 맨유  \n\n🔗 ![프리미어 리그 로고](https://media.api-sports.io/football/leagues/39.png)  \n🔗 ![맨체스터 시티 로고](https://media.api-sports.io/football/teams/40.png)  \n🔗 ![맨체스터 유나이티드 로고](https://media.api-sports.io/football/teams/33.png)  \n\n📌 **최근 맞대결 결과:**  \n- **2025-03-06:** 맨유 4-2 맨시티  \n- **2025-03-05:** 맨시티 4-2 맨유  \n- **2025-03-04:** 맨유 4-1 맨시티  \n- **2025-03-03:** 맨시티 0-3 맨유  \n- **2025-03-02:** 맨유 4-3 맨시티  \n\n📢 **맨체스터 더비에서 치열한 접전이 이어지고 있습니다!** ⚡",
+      messageType: "sports_search",
+      data: {
+        fixtures: [
+          {
+            fixture: {
+              id: 901,
+              referee: "M. Oliver",
+              timezone: "UTC",
+              date: "2025-03-07T23:46:33+00:00",
+              timestamp: 1741358793,
+              status: {
+                long: "Match Finished",
+                short: "FT",
+              },
+            },
+            league: {
+              id: 39,
+              name: "Premier League",
+              country: "England",
+              logo: "https://media.api-sports.io/football/leagues/39.png",
+              flag: "https://media.api-sports.io/flags/gb.svg",
+              season: 2024,
+              round: "Regular Season - 26",
+            },
+            teams: {
+              home: {
+                id: 40,
+                name: "Manchester City",
+                logo: "https://media.api-sports.io/football/teams/40.png",
+              },
+              away: {
+                id: 33,
+                name: "Manchester United",
+                logo: "https://media.api-sports.io/football/teams/33.png",
+              },
+            },
+            goals: {
+              home: 3,
+              away: 2,
+            },
+            score: {
+              halftime: {
+                home: 0,
+                away: 0,
+              },
+              fulltime: {
+                home: 0,
+                away: 2,
+              },
+              extratime: {
+                home: null,
+                away: null,
+              },
+              penalty: {
+                home: null,
+                away: null,
+              },
+            },
+          },
+        ],
+      },
     },
   ]);
+  console.log("messages", messages);
 
-  const [nextId, setNextId] = useState<number>(8);
   const [inputText, setInputText] = useState<string>("");
   const [prevHomeInputText, setPrevHomeInputText] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -60,17 +111,17 @@ function ChattingComponent({
   useEffect(() => {
     if (homeInputText.trim() !== "" && homeInputText !== prevHomeInputText) {
       const newMessage: Chatting = {
-        id: nextId,
-        chatting: homeInputText,
-        isMe: true,
+        externalId: null,
+        content: homeInputText,
+        messageType: "TEXT",
+        sender: null,
       };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
-      setNextId((prevId) => prevId + 1);
       setPrevHomeInputText(homeInputText);
 
-      resetInput();
+      resetInput(); // 입력 필드 초기화
     }
-  }, [homeInputText, nextId, prevHomeInputText, resetInput]);
+  }, [homeInputText, prevHomeInputText, resetInput]);
 
   // 메시지 목록이 업데이트될 때 스크롤
   useEffect(() => {
@@ -89,6 +140,7 @@ function ChattingComponent({
       sendMessage();
     }
   };
+
   const handleKeyUp = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -105,52 +157,80 @@ function ChattingComponent({
   const sendMessage = () => {
     if (inputText.trim() === "") return;
     const newMessage: Chatting = {
-      id: nextId,
-      chatting: inputText,
-      isMe: true,
+      externalId: null, // response 해서 받아온 id 넣어야함
+      content: inputText,
+      messageType: "TEXT",
+      sender: null,
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
-    setNextId((prevId) => prevId + 1);
     setInputText("");
   };
 
+  const handleButtonClick = (button: string) => {
+    console.log(`Button clicked: ${button}`);
+  };
+
   return (
-    <div className="flex flex-col h-screen text-white max-w-[700px] font-familyo">
+    <div className="flex flex-col h-screen text-white w-[700px] font-family text">
       {/* 채팅 메시지 영역 */}
       <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden pb-[150px]">
         {messages.map((msg) => (
           <div
-            key={msg.id}
-            className={`flex ${msg.isMe ? "justify-end" : ""} my-5`}
+            key={msg.externalId}
+            className={`flex ${msg.sender === null ? "justify-end" : ""} my-5`}
           >
             <div
-              className={`text-lg ${msg.isMe ? "mr-3 max-w-[40ch]" : "ml-3"}`}
+              className={`text-lg ${
+                msg.sender === null ? "mr-3 max-w-[50ch]" : "ml-3"
+              }`}
             >
               <div
                 className={`p-3 mt-2 ${
-                  msg.isMe
+                  msg.sender === null
                     ? `${
-                        msg.chatting.length > 40 ? "rounded-lg" : "rounded-full"
+                        msg.content.length > 50 ? "rounded-lg" : "rounded-full"
                       } bg-[#2C2C2C] break-words text-left`
                     : ""
                 }`}
               >
+                {/* 메시지 내용 표시 */}
                 <span className="text-base">
-                  {msg.chatting.split("\n").map((line, index) => (
+                  {msg.content.split("\n").map((line, index) => (
                     <span key={index}>
                       {line}
                       <br />
                     </span>
                   ))}
                 </span>
+
+                {/* 데이터가 있을 경우 */}
+                {msg.data?.fixture?.status && (
+                  <div className="mt-3">
+                    {msg.data?.fixture.status.map(
+                      (
+                        fixture: string,
+                        index: React.Key | null | undefined
+                      ) => (
+                        <button
+                          key={index}
+                          className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                          onClick={() => handleButtonClick(fixture)}
+                        >
+                          {fixture}
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         ))}
         <div ref={chatEndRef} />
       </div>
+
       {/* 입력 구간 */}
-      <div className="p-4 bg-[#1E1E1E] fixed bottom-5 left-0 right-0 mx-auto max-w-[700px] rounded-lg border-2 border-[#2C2C2C] ">
+      <div className="p-4 bg-[#1E1E1E] fixed bottom-5 left-0 right-0 mx-auto max-w-[700px] rounded-lg border-2 border-[#2C2C2C]">
         <div className="flex flex-col h-full">
           <textarea
             className="p-3 rounded-lg resize-none"
@@ -162,32 +242,6 @@ function ChattingComponent({
             rows={1}
           />
           <div className="flex justify-between mt-2">
-            <div className="flex gap-2">
-              <div className="px-3 py-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="#B3B3B3"
-                  className="size-5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M15.621 4.379a3 3 0 0 0-4.242 0l-7 7a3 3 0 0 0 4.241 4.243h.001l.497-.5a.75.75 0 0 1 1.064 1.057l-.498.501-.002.002a4.5 4.5 0 0 1-6.364-6.364l7-7a4.5 4.5 0 0 1 6.368 6.36l-3.455 3.553A2.625 2.625 0 1 1 9.52 9.52l3.45-3.451a.75.75 0 1 1 1.061 1.06l-3.45 3.451a1.125 1.125 0 0 0 1.587 1.595l3.454-3.553a3 3 0 0 0 0-4.242Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="px-3 py-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 512 512"
-                  className="size-5"
-                  fill="#B3B3B3"
-                >
-                  <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z" />
-                </svg>
-              </div>
-            </div>
             <button
               className="px-3 py-3 bg-[#2C2C2C] rounded-lg cursor-pointer"
               onClick={handleSend}

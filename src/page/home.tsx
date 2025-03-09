@@ -17,6 +17,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { CopyQRClipboard } from "@/components/CopyQRClipboard";
 import * as web3 from "@solana/web3.js";
 
+
 function Home() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [currentState, setCurrentState] = useState<string>("delegate");
@@ -133,6 +134,7 @@ function Home() {
   };
   return (
     <>
+
       {presseSearch && (
         <>
           <div
@@ -241,7 +243,7 @@ function Home() {
 
       {isConnected && !isMinimized && (
         <Card
-          className={`py-6 absolute top-3 left-3 flex items-start min-w-[320px] bg-[#1E1E1E] text-[#767676] z-20 font-family font-semibold ${
+          className={`py-4 absolute top-3 left-3 flex items-start min-w-[320px] bg-[#1E1E1E] text-[#767676] z-20 font-family font-semibold ${
             presseSearch ? "mt-10" : "mt-0"
           }`}
         >
@@ -389,7 +391,7 @@ function Home() {
         <div
           className={`fade-in-from-left gap-2 font-prme absolute  min-w-[261px] h-[100px] text-white rounded-lg shadow-lg flex flex-col items-center justify-center bg-black ${
             presseSearch ? "top-15 -left-2" : "top-5 -left-2"
-          } rounded-lgc`}
+          } rounded-lg`}
         >
           {" "}
           <CardHeader>
