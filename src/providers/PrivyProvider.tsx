@@ -19,7 +19,6 @@ const PrivyProviderComponent = ({
         appearance: {
           theme: "light",
           accentColor: "#676FFF",
-
         },
         externalWallets: {
           solana: {
