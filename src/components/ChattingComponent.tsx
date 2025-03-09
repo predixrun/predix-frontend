@@ -84,8 +84,6 @@ function ChattingComponent({
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [externalId, setExternalId] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState<string>("");
-
   // useEffect(() => {
   //   const filteredMessages = messages.filter(
   //     (msg) => msg.messageType === "MARKET_OPTIONS"
@@ -94,22 +92,20 @@ function ChattingComponent({
   // }, [messages]);
 
   useEffect(() => {
-    
-      if (homeInputText.trim() !== "" && homeInputText !== prevHomeInputText) {
-        const newMessage: Chatting = {
-          externalId: null,
-          content: homeInputText,
-          messageType: "TEXT",
-          sender: null,
-        };
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
-        setPrevHomeInputText(homeInputText);
+    if (homeInputText.trim() !== "" && homeInputText !== prevHomeInputText) {
+      const newMessage: Chatting = {
+        externalId: null,
+        content: homeInputText,
+        messageType: "TEXT",
+        sender: null,
+      };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      setPrevHomeInputText(homeInputText);
 
-        homeSendMessage(newMessage);
+      homeSendMessage(newMessage);
 
-        resetInput();
-      }
-    
+      resetInput();
+    }
   }, [homeInputText, prevHomeInputText, resetInput]);
 
   // Scroll when the message list is updated
@@ -148,7 +144,6 @@ function ChattingComponent({
     }
     setLoading(true);
     try {
-
       const data = await chatAPI.sendChatMessage(homeMessage);
 
       if (data?.data?.message) {
@@ -166,7 +161,6 @@ function ChattingComponent({
 
   // Message sending function
   const sendMessage = async () => {
-    
     if (inputText.trim() === "") return;
     const newMessage: Chatting = {
       externalId: externalId, // need ID received in response
@@ -180,7 +174,7 @@ function ChattingComponent({
     try {
       const data = await chatAPI.sendChatMessage(newMessage);
 
-      if (data?.data?.message && showSuccess!=="") {
+      if (data?.data?.message) {
         const newMessage = data.data.message;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
         setExternalId(data?.data?.conversationExternalId);
@@ -196,26 +190,28 @@ function ChattingComponent({
     if (!buttonText) {
       return;
     }
+
     const newMessage: Chatting = {
       externalId: externalId,
       content: `SELECTION: ${buttonText}`,
       messageType: "TEXT",
       sender: null,
     };
+
     setMessages((prevMessages) => [...prevMessages, newMessage]);
-    homeSendMessage(newMessage);
 
     if (buttonText === "Yes") {
       CreateMessage();
-      setTimeout(() => {}, 2000);
+    } else {
+      homeSendMessage(newMessage);
     }
   };
+
   const CreateMessage = async () => {
     setLoading(true);
 
     try {
       const response = await chatAPI.creatChatMessage(mockGameData);
-      setShowSuccess(response.data.message.content);
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
           externalId: externalId,
