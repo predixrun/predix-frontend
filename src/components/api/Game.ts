@@ -24,6 +24,7 @@ export const fetchGameHistory = async ({
     let endpoint = `${BASE_URL}/v1/game`;
     let type = "T"; 
 
+
     switch (category) {
       case "Trending Game":
         type = "T"; 
@@ -55,7 +56,7 @@ export const fetchGameHistory = async ({
         Authorization: `Bearer ${authToken}`,
       },
     });
-    console.log("response",response)
+
     if (response.data?.status === "SUCCESS") {
       return response.data.data;
     }
@@ -63,7 +64,7 @@ export const fetchGameHistory = async ({
     throw new Error("Failed to fetch game history");
   } catch (error) {
     console.error("Error fetching game history:", error);
-    return null;
+    throw error;
   }
 };
 

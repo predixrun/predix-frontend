@@ -156,7 +156,7 @@ function Home() {
       )}
 
       {presseSearch ? (
-        <ChattingComponent homeInputText={inputText} resetInput={resetInput} />
+        <ChattingComponent homeInputText={inputText} resetInput={resetInput} changeParentsFunction={homeSendMessage}/>
       ) : (
         <div className="flex flex-col items-center justify-center font-dd font-family scrollbar-width: none">
           {/* base UI */}
