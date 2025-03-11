@@ -77,11 +77,15 @@ function Home() {
       };
       const fetchSolPrice = async () => {
         try {
+
           const response = await fetch(
             "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
           );
           const data = await response.json();
-          setSolPrice(data.solana.usd); 
+      
+          const solBalance = parseFloat(walletBalance); 
+          const solValueInUSD = solBalance * data.solana.usd; 
+          setSolPrice(solValueInUSD);
         } catch (err) {
           console.error("SOL Failed to retrieve", err);
         }
