@@ -68,10 +68,11 @@ function ChattingComponent({
       externalId: null,
       content:
         `
-## Hello, **${username}**! 
+#### Hello, **${username}**! 
 
 There are three options you can choose from: 
-### Create Prediction
+
+**Create Prediction**
 
 - Good! To create a prediction market, some information is needed. Please enter the information you know.
   - League
@@ -79,15 +80,14 @@ There are three options you can choose from:
   - DATE (e.g., next week, this month, 2025-06-18)
   - Creation command (Currently, only football supported)
 
-### Sports Search
+**Sports Search**
 
 - Great, I can fetch information related to sports. Currently, I only support football.
   - “What are the matches this Sunday?”
   - "Search for Manchester City matches."
   - "Search for Premier League information."
 
-### Chat
-
+**Chat**
 - Ask PrediX anything you want to know! :)
 `,
       messageType: "TEXT",
@@ -362,7 +362,7 @@ There are three options you can choose from:
                 >
                   {/* Show message content*/}
                   <span className="text-base prose prose-invert max-w-none">
-                    <ReactMarkdown >{msg.content}</ReactMarkdown>
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </span>
                   {msg.data?.selections && (
                     <div className="mt-3">
