@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import chatAPI from "@/components/api/Chat";
 import "@/components/styles/game-dashboard-animations.css";
 import { Transaction } from "@solana/web3.js";
-import { useSolanaWallets } from "@privy-io/react-auth";
+import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
 import signGame from "@/components/api/Sign";
 import gameAPI from "@/components/api/Game";
+import ReactMarkdown from "react-markdown";
 interface Selection {
   name: string;
   type: string;
@@ -56,7 +57,37 @@ function ChattingComponent({
   resetInput,
   changeParentsFunction,
 }: ChattingComponentProps) {
-  const [messages, setMessages] = useState<Chatting[]>([]);
+  const { user } = usePrivy();
+  const twitterAccount = user?.linkedAccounts[0] as
+    | { username: string }
+    | undefined;
+  const username = twitterAccount?.username;
+  const [messages, setMessages] = useState<Chatting[]>([
+    {
+      externalId: null,
+      content:
+        `## Hello, **${username}**! \n\n` +
+        "There are two options you can choose from: " +
+        "'**Create Prediction**' and \n" +
+        "'**Participate in Prediction**' - Please choose!\n\n",
+      messageType: "TEXT",
+      sender: "SYSTEM",
+      data: {
+        selections: [
+          {
+            name: "Create Prediction",
+            type: "option",
+            description: "Start your own prediction market.",
+          },
+          {
+            name: "Participate in Prediction",
+            type: "option",
+            description: "Join an existing prediction market.",
+          },
+        ],
+      },
+    },
+  ]);
   const [marketOptions, setMarketOptions] = useState<Chatting[]>([]);
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
@@ -75,23 +106,21 @@ function ChattingComponent({
     setMarketOptions(filteredMessages);
   }, [messages]);
 
-
   useEffect(() => {
     if (homeInputText.trim() !== "" && homeInputText !== prevHomeInputText) {
-      const newMessage: Chatting = {
-        externalId: null,
-        content: homeInputText,
-        messageType: "TEXT",
-        sender: null,
-      };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      // const newMessage: Chatting = {
+      //   externalId: null,
+      //   content: homeInputText,
+      //   messageType: "TEXT",
+      //   sender: null,
+      // };
+      // setMessages((prevMessages) => [...prevMessages, newMessage]);
       setPrevHomeInputText(homeInputText);
 
-      homeSendMessage(newMessage);
+      // homeSendMessage(newMessage);
 
       resetInput();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeInputText, prevHomeInputText, resetInput]);
 
   // Scroll when the message list is updated
@@ -136,9 +165,6 @@ function ChattingComponent({
       if (data?.data?.message) {
         const newMessage = data.data.message;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
-        if (!externalId && newMessage.conversationExternalId) {
-          setExternalId(newMessage.conversationExternalId);
-        }
       } else {
         console.log("No message data received.");
       }
@@ -167,6 +193,9 @@ function ChattingComponent({
       if (data?.data?.message) {
         const newMessage = data.data.message;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
+        if (!externalId && newMessage.conversationExternalId) {
+          setExternalId(newMessage.conversationExternalId);
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -181,14 +210,13 @@ function ChattingComponent({
     }
 
     if (buttonText.includes("Win") || buttonText.includes("Draw/Lose")) {
-      const extractedChoice = buttonText.split(" ").slice(-1)[0];
-
-      setSelectedChoice(extractedChoice);
+      buttonText = buttonText.split(" ").slice(-1)[0];
     }
 
+    setSelectedChoice(buttonText);
     const newMessage: Chatting = {
       externalId: externalId,
-      content: `SELECTION: ${buttonText}`,
+      content: buttonText,
       messageType: "TEXT",
       sender: null,
     };
@@ -198,7 +226,12 @@ function ChattingComponent({
     if (buttonText === "Yes") {
       CreateMessage();
     } else {
-      homeSendMessage(newMessage);
+      const messageWithSelection = {
+        ...newMessage,
+        data: { SELECTION: buttonText },
+      };
+
+      homeSendMessage(messageWithSelection);
     }
   };
 
@@ -305,8 +338,7 @@ function ChattingComponent({
                   <span className="text-base">
                     {msg.content.split("\n").map((line, index) => (
                       <span key={index}>
-                        {line}
-                        <br />
+                        <ReactMarkdown>{line}</ReactMarkdown>
                       </span>
                     ))}
                   </span>
