@@ -85,7 +85,7 @@ function Home() {
       
           const solBalance = parseFloat(walletBalance); 
           const solValueInUSD = solBalance * data.solana.usd; 
-          setSolPrice(solValueInUSD);
+          setSolPrice(parseFloat(solValueInUSD.toFixed(4)));
         } catch (err) {
           console.error("SOL Failed to retrieve", err);
         }
