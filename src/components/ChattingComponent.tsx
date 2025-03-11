@@ -6,6 +6,7 @@ import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
 import signGame from "@/components/api/Sign";
 import gameAPI from "@/components/api/Game";
 import ReactMarkdown from "react-markdown";
+
 interface Selection {
   name: string;
   type: string;
@@ -66,10 +67,29 @@ function ChattingComponent({
     {
       externalId: null,
       content:
-        `## Hello, **${username}**! \n\n` +
-        "There are two options you can choose from: " +
-        "'**Create Prediction**' and \n" +
-        "'**Participate in Prediction**' - Please choose!\n\n",
+        `
+## Hello, **${username}**! 
+
+There are three options you can choose from: 
+### Create Prediction
+
+- Good! To create a prediction market, some information is needed. Please enter the information you know.
+  - League
+  - Team
+  - DATE (e.g., next week, this month, 2025-06-18)
+  - Creation command (Currently, only football supported)
+
+### Sports Search
+
+- Great, I can fetch information related to sports. Currently, I only support football.
+  - “What are the matches this Sunday?”
+  - "Search for Manchester City matches."
+  - "Search for Premier League information."
+
+### Chat
+
+- Ask PrediX anything you want to know! :)
+`,
       messageType: "TEXT",
       sender: "SYSTEM",
       data: {
@@ -80,14 +100,20 @@ function ChattingComponent({
             description: "Start your own prediction market.",
           },
           {
-            name: "Participate in Prediction",
+            name: "Sports Search",
             type: "option",
             description: "Join an existing prediction market.",
+          },
+          {
+            name: "Chat",
+            type: "option",
+            description: "Ask PrediX anything you want to know!",
           },
         ],
       },
     },
   ]);
+
   const [marketOptions, setMarketOptions] = useState<Chatting[]>([]);
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
@@ -335,12 +361,8 @@ function ChattingComponent({
                   }`}
                 >
                   {/* Show message content*/}
-                  <span className="text-base">
-                    {msg.content.split("\n").map((line, index) => (
-                      <span key={index}>
-                        <ReactMarkdown>{line}</ReactMarkdown>
-                      </span>
-                    ))}
+                  <span className="text-base prose prose-invert max-w-none">
+                    <ReactMarkdown >{msg.content}</ReactMarkdown>
                   </span>
                   {msg.data?.selections && (
                     <div className="mt-3">
