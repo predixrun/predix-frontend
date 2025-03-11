@@ -19,13 +19,14 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
   const externalWallet = wallets.find(
     (wallet) => wallet.walletClientType === 'privy',
   );
-  function getCookie(name: string) {
-    return document.cookie
-      .split('; ')
-      .find((row) => row.startsWith(name + '='))
-      ?.split('=')[1];
-  }
-  const privyToken = getCookie('privy-token');
+  // function getCookie(name: string) {
+  //   return document.cookie
+  //     .split('; ')
+  //     .find((row) => row.startsWith(name + '='))
+  //     ?.split('=')[1];
+  // }
+  // const privyToken = localStorage.getItem("privy:token");
+  const privyToken = JSON.parse(localStorage.getItem("privy:token") || '""');
 
   const handleConnectWallet = async () => {
     if (!ready) return;

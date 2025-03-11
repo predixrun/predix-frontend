@@ -3,7 +3,7 @@ import chatAPI from "@/components/api/Chat";
 import "@/components/styles/game-dashboard-animations.css";
 import { Transaction } from "@solana/web3.js";
 import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
-import signGame from "@/components/api/Sign";
+import signGame from "@/components/api/SignCreate";
 import gameAPI from "@/components/api/Game";
 import ReactMarkdown from "react-markdown";
 
@@ -66,8 +66,7 @@ function ChattingComponent({
   const [messages, setMessages] = useState<Chatting[]>([
     {
       externalId: null,
-      content:
-        `
+      content: `
 #### Hello, **${username}**! 
 
 There are three options you can choose from: 
@@ -118,12 +117,13 @@ There are three options you can choose from:
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
-
+  console.log("marketOptions",marketOptions)
   const [inputText, setInputText] = useState<string>("");
   const [prevHomeInputText, setPrevHomeInputText] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [externalId, setExternalId] = useState<string | null>(null);
+
 
   useEffect(() => {
     const filteredMessages = messages.filter(
@@ -191,6 +191,9 @@ There are three options you can choose from:
       if (data?.data?.message) {
         const newMessage = data.data.message;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
+        if (!externalId && newMessage.conversationExternalId) {
+          setExternalId(newMessage.conversationExternalId);
+        }
       } else {
         console.log("No message data received.");
       }
@@ -210,6 +213,7 @@ There are three options you can choose from:
       messageType: "TEXT",
       sender: null,
     };
+
     setMessages((prevMessages) => [...prevMessages, newMessage]);
     setInputText("");
     setLoading(true);
@@ -287,9 +291,7 @@ There are three options you can choose from:
           choiceType: selectedChoice ?? "WIN",
         },
       };
-
-      const response = await chatAPI.creatChatMessage(userGameSelectionData);
-
+      const response = await chatAPI.sendChatMessage(userGameSelectionData);
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
           externalId: externalId,
