@@ -81,14 +81,12 @@ export const sendChatMessage = async ({
 
 export const creatChatMessage = async (message: ChatMessage) => {
   try {
-    const authToken = localStorage.getItem("auth_token");
-
     const response = await axios.post(`${BASE_URL}/v1/chat/message`, message, {
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
     });
-
+    
     return response.data;
   } catch (error) {
     console.error("sign game:", error);
@@ -96,6 +94,20 @@ export const creatChatMessage = async (message: ChatMessage) => {
   }
 };
 
+export const ChatmessageList = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/v1/chat/message`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    
+    console.error("sign game:", error);
+  }
+};
 const chatAPI = {
   getChatMessages,
   sendChatMessage,
