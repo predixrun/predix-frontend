@@ -30,6 +30,7 @@ function Home() {
   const [inputText, setInputText] = useState<string>("");
 
   const { user } = usePrivy();
+
   const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
   let referralCode = "";
   if (userProfile?.data?.referral?.code) {
