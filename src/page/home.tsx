@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import GameInterfaceComponent from "@/components/GameInterface";
-import ChattingComponent from "@/components/ChattingComponent";
+import ChattingComponent from "@/components/ChattingHandler";
 import LoginHandler from "@/components/LoginHandler";
 import { usePrivy } from "@privy-io/react-auth";
 import DelegateWalletButton from "@/components/DelegateWallet";
