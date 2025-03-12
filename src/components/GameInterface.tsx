@@ -73,8 +73,8 @@ function GameInterfaceComponent({
     const loadGames = async () => {
       const gameData = await gameAPI.fetchGameHistory({
         category: selectedCategory,
-        page: 1,
-        take: 9,
+        page: currentPage + 1,
+        take: 1,
         status:
           selectedCategory === "History" || selectedCategory === "Created Game"
             ? statusFilter
@@ -116,7 +116,7 @@ function GameInterfaceComponent({
     };
 
     loadGames();
-  }, [selectedCategory, statusFilter]);
+  }, [currentPage, selectedCategory, statusFilter]);
   const games: Game[] = gamesData;
 
   const displayedGames = games.filter((game) => {
@@ -328,9 +328,11 @@ function GameInterfaceComponent({
 
             {selectedGame === game.gameId && selectedGameData && (
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-100">
-              <GameDashboard gameData={selectedGameData} onClose={closeDashboard} />
-            </div>
-            
+                <GameDashboard
+                  gameData={selectedGameData}
+                  onClose={closeDashboard}
+                />
+              </div>
             )}
           </>
         ))}
