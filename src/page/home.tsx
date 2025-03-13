@@ -9,13 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import GameInterfaceComponent from "@/components/GameInterface";
-import ChattingComponent from "@/components/ChattingHandler";
+import ChattingComponent from "@/components/Chat/ChattingHandler";
 import LoginHandler from "@/components/LoginHandler";
 import { usePrivy } from "@privy-io/react-auth";
 import DelegateWalletButton from "@/components/DelegateWallet";
 import { QRCodeCanvas } from "qrcode.react";
 import { CopyQRClipboard } from "@/components/CopyQRClipboard";
 import * as web3 from "@solana/web3.js";
+import Intro from "@/components/Intro";
 
 function Home() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -134,6 +135,7 @@ function Home() {
   };
   return (
     <>
+      <Intro/>
       {presseSearch ? (
         <ChattingComponent
           homeInputText={inputText}

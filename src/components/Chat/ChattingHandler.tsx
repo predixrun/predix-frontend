@@ -279,8 +279,8 @@ There are three options you can choose from:
   };
 
   return (
-    <>
-      <div className="flex flex-col h-screen text-white w-[700px] font-family text">
+    <div className="font-family">
+      <div className="flex flex-col h-screen text-white w-[700px]">
         {/* Chat message area */}
         <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden pb-[150px]">
           {messages.map((msg, index) => (
@@ -317,7 +317,7 @@ There are three options you can choose from:
         </div>
 
       </div>
-    </>
+    </div>
   );
 }
 

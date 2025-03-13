@@ -8,7 +8,6 @@ function ChatHistory() {
       const data = await chatAPI.getChatList();
 
       setMessage(data);
-      console.log("Fetched messages:", message);
     } catch (error) {
       console.error("Error fetching chat messages:", error);
     }
