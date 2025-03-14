@@ -1,11 +1,7 @@
 import ChattingComponent from "@/components/chat/ChattingHandler";
 
-function chat() {
-  return (
-    <div>
-      <ChattingComponent/>
-    </div>
-  );
+function Chat() {
+  return <ChattingComponent />;
 }
 
-export default chat;
+export default Chat;
