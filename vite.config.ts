@@ -16,4 +16,7 @@ export default defineConfig({
       plugins: [inject({ Buffer: ["buffer", "Buffer"] })],
     },
   },
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
 });
