@@ -1,4 +1,4 @@
-import ChattingComponent from "@/components/chat/ChattingHandler";
+import ChattingComponent from "@/components/Chat/ChattingHandler";
 
 function Chat() {
   return <ChattingComponent />;

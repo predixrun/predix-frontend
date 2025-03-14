@@ -46,7 +46,7 @@ interface ChatMessage {
   data: GameData;
 }
 
-function ChattingComponent() {
+function ChattingHandler() {
   const { user } = usePrivy();
   const twitterAccount = user?.linkedAccounts[0] as
     | { username: string }
@@ -282,4 +282,4 @@ There are three options you can choose from:
   );
 }
 
-export default ChattingComponent;
+export default ChattingHandler;
