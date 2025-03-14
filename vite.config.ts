@@ -1,8 +1,8 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from "path"
-import tailwindcss from "@tailwindcss/vite"
-import inject from '@rollup/plugin-inject';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+import tailwindcss from "@tailwindcss/vite";
+import inject from "@rollup/plugin-inject";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -12,15 +12,11 @@ export default defineConfig({
     },
   },
   build: {
-		rollupOptions: {
-			plugins: [inject({ Buffer: ['buffer', 'Buffer'] })],
-		},
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    }
-	},
-})
+    rollupOptions: {
+      plugins: [inject({ Buffer: ["buffer", "Buffer"] })],
+    },
+  },
+  define: {
+    "console.log": "() => {}",
+  },
+});
