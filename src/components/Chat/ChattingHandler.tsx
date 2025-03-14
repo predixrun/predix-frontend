@@ -114,6 +114,8 @@ There are three options you can choose from:
   const marketOptions = useMemo(() => {
     return messages.filter((msg) => msg.messageType === "MARKET_OPTIONS");
   }, [messages]);
+  console.log("messages",messages)
+  console.log("marketOptions",marketOptions)
 
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");

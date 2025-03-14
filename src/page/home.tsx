@@ -119,9 +119,8 @@ function Home() {
     setSelectedCategory("");
   };
 
-  const homeSendMessage = () => {
-    setPresseSearch(!presseSearch);
-  };
+  const homeSendMessage = () => setPresseSearch((prev) => !prev);
+
 
   const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -135,7 +134,7 @@ function Home() {
   };
   return (
     <>
-      <Intro/>
+      {!isConnected && <Intro />}
       {presseSearch ? (
         <ChattingComponent
           homeInputText={inputText}

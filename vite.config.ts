@@ -15,5 +15,12 @@ export default defineConfig({
 		rollupOptions: {
 			plugins: [inject({ Buffer: ['buffer', 'Buffer'] })],
 		},
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    }
 	},
 })
