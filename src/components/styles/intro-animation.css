@@ -1,0 +1,26 @@
+@keyframes wave {
+    0% {
+      transform: translateY(100%) rotate(0deg);
+
+    }
+    15% {
+      transform: translateY(0%) rotate(15.19deg);
+    }
+    30% {
+      transform: translateY(0%) rotate(-15.19deg);
+    }
+    45% {
+      transform: translateY(0%) rotate(15.19deg);
+    }
+    60% {
+      transform: translateY(0%) rotate(0deg);
+    }
+    100% {
+      transform: translateY(100%) rotate(0deg);
+    }
+  }
+  
+  .animate-wave {
+    animation: wave 4s ease-in-out forwards;
+  }
+  

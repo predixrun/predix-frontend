@@ -74,7 +74,7 @@ function GameInterfaceComponent({
       const gameData = await gameAPI.fetchGameHistory({
         category: selectedCategory,
         page: currentPage + 1,
-        take: 1,
+        take: 8,
         status:
           selectedCategory === "History" || selectedCategory === "Created Game"
             ? statusFilter

@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import chatAPI from "@/components/api/Chat";
 import "@/components/styles/game-dashboard-animations.css";
+
 import { Transaction } from "@solana/web3.js";
 import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
 import signGame from "@/components/api/SignCreate";
 import gameAPI from "@/components/api/Game";
 import ChatInput from "./ChatInput";
 import ChatMessage from "./ChatMessage";
+
 
 interface Chatting {
   externalId?: string | null;
@@ -112,11 +114,13 @@ There are three options you can choose from:
   const marketOptions = useMemo(() => {
     return messages.filter((msg) => msg.messageType === "MARKET_OPTIONS");
   }, [messages]);
+  console.log("messages",messages)
+  console.log("marketOptions",marketOptions)
 
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
-  console.log("messages", messages);
+
   const [inputText, setInputText] = useState<string>("");
   // const [prevHomeInputText, setPrevHomeInputText] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -149,7 +153,7 @@ There are three options you can choose from:
     setLoading(true);
     try {
       const data = await chatAPI.sendChatMessage(message);
-      console.log("data", data);
+
       if (data?.data?.message) {
         const newMessage = data.data.message;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
@@ -277,8 +281,8 @@ There are three options you can choose from:
   };
 
   return (
-    <>
-      <div className="flex flex-col h-screen text-white w-[700px] font-family text">
+    <div className="font-family">
+      <div className="flex flex-col h-screen text-white w-[700px]">
         {/* Chat message area */}
         <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden pb-[150px]">
           {messages.map((msg, index) => (
@@ -299,7 +303,23 @@ There are three options you can choose from:
           loading={loading}
         />
       </div>
-    </>
+
+      <div className="z-100">
+        <div
+          className="peer gap-2 p-3 opacity-30 hover:opacity-100 transition-all duration-300 text-[#B3B3B3] hover:text-white flex items-center font-family font-semibold left-0 top-0 absolute cursor-pointer"
+          onClick={changeParentsFunction}
+        >
+          <img src="PrediX-logo.webp" alt="logo" className="size-8 " />
+          <p>PrediX</p>
+        </div>
+
+        <div className="absolute left-60 top-2 hidden peer-hover:block p-2 bg-[#1E1E1E] text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)]">
+          <div className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[10px] border-b-[10px] border-r-[10px] border-transparent border-r-[#1E1E1E]"></div>
+          Back home
+        </div>
+
+      </div>
+    </div>
   );
 }
 

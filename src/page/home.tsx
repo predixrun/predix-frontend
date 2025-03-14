@@ -9,14 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import GameInterfaceComponent from "@/components/GameInterface";
-import ChattingComponent from "@/components/ChattingHandler";
+import ChattingComponent from "@/components/Chat/ChattingHandler";
 import LoginHandler from "@/components/LoginHandler";
 import { usePrivy } from "@privy-io/react-auth";
 import DelegateWalletButton from "@/components/DelegateWallet";
 import { QRCodeCanvas } from "qrcode.react";
 import { CopyQRClipboard } from "@/components/CopyQRClipboard";
 import * as web3 from "@solana/web3.js";
-
+import Intro from "@/components/Intro";
 
 function Home() {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -37,7 +37,6 @@ function Home() {
     referralCode = userProfile.data.referral.code;
   }
 
-
   const copyToReferralCode = () => {
     if (referralCode) {
       navigator.clipboard
@@ -50,7 +49,6 @@ function Home() {
         });
     }
   };
-
 
   const walletToDelegate = user?.linkedAccounts.find(
     (wallet) =>
@@ -70,21 +68,20 @@ function Home() {
           );
           const publicKey = new web3.PublicKey(walletToDelegate.address);
           const balance = await connection.getBalance(publicKey);
-          setWalletBalance((balance / 1000000000).toFixed(2)); 
+          setWalletBalance((balance / 1000000000).toFixed(2));
         } catch (err) {
           console.error(err);
         }
       };
       const fetchSolPrice = async () => {
         try {
-
           const response = await fetch(
             "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
           );
           const data = await response.json();
-      
-          const solBalance = parseFloat(walletBalance); 
-          const solValueInUSD = solBalance * data.solana.usd; 
+
+          const solBalance = parseFloat(walletBalance);
+          const solValueInUSD = solBalance * data.solana.usd;
           setSolPrice(parseFloat(solValueInUSD.toFixed(4)));
         } catch (err) {
           console.error("SOL Failed to retrieve", err);
@@ -122,9 +119,8 @@ function Home() {
     setSelectedCategory("");
   };
 
-  const homeSendMessage = () => {
-    setPresseSearch(!presseSearch);
-  };
+  const homeSendMessage = () => setPresseSearch((prev) => !prev);
+
 
   const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -138,30 +134,13 @@ function Home() {
   };
   return (
     <>
-
-      {presseSearch && (
-        <>
-          <div
-            className="peer gap-2 p-3 opacity-30 hover:opacity-100 transition-all duration-300 text-[#B3B3B3] hover:text-white flex items-center font-family font-semibold left-0 top-0 absolute cursor-pointer"
-            onClick={homeSendMessage}
-          >
-            <img
-              src="PrediX-logo.webp"
-              alt="logo"
-              className="size-8 "
-            />
-            <p>PrediX</p>
-          </div>
-
-          <div className="absolute left-60 top-2 hidden peer-hover:block p-2 bg-[#1E1E1E] text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)]">
-            <div className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[10px] border-b-[10px] border-r-[10px] border-transparent border-r-[#1E1E1E]"></div>
-            Back home
-          </div>
-        </>
-      )}
-
+      {!isConnected && <Intro />}
       {presseSearch ? (
-        <ChattingComponent homeInputText={inputText} resetInput={resetInput} changeParentsFunction={homeSendMessage}/>
+        <ChattingComponent
+          homeInputText={inputText}
+          resetInput={resetInput}
+          changeParentsFunction={homeSendMessage}
+        />
       ) : (
         <div className="flex flex-col items-center justify-center font-dd font-family scrollbar-width: none">
           {/* base UI */}
@@ -317,8 +296,7 @@ function Home() {
                 <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white">
                   <div className="text-[36px] font-bold">${solPrice}</div>
                   <div className="text-sl flex">
-                    <span className="text-lg text-[#7FED58] flex">
-                    </span>
+                    <span className="text-lg text-[#7FED58] flex"></span>
                   </div>
                   <div className="flex items-center mt-2 bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between">
                     <div className="ml-4 flex gap-2 items-center">
@@ -391,9 +369,7 @@ function Home() {
               />
               <div className="flex flex-col ml-2">
                 <span>@{username}</span>
-                <span className="text-lg text-[#7FED58] flex">
-
-                </span>
+                <span className="text-lg text-[#7FED58] flex"></span>
               </div>
             </div>
             <div className="flex items-center gap-4 text-[#B3B3B3]"></div>

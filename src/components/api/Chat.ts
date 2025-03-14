@@ -66,7 +66,7 @@ export const sendChatMessage = async (message: ChatMessage) => {
 };
 
 
-export const ChatmessageList = async () => {
+export const getChatList = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/v1/chat/message`, {
       headers: {
@@ -83,6 +83,7 @@ export const ChatmessageList = async () => {
 const chatAPI = {
   getChatMessages,
   sendChatMessage,
+  getChatList
 };
 
 export default chatAPI;
