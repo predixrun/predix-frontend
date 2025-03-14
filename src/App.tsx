@@ -3,7 +3,7 @@ import Spinner from "./components/styles/Spiner";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import WalletLayout from "@/components/WalletLayout";
 const Home = lazy(() => import("./page/home"));
-const Chat = lazy(() => import("./page/chat"));
+const Chat = lazy(() => import("./components/chat/ChattingHandler"));
 
 function App() {
   return (
