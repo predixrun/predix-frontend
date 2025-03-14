@@ -16,7 +16,4 @@ export default defineConfig({
       plugins: [inject({ Buffer: ["buffer", "Buffer"] })],
     },
   },
-  define: {
-    "console.log": "() => {}",
-  },
 });
