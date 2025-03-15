@@ -73,7 +73,7 @@ export function SendSolWithEmbeddedWallet() {
 
       <button
         onClick={handleSend}
-        className="px-4 py-2 bg-[#B3B3B3] w-full text-white rounded"
+        className="px-4 py-2 bg-[#B3B3B3] w-full text-white rounded cursor-pointer"
       >
         {amount} SONIC 전송
       </button>
