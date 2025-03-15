@@ -1,11 +1,24 @@
-import { PrivyProvider } from "@privy-io/react-auth";
-import {
-  toSolanaWalletConnectors,
-} from "@privy-io/react-auth/solana";
+import { addPrivyRpcToChain, PrivyProvider } from "@privy-io/react-auth";
+// import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
+import { defineChain } from "viem";
 
-const solanaConnectors = toSolanaWalletConnectors({
-  shouldAutoConnect: true,
+const sonicTestnetChain = defineChain({
+  id: 146,
+  name: "Sonic Testnet",
+  rpcUrls: { default: { http: ["https://api.testnet.sonic.game"] } },
+  nativeCurrency: {
+    name: "Sonic Token",
+    symbol: "S",
+    decimals: 18,
+  },
+  testnet: true,
 });
+
+addPrivyRpcToChain(sonicTestnetChain, "https://api.testnet.sonic.game");
+
+// const solanaConnectors = toSolanaWalletConnectors({
+//   shouldAutoConnect: true,
+// });
 
 const PrivyProviderComponent = ({
   children,
@@ -20,12 +33,12 @@ const PrivyProviderComponent = ({
           theme: "light",
           accentColor: "#676FFF",
         },
-        externalWallets: {
-          solana: {
-            connectors: solanaConnectors,
-          },
-        },
-        loginMethods: ["twitter"],
+        // externalWallets: {
+        //   solana: {
+        //     connectors: solanaConnectors,
+
+        //   },
+        // },
         embeddedWallets: {
           solana: {
             createOnLogin: "users-without-wallets",
@@ -34,9 +47,11 @@ const PrivyProviderComponent = ({
             createOnLogin: "users-without-wallets",
           },
         },
+        loginMethods: ["twitter"],
+        defaultChain: sonicTestnetChain,
+        supportedChains: [sonicTestnetChain],
       }}
     >
-
       {children}
     </PrivyProvider>
   );

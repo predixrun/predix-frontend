@@ -6,9 +6,9 @@ import { Transaction } from "@solana/web3.js";
 import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
 import signGame from "@/components/api/SignCreate";
 import gameAPI from "@/components/api/Game";
-import ChatInput from "./ChatInput";
-import ChatMessage from "./ChatMessage";
-
+import ChatInput from "@/components/Chat/ChatInput";
+import ChatMessage from "@/components/Chat/ChatMessage";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface Chatting {
   externalId?: string | null;
@@ -18,12 +18,6 @@ interface Chatting {
   messageType: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any | null;
-}
-
-interface ChattingComponentProps {
-  homeInputText: string;
-  resetInput: () => void;
-  changeParentsFunction: () => void;
 }
 
 interface GameRelation {
@@ -51,11 +45,7 @@ interface ChatMessage {
   data: GameData;
 }
 
-function ChattingComponent({
-  homeInputText,
-  resetInput,
-  changeParentsFunction,
-}: ChattingComponentProps) {
+function ChattingComponents() {
   const { user } = usePrivy();
   const twitterAccount = user?.linkedAccounts[0] as
     | { username: string }
@@ -114,34 +104,38 @@ There are three options you can choose from:
   const marketOptions = useMemo(() => {
     return messages.filter((msg) => msg.messageType === "MARKET_OPTIONS");
   }, [messages]);
-  console.log("messages",messages)
-  console.log("marketOptions",marketOptions)
 
+  const navigate = useNavigate();
+  const location = useLocation();
+  const homeInputText = location.state?.message || "";
+  console.log("homeInputText", homeInputText);
+  console.log("messages", messages);
+  console.log("marketOptions", marketOptions);
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
 
   const [inputText, setInputText] = useState<string>("");
-  // const [prevHomeInputText, setPrevHomeInputText] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [externalId, setExternalId] = useState<string | null>(null);
+  const isHomeMessageProcessed = useRef(false);
 
   useEffect(() => {
-    if (homeInputText.trim()) {
-      // const newMessage: Chatting = {
-      //   externalId: null,
-      //   content: homeInputText,
-      //   messageType: "TEXT",
-      //   sender: null,
-      // };
-      // setMessages((prevMessages) => [...prevMessages, newMessage]);
-      // setPrevHomeInputText(homeInputText);
-      // homeSendMessage(newMessage);
+    if (!isHomeMessageProcessed.current && homeInputText.trim() !== "") {
+      isHomeMessageProcessed.current = true;
+      const newMessage: Chatting = {
+        externalId: null,
+        content: homeInputText,
+        messageType: "TEXT",
+        sender: null,
+      };
 
-      resetInput();
+      sendChatMessage(newMessage);
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [homeInputText, resetInput]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Scroll when the message list is updated
   useEffect(() => {
@@ -263,8 +257,6 @@ There are three options you can choose from:
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
-      changeParentsFunction();
-
       setTimeout(async () => {
         try {
           await gameAPI.fetchGameHistory({
@@ -278,6 +270,7 @@ There are three options you can choose from:
       }, 1000);
       setLoading(false);
     }
+    navigate("/");
   };
 
   return (
@@ -303,24 +296,8 @@ There are three options you can choose from:
           loading={loading}
         />
       </div>
-
-      <div className="z-100">
-        <div
-          className="peer gap-2 p-3 opacity-30 hover:opacity-100 transition-all duration-300 text-[#B3B3B3] hover:text-white flex items-center font-family font-semibold left-0 top-0 absolute cursor-pointer"
-          onClick={changeParentsFunction}
-        >
-          <img src="PrediX-logo.webp" alt="logo" className="size-8 " />
-          <p>PrediX</p>
-        </div>
-
-        <div className="absolute left-60 top-2 hidden peer-hover:block p-2 bg-[#1E1E1E] text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)]">
-          <div className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[10px] border-b-[10px] border-r-[10px] border-transparent border-r-[#1E1E1E]"></div>
-          Back home
-        </div>
-
-      </div>
     </div>
   );
 }
 
-export default ChattingComponent;
+export default ChattingComponents;
