@@ -12,6 +12,7 @@ import DelegateWalletButton from "./DelegateWallet";
 import { QRCodeCanvas } from "qrcode.react";
 import { CopyQRClipboard } from "./CopyQRClipboard";
 import { useLocation, useNavigate } from "react-router-dom";
+import { SendSolWithEmbeddedWallet } from "./WalletTransfer";
 
 function Wallet() {
   const [currentState, setCurrentState] = useState<string>("delegate");
@@ -255,9 +256,11 @@ console.log("user",user)
                 </svg>
               </div>
             </div>
+            <SendSolWithEmbeddedWallet/>
           </CardContent>
           <CardFooter>
             <div className="flex gap-4 text-[#B3B3B3]"></div>
+            
             <div onClick={handleMinimizeToggle} style={{ cursor: "pointer" }}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -273,6 +276,7 @@ console.log("user",user)
               </svg>
             </div>
           </CardFooter>
+
         </Card>
       ) : (
         <div
