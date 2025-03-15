@@ -1,17 +1,25 @@
-import { lazy, Suspense } from 'react';
-import Spinner from './components/styles/Spiner';
-
-
-const Home = lazy(() => import('./page/home'));
+import { lazy, Suspense } from "react";
+import Spinner from "./components/styles/Spiner";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import WalletLayout from "@/components/WalletLayout";
+const Home = lazy(() => import("./page/home"));
+const Chat = lazy(() => import("./page/chat"));
 
 function App() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-svh">
-
-      <Suspense fallback={<Spinner />}>
-        <Home />
-      </Suspense>
-    </div>
+    <Router>
+      <div className="flex flex-col items-center justify-center min-h-svh">
+        <Suspense fallback={<Spinner />}>
+          <Routes>
+            <Route element={<WalletLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/*" element={<Home />} />
+            </Route>
+          </Routes>
+        </Suspense>
+      </div>
+    </Router>
   );
 }
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import "@/components/styles/game-dashboard-animations.css";
 import joinGame from "@/components/api/Join";
-import signGame from "@/components/api/Sign";
+import signGame from "@/components/api/SignCreate";
 
 import { useSolanaWallets } from "@privy-io/react-auth/solana";
 import { Transaction } from "@solana/web3.js";
@@ -143,7 +143,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                   {gameData.user.name} | Ends: {gameData.gameExpiredAt}
                 </div>
               </div>
-              <div>Wager Size ({quantity} SOL)</div>
+              <div>Wager Size ({gameData.gameQuantity} SOL)</div>
             </div>
           </CardHeader>
           <CardContent className="mt-5">

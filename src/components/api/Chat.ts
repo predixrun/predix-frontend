@@ -21,22 +21,16 @@ interface GameData {
 }
 
 interface ChatMessage {
-  externalId: string | null;
-  content: string;
-  messageType: "CREATE_TR";
-  data: GameData;
-}
-
-const authToken = localStorage.getItem("auth_token");
-interface Chatting {
   externalId?: string | null;
   conversationExternalId?: string;
   sender?: string | null;
   content: string;
   messageType: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data?: any;
+  data?: GameData;
 }
+
+const authToken = localStorage.getItem("auth_token");
+
 // Load chat messages
 export const getChatMessages = async () => {
   try {
@@ -53,19 +47,11 @@ export const getChatMessages = async () => {
 };
 
 // send message
-export const sendChatMessage = async ({
-  externalId,
-  content,
-  messageType,
-}: Chatting) => {
+export const sendChatMessage = async (message: ChatMessage) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/v1/chat/message`,
-      {
-        externalId,
-        content,
-        messageType,
-      },
+      message,
       {
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -79,22 +65,8 @@ export const sendChatMessage = async ({
   }
 };
 
-export const creatChatMessage = async (message: ChatMessage) => {
-  try {
-    const response = await axios.post(`${BASE_URL}/v1/chat/message`, message, {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
-    
-    return response.data;
-  } catch (error) {
-    console.error("sign game:", error);
-    throw error;
-  }
-};
 
-export const ChatmessageList = async () => {
+export const getChatList = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/v1/chat/message`, {
       headers: {
@@ -111,7 +83,7 @@ export const ChatmessageList = async () => {
 const chatAPI = {
   getChatMessages,
   sendChatMessage,
-  creatChatMessage,
+  getChatList
 };
 
 export default chatAPI;
