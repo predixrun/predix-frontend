@@ -92,6 +92,7 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
 
       if (signInResponse.status === 'SUCCESS' && signInResponse.data?.token) {
         localStorage.setItem('auth_token', signInResponse.data.token);
+        window.dispatchEvent(new Event('auth_token_updated'));
         const profileResponse = await authAPI.profile(
           signInResponse.data?.token,
         );
@@ -113,6 +114,7 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
 
       if (signUpResponse.status === 'SUCCESS' && signUpResponse.data?.token) {
         localStorage.setItem('auth_token', signUpResponse.data.token);
+        window.dispatchEvent(new Event('auth_token_updated'));
         const profileResponse = await authAPI.profile(
           signUpResponse.data?.token,
         );
