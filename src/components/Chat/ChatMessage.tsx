@@ -49,7 +49,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           </span>
 
           {/* 선택지 버튼 */}
-          {message.data?.selections && (
+          {message.messageType === "MARKET_OPTIONS" && (
+            <div className="mt-3">
+              {message.data.selections.map(
+                (selection: Selection, index: React.Key | null | undefined) => (
+                  <button
+                    key={index}
+                    className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                    onClick={() => handleButtonClick(`${selection.type}`)}
+                  >
+                    {selection.type}
+                  </button>
+                )
+              )}
+            </div>
+          )}
+          {message.messageType === "Market_Info" && (
             <div className="mt-3">
               {message.data.selections.map(
                 (selection: Selection, index: React.Key | null | undefined) => (
@@ -64,34 +79,48 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               )}
             </div>
           )}
-
-          {/* Yes / Win / Draw-Lose 버튼 */}
-          {message.data?.selected_option && (
+          {message.messageType === "SPORTS_SEARCH" && (
             <div className="mt-3">
-              {message.data.selected_option.length > 0 && (
-                <>
-                  <button
-                    className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
-                    onClick={() => handleButtonClick("Yes")}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
-                    onClick={() =>
-                      handleButtonClick(
-                        message.data.selected_option[0].includes("Draw/Lose")
-                          ? "Win"
-                          : "Draw/Lose"
-                      )
-                    }
-                  >
-                    {message.data.selected_option[0].includes("Draw/Lose")
-                      ? "Win"
-                      : "Draw/Lose"}
-                  </button>
-                </>
-              )}
+              {message.data.fixtures
+                .filter(
+                  (fixtureData: { fixture: { status: string } }) =>
+                    fixtureData.fixture.status === "Not Started"
+                )
+                .map(
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (fixtures: any, index: React.Key | null | undefined) => (
+                    <button
+                      key={index}
+                      className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                      onClick={() =>
+                        handleButtonClick(
+                          `${fixtures.teams.home.name} vs ${fixtures.teams.away.name}`
+                        )
+                      }
+                    >
+                      {fixtures.teams.home.name} vs {fixtures.teams.away.name}
+                    </button>
+                  )
+                )}
+            </div>
+          )}
+          {/* Yes / Win / Draw-Lose 버튼 */}
+          {message.messageType === "BETTING_AMOUNT_REQUEST" && (
+            <div className="mt-3">
+              <>
+                <button
+                  className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                  onClick={() => handleButtonClick("Confirm")}
+                >
+                  Confirm
+                </button>
+                <button
+                  className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                  onClick={() => handleButtonClick("No")}
+                >
+                  No
+                </button>
+              </>
             </div>
           )}
         </div>
