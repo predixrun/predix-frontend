@@ -12,12 +12,13 @@ function Home() {
   const [inputText, setInputText] = useState<string>("");
   const navigate = useNavigate();
 
+  
   const changeParents = () => {
     setSelectedCategory("");
   };
 
   const homeSendMessage = () => {
-    navigate("/chat");
+    navigate("/chat", { state: { message: inputText } });
   };
 
   const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -110,7 +111,6 @@ function Home() {
           />
         )}
       </div>
-      {/* wallet UI */}
     </>
   );
 }

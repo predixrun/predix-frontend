@@ -16,7 +16,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 function Wallet() {
   const [currentState, setCurrentState] = useState<string>("delegate");
   const [walletBalance, setWalletBalance] = useState<string>("");
-  const [solPrice, setSolPrice] = useState<number>(0);
+  const [Price, setPrice] = useState<number>(0);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
 
   const location = useLocation();
@@ -44,7 +44,7 @@ function Wallet() {
   const handleMinimizeToggle = () => {
     setIsMinimized(!isMinimized);
   };
-
+console.log("user",user)
   const walletToDelegate = user?.linkedAccounts.find(
     (wallet) =>
       wallet.type === "wallet" &&
@@ -57,10 +57,16 @@ function Wallet() {
     if (walletToDelegate) {
       const fetchBalance = async () => {
         try {
-          const connection = new web3.Connection(
-            web3.clusterApiUrl("devnet"),
-            "confirmed"
-          );
+          // solana
+          // const connection = new web3.Connection(
+          //   web3.clusterApiUrl("devnet"),
+          //   "confirmed"
+          // );
+
+          // sonic
+          const customRpcUrl = "https://api.testnet.sonic.game";
+          const connection = new web3.Connection(customRpcUrl, "confirmed");
+
           const publicKey = new web3.PublicKey(walletToDelegate.address);
           const balance = await connection.getBalance(publicKey);
           setWalletBalance((balance / 1000000000).toFixed(2));
@@ -70,14 +76,23 @@ function Wallet() {
       };
       const fetchSolPrice = async () => {
         try {
+          //solana
+          // const response = await fetch(
+          //   "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
+          // );
+          // const data = await response.json();
+          // const solBalance = parseFloat(walletBalance);
+          // const solValueInUSD = solBalance * data.solana.usd;
+          // setSolPrice(parseFloat(solValueInUSD.toFixed(4)));
+
+          //sonic
           const response = await fetch(
-            "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
+            "https://api.coingecko.com/api/v3/simple/price?ids=sonic-svm&vs_currencies=usd"
           );
           const data = await response.json();
-
-          const solBalance = parseFloat(walletBalance);
-          const solValueInUSD = solBalance * data.solana.usd;
-          setSolPrice(parseFloat(solValueInUSD.toFixed(4)));
+          const sonicBalance = parseFloat(walletBalance);
+          const sonicValueInUSD = sonicBalance * data["sonic-svm"].usd;
+          setPrice(parseFloat(sonicValueInUSD.toFixed(4)));
         } catch (err) {
           console.error("SOL Failed to retrieve", err);
         }
@@ -107,8 +122,8 @@ function Wallet() {
   const ProfileUrl = twitterProfileUrl?.profilePictureUrl;
 
   const cardMarginTop = location.pathname === "/chat" ? "mt-10" : "mt-0";
-  const minimizedPosition = location.pathname === "/chat" ? "top-15 -left-2" : "top-5 -left-2";
-
+  const minimizedPosition =
+    location.pathname === "/chat" ? "top-15 -left-2" : "top-5 -left-2";
 
   return (
     <div>
@@ -197,23 +212,27 @@ function Wallet() {
               )}
               {currentState === "confirmed" && (
                 <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white">
-                  <div className="text-[36px] font-bold">${solPrice}</div>
+                  <div className="text-[36px] font-bold">${Price}</div>
                   <div className="text-sl flex">
                     <span className="text-lg text-[#7FED58] flex"></span>
                   </div>
                   <div className="flex items-center mt-2 bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between">
                     <div className="ml-4 flex gap-2 items-center">
-                      <span>
-                        <img
-                          src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
-                          alt="Profile"
-                          className="size-5"
-                        />
-                      </span>
-                      <span>{parseFloat(walletBalance)} SOL</span>
+                      {/* <img
+                        src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
+                        alt="Profile"
+                        className="size-5"
+                      /> */}
+                      {/* <span>{parseFloat(walletBalance)} SOL</span> */}
+                      <img
+                        src="sonic-logo.png"
+                        alt="Profile"
+                        className="size-5"
+                      />
+                      <span>{parseFloat(walletBalance)} Sonic</span>
                     </div>
                     <div className="mr-4">
-                      <span className="text-sm ml-2">${solPrice}</span>
+                      <span className="text-sm ml-2">${Price}</span>
                     </div>
                   </div>
                 </div>
@@ -278,16 +297,18 @@ function Wallet() {
             <div className="min-w-[261px] h-[54px] rounded bg-[#1E1E1E] flex items-center justify-between">
               <div className="ml-2 flex gap-2 items-center">
                 <span className="size-8 p-1 ml-1">
-                  <img
+                  {/* <img
                     src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
                     alt="Profile"
                     className="size-6"
-                  />
+                  /> */}
+                  <img src="sonic-logo.png" alt="Profile" className="size-6" />
                 </span>
                 <div className="flex flex-col">
-                  <span>{parseFloat(walletBalance)} SOL</span>
+                  {/* <span>{parseFloat(walletBalance)} SOL</span> */}
+                  <span>{parseFloat(walletBalance)} Sonic</span>
                   <span className="text-sm text-[#B3B3B3] text-[14px]">
-                    ${solPrice}
+                    ${Price}
                   </span>
                 </div>
               </div>

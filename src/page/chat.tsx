@@ -8,7 +8,7 @@ import signGame from "@/components/api/SignCreate";
 import gameAPI from "@/components/api/Game";
 import ChatInput from "@/components/Chat/ChatInput";
 import ChatMessage from "@/components/Chat/ChatMessage";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface Chatting {
   externalId?: string | null;
@@ -19,7 +19,6 @@ interface Chatting {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any | null;
 }
-
 
 interface GameRelation {
   key: string;
@@ -105,19 +104,38 @@ There are three options you can choose from:
   const marketOptions = useMemo(() => {
     return messages.filter((msg) => msg.messageType === "MARKET_OPTIONS");
   }, [messages]);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const homeInputText = location.state?.message || "";
+  console.log("homeInputText", homeInputText);
   console.log("messages", messages);
   console.log("marketOptions", marketOptions);
-  const navigate = useNavigate();
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
 
   const [inputText, setInputText] = useState<string>("");
-  // const [prevHomeInputText, setPrevHomeInputText] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [externalId, setExternalId] = useState<string | null>(null);
+  const isHomeMessageProcessed = useRef(false);
 
+  useEffect(() => {
+    if (!isHomeMessageProcessed.current && homeInputText.trim() !== "") {
+      isHomeMessageProcessed.current = true;
+      const newMessage: Chatting = {
+        externalId: null,
+        content: homeInputText,
+        messageType: "TEXT",
+        sender: null,
+      };
+
+      sendChatMessage(newMessage);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Scroll when the message list is updated
   useEffect(() => {
