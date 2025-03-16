@@ -49,6 +49,7 @@ const PrivyProviderComponent = ({
         },
         defaultChain: sonicTestnetChain,
         supportedChains: [sonicTestnetChain],
+        
       }}
     >
       {children}

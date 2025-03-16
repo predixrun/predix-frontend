@@ -13,16 +13,19 @@ import { QRCodeCanvas } from "qrcode.react";
 import { CopyQRClipboard } from "./CopyQRClipboard";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SendSolWithEmbeddedWallet } from "./WalletTransfer";
+import WalletDashboard from "./WalletDashboard";
 
 function Wallet() {
   const [currentState, setCurrentState] = useState<string>("delegate");
   const [walletBalance, setWalletBalance] = useState<string>("");
   const [Price, setPrice] = useState<number>(0);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
+  const [isDashboardView, setIsDashboardView] = useState<boolean>(false);
 
+  const toggleDashboard = () => setIsDashboardView(!isDashboardView);
   const location = useLocation();
-  const { user } = usePrivy();
   const navigate = useNavigate();
+  const { user } = usePrivy();
 
   const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
   let referralCode = "";
@@ -69,7 +72,7 @@ function Wallet() {
 
           const publicKey = new web3.PublicKey(walletToDelegate.address);
           const balance = await connection.getBalance(publicKey);
-          setWalletBalance((balance / 1000000000).toFixed(2));
+          setWalletBalance((balance / 1000000000).toFixed(4));
         } catch (err) {
           console.error(err);
         }
@@ -143,143 +146,180 @@ function Wallet() {
           </div>
         </div>
       )}
+
       {!isMinimized ? (
         <Card
           className={`py-4 absolute top-3 left-3 flex items-start min-w-[320px] bg-[#1E1E1E] text-[#767676] z-20 font-family font-semibold ${cardMarginTop}`}
         >
-          <CardHeader>
-            <div className="flex items-center">
-              <img
-                src={ProfileUrl}
-                alt="Profile"
-                className="rounded-full w-10 h-10"
-              />
-              <span className="ml-2 text-sm">@{username}</span>
-            </div>
-            <div></div>
-          </CardHeader>
-          <CardTitle>
+          {!isDashboardView ? (
             <>
-              {currentState !== "confirmed" && (
+              <CardHeader>
+                <div className="flex items-center">
+                  <img
+                    src={ProfileUrl}
+                    alt="Profile"
+                    className="rounded-full w-10 h-10"
+                  />
+                  <span className="ml-2 text-sm">@{username}</span>
+                </div>
+                <div></div>
+              </CardHeader>
+              <CardTitle>
+                <>
+                  {currentState !== "confirmed" && (
+                    <div
+                      className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${
+                        currentState === "delegate"
+                          ? "h-[103px]"
+                          : currentState === "deposit"
+                          ? "h-[144px]"
+                          : "h-[256px]"
+                      }`}
+                    >
+                      {currentState === "delegate" && (
+                        <div className="h-full flex justify-center items-center font-prme text-[36px] text-white cursor-pointer">
+                          <DelegateWalletButton
+                            setCurrentState={setCurrentState}
+                          />
+                        </div>
+                      )}
+                      {currentState === "deposit" && (
+                        <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-prme text-white p-5 gap-1">
+                          <div className=" text-[36px]">Deposit</div>
+                          <button
+                            className="transform bg-[#FA6631] text-black px-4 py-2 rounded cursor-pointer text-[14px] w-[242px] leading-[13px] bg-gradient-to-r from-[#FFEE00] to-[#FA6631]"
+                            onClick={() => setCurrentState("qrCode")}
+                          >
+                            QR/Address
+                          </button>
+                        </div>
+                      )}
+                      {currentState === "qrCode" && (
+                        <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-family text-white">
+                          <div className="p-2 bg-white rounded-lg inline-block">
+                            <QRCodeCanvas
+                              value={walletToDelegate?.address ?? ""}
+                              size={100}
+                              level="H"
+                              bgColor="#FFFFFF"
+                              fgColor="#000000"
+                            />
+                          </div>
+                          <div className="mt-4 mb-2 flex items-center gap-4">
+                            <CopyQRClipboard />
+                          </div>
+                          <button
+                            className="mt-4 bg-[#161414] text-[#B3B3B3] px-4 py-2 rounded text-[14px] w-[264px] cursor-pointer"
+                            onClick={() => setCurrentState("confirmed")}
+                          >
+                            I confirmed the address!
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {currentState === "confirmed" && (
+                    <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white">
+                      <div className="text-[36px] font-bold">${Price}</div>
+                      <div className="text-sl flex">
+                        <span className="text-lg text-[#7FED58] flex"></span>
+                      </div>
+                      <div className="flex items-center mt-2 bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between">
+                        <div className="ml-4 flex gap-2 items-center">
+                          {/* <img
+              src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
+              alt="Profile"
+              className="size-5"
+            /> */}
+                          {/* <span>{parseFloat(walletBalance)} SOL</span> */}
+                          <img
+                            src="sonic-logo.png"
+                            alt="Profile"
+                            className="size-5"
+                          />
+                          <span>{parseFloat(walletBalance)} Sonic</span>
+                        </div>
+                        <div className="mr-4">
+                          <span className="text-sm ml-2">${Price}</span>
+                        </div>
+                      </div>
+                      <div
+                        className="mt-1.5 flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
+                        onClick={toggleDashboard}
+                      >
+                        <span className="ml-4 mr-2 text-[18px]">1 </span>
+                        <div className="ml-1 flex gap-0.5 items-center">
+                          <span>&#128170;</span>
+                          <span className="text-[#767676]">@fdd520</span>
+                        </div>
+                        <div className="text-[#E8B931]">+45</div>
+                        <span className="text-sm text-[#7FED58] flex items-center">
+                          <div className="size-4">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                            >
+                              <path fill="none" d="M0 0h24v24H0z"></path>
+                              <path d="M12 8L18 14H6L12 8Z"></path>
+                            </svg>
+                          </div>
+                          <div>1</div>
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </>
+              </CardTitle>
+              <CardContent>
+                <div className="text-sm mb-3 flex justify-between">
+                  <div className="ml-2">Invite code: {referralCode}</div>
+                  <div className="mr-2 cursor-pointer">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="size-5 fill-[#767676]"
+                      onClick={copyToReferralCode}
+                    >
+                      <path d="M2 4.25A2.25 2.25 0 0 1 4.25 2h6.5A2.25 2.25 0 0 1 13 4.25V5.5H9.25A3.75 3.75 0 0 0 5.5 9.25V13H4.25A2.25 2.25 0 0 1 2 10.75v-6.5Z" />
+                      <path d="M9.25 7A2.25 2.25 0 0 0 7 9.25v6.5A2.25 2.25 0 0 0 9.25 18h6.5A2.25 2.25 0 0 0 18 15.75v-6.5A2.25 2.25 0 0 0 15.75 7h-6.5Z" />
+                    </svg>
+                  </div>
+                </div>
+                <SendSolWithEmbeddedWallet />
+              </CardContent>
+              <CardFooter>
+                <div className="flex gap-4 text-[#B3B3B3]"></div>
                 <div
-                  className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${
-                    currentState === "delegate"
-                      ? "h-[103px]"
-                      : currentState === "deposit"
-                      ? "h-[144px]"
-                      : "h-[256px]"
-                  }`}
+                  onClick={handleMinimizeToggle}
+                  style={{ cursor: "pointer" }}
                 >
-                  {currentState === "delegate" && (
-                    <div className="h-full flex justify-center items-center font-prme text-[36px] text-white cursor-pointer">
-                      <DelegateWalletButton setCurrentState={setCurrentState} />
-                    </div>
-                  )}
-                  {currentState === "deposit" && (
-                    <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-prme text-white p-5 gap-1">
-                      <div className=" text-[36px]">Deposit</div>
-                      <button
-                        className="transform bg-[#FA6631] text-black px-4 py-2 rounded cursor-pointer text-[14px] w-[242px] leading-[13px] bg-gradient-to-r from-[#FFEE00] to-[#FA6631]"
-                        onClick={() => setCurrentState("qrCode")}
-                      >
-                        QR/Address
-                      </button>
-                    </div>
-                  )}
-                  {currentState === "qrCode" && (
-                    <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-family text-white">
-                      <div className="p-2 bg-white rounded-lg inline-block">
-                        <QRCodeCanvas
-                          value={walletToDelegate?.address ?? ""}
-                          size={100}
-                          level="H"
-                          bgColor="#FFFFFF"
-                          fgColor="#000000"
-                        />
-                      </div>
-                      <div className="mt-4 mb-2 flex items-center gap-4">
-                        <CopyQRClipboard />
-                      </div>
-                      <button
-                        className="mt-4 bg-[#161414] text-[#B3B3B3] px-4 py-2 rounded text-[14px] w-[264px] cursor-pointer"
-                        onClick={() => setCurrentState("confirmed")}
-                      >
-                        I confirmed the address!
-                      </button>
-                    </div>
-                  )}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="size-4"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8 14a.75.75 0 0 1-.75-.75V4.56L4.03 7.78a.75.75 0 0 1-1.06-1.06l4.5-4.5a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.75 4.56v8.69A.75.75 0 0 1 8 14Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 </div>
-              )}
-              {currentState === "confirmed" && (
-                <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white">
-                  <div className="text-[36px] font-bold">${Price}</div>
-                  <div className="text-sl flex">
-                    <span className="text-lg text-[#7FED58] flex"></span>
-                  </div>
-                  <div className="flex items-center mt-2 bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between">
-                    <div className="ml-4 flex gap-2 items-center">
-                      {/* <img
-                        src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
-                        alt="Profile"
-                        className="size-5"
-                      /> */}
-                      {/* <span>{parseFloat(walletBalance)} SOL</span> */}
-                      <img
-                        src="sonic-logo.png"
-                        alt="Profile"
-                        className="size-5"
-                      />
-                      <span>{parseFloat(walletBalance)} Sonic</span>
-                    </div>
-                    <div className="mr-4">
-                      <span className="text-sm ml-2">${Price}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              </CardFooter>
             </>
-          </CardTitle>
-          <CardContent>
-            <div className="text-sm mb-3 flex justify-between">
-              <div className="ml-2">Invite code: {referralCode}</div>
-              <div className="mr-2 cursor-pointer">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5 fill-[#767676]"
-                  onClick={copyToReferralCode}
-                >
-                  <path d="M2 4.25A2.25 2.25 0 0 1 4.25 2h6.5A2.25 2.25 0 0 1 13 4.25V5.5H9.25A3.75 3.75 0 0 0 5.5 9.25V13H4.25A2.25 2.25 0 0 1 2 10.75v-6.5Z" />
-                  <path d="M9.25 7A2.25 2.25 0 0 0 7 9.25v6.5A2.25 2.25 0 0 0 9.25 18h6.5A2.25 2.25 0 0 0 18 15.75v-6.5A2.25 2.25 0 0 0 15.75 7h-6.5Z" />
-                </svg>
-              </div>
-            </div>
-            <SendSolWithEmbeddedWallet/>
-          </CardContent>
-          <CardFooter>
-            <div className="flex gap-4 text-[#B3B3B3]"></div>
-            
-            <div onClick={handleMinimizeToggle} style={{ cursor: "pointer" }}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                className="size-4"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8 14a.75.75 0 0 1-.75-.75V4.56L4.03 7.78a.75.75 0 0 1-1.06-1.06l4.5-4.5a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.75 4.56v8.69A.75.75 0 0 1 8 14Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-          </CardFooter>
-
+          ) : (
+            <WalletDashboard
+              isOpen={isDashboardView}
+              onClose={toggleDashboard}
+            />
+          )}
         </Card>
       ) : (
         <div
-          className={`fade-in-from-left gap-2 font-prme absolute  min-w-[261px] h-[100px] text-white rounded-lg shadow-lg flex flex-col items-center justify-center bg-black ${minimizedPosition}`}
+          className={`fade-in-from-left gap-2 font-prme absolute  min-w-[261px] h-[100px] text-white rounded-lg shadow-lg flex flex-col items-center justify-center z-20 bg-black ${minimizedPosition}`}
         >
           {" "}
           <CardHeader>
