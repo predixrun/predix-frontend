@@ -198,7 +198,11 @@ There are three options you can choose from:
     };
     sendChatMessage(newMessage);
   };
-
+  const formatToISO8601 = (isoString: string | undefined) => {
+    if (!isoString) return new Date().toISOString(); 
+    const date = new Date(isoString);
+    return date.toISOString();
+  };
   const CreateMessage = async () => {
     setLoading(true);
 
@@ -211,7 +215,7 @@ There are three options you can choose from:
           gameTitle: `${marketOptions[0]?.data?.event?.home_team?.name} VS ${marketOptions[0]?.data?.event?.away_team?.name}`,
           gameContent: marketOptions[0]?.data?.market?.description,
           extras: "",
-          gameStartAt: marketOptions[0]?.data?.event?.start_time,
+          gameStartAt:formatToISO8601(marketOptions[0]?.data?.event?.created_at),
           gameExpriedAt: marketOptions[0]?.data?.market?.close_date,
           fixtureId: marketOptions[0]?.data?.event?.fixture_id,
           gameRelations: marketOptions[0]?.data?.selections?.map(
@@ -225,6 +229,7 @@ There are three options you can choose from:
           choiceType: marketOptions[0]?.data.selected_type ?? "WIN",
         },
       };
+      console.log("userGameSelectionData",userGameSelectionData)
       const response = await chatAPI.sendChatMessage(userGameSelectionData);
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
