@@ -45,7 +45,6 @@ function Wallet() {
   const handleMinimizeToggle = () => {
     setIsMinimized(!isMinimized);
   };
-console.log("user",user)
   const walletToDelegate = user?.linkedAccounts.find(
     (wallet) =>
       wallet.type === "wallet" &&
