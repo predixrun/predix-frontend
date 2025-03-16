@@ -137,7 +137,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                 <div className="flex gap-2 items-center">
                   <img
                     src={gameData.user.profileImg}
-                    alt=""
+                    alt="profileImg"
                     className="size-6 rounded-full"
                   />{" "}
                   {gameData.user.name} | Ends: {gameData.gameExpiredAt}

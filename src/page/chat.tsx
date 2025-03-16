@@ -77,7 +77,7 @@ There are three options you can choose from:
 **Chat**
 - Ask PrediX anything you want to know! :)
 `,
-      messageType: "TEXT",
+      messageType: "Market_Info",
       sender: "SYSTEM",
       data: {
         selections: [
@@ -102,7 +102,7 @@ There are three options you can choose from:
   ]);
 
   const marketOptions = useMemo(() => {
-    return messages.filter((msg) => msg.messageType === "MARKET_OPTIONS");
+    return messages.filter((msg) => msg.messageType === "MARKET_FINALIZED");
   }, [messages]);
 
   const navigate = useNavigate();
@@ -113,7 +113,6 @@ There are three options you can choose from:
   console.log("marketOptions", marketOptions);
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
-  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
 
   const [inputText, setInputText] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -140,6 +139,13 @@ There are three options you can choose from:
   // Scroll when the message list is updated
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.messageType === "MARKET_FINALIZED") {
+        CreateMessage();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
   const sendChatMessage = async (message: Chatting) => {
@@ -184,53 +190,46 @@ There are three options you can choose from:
       buttonText = buttonText.split(" ").slice(-1)[0];
     }
 
-    setSelectedChoice(buttonText);
     const newMessage: Chatting = {
       externalId: externalId,
       content: buttonText,
       messageType: "TEXT",
       sender: null,
     };
-
-    if (buttonText === "Yes") {
-      CreateMessage();
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-    } else {
-      const messageWithSelection = {
-        ...newMessage,
-        data: { SELECTION: buttonText },
-      };
-
-      sendChatMessage(messageWithSelection);
-    }
+    sendChatMessage(newMessage);
   };
-
+  const formatToISO8601 = (isoString: string | undefined) => {
+    if (!isoString) return new Date().toISOString(); 
+    const date = new Date(isoString);
+    return date.toISOString();
+  };
   const CreateMessage = async () => {
     setLoading(true);
 
     try {
       const userGameSelectionData: ChatMessage = {
         externalId: marketOptions[0]?.conversationExternalId ?? null,
-        content: marketOptions[0].content,
+        content: marketOptions[0].data?.event.league.name,
         messageType: "CREATE_TR",
         data: {
           gameTitle: `${marketOptions[0]?.data?.event?.home_team?.name} VS ${marketOptions[0]?.data?.event?.away_team?.name}`,
           gameContent: marketOptions[0]?.data?.market?.description,
           extras: "",
-          gameStartAt: marketOptions[0]?.data?.event?.start_time,
+          gameStartAt:formatToISO8601(marketOptions[0]?.data?.event?.created_at),
           gameExpriedAt: marketOptions[0]?.data?.market?.close_date,
           fixtureId: marketOptions[0]?.data?.event?.fixture_id,
           gameRelations: marketOptions[0]?.data?.selections?.map(
-            (selection: { name: string }, index: number) => ({
+            (selection: { type: string, name: string }, index: number) => ({
               key: index === 0 ? "A" : "B",
-              content: selection.name.includes("Win") ? "WIN" : "DRAW_LOSE",
+              content: selection.type === "win" ? `${selection.name} WIN` : `${selection.name} DRAW_LOSE`,
             })
           ),
           quantity: marketOptions[0]?.data.market?.amount?.toString(),
-          key: selectedChoice === "Draw/Lose" ? "B" : "A",
-          choiceType: selectedChoice ?? "WIN",
+          key: marketOptions[0]?.data.selected_type === "win" ? "A" : "B",
+          choiceType: marketOptions[0]?.data.selected_type ?? "WIN",
         },
       };
+      console.log("userGameSelectionData",userGameSelectionData)
       const response = await chatAPI.sendChatMessage(userGameSelectionData);
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
