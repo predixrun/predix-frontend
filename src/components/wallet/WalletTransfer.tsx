@@ -65,7 +65,7 @@ export function SendSolWithEmbeddedWallet() {
       />
       <input
         type="number"
-        placeholder="전송할 SOL 양을 입력하세요"
+        placeholder="전송할 SONIC 양을 입력하세요"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         className="px-4 py-2 rounded w-full"

@@ -43,6 +43,7 @@ interface GameDashboardProps {
   onClose: () => void;
 }
 
+
 function GameDashboard({ gameData, onClose }: GameDashboardProps) {
   const [closing, setClosing] = useState(false);
   const [betStatus, setBetStatus] = useState<
@@ -79,6 +80,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
 
       const signedTransaction = signedTx?.serialize();
       const rawTransaction = signedTransaction?.toString("base64");
+
       await signGame(transId, rawTransaction);
 
       setBetStatus("success");
