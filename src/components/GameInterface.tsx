@@ -53,6 +53,7 @@ function GameInterfaceComponent({
   const [currentPage, setCurrentPage] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [gamesData, setGamesData] = useState<Game[]>([]);
+  const [totalGames, setTotalGames] = useState(0);
 
   const [statusFilter, setStatusFilter] = useState<"ONGOING" | "END">(
     "ONGOING"
@@ -112,6 +113,7 @@ function GameInterfaceComponent({
         }));
 
         setGamesData(formattedGames);
+        setTotalGames(gameData.total)
       }
     };
 
@@ -149,11 +151,14 @@ function GameInterfaceComponent({
 
     return isValidStatus;
   });
+  console.log("displayedGames",displayedGames)
   // Pagination settings
   const itemsPerPage = 8;
-  const pageCount = Math.ceil(displayedGames.length / itemsPerPage);
-  const offset = currentPage * itemsPerPage;
-  const currentItems = displayedGames.slice(offset, offset + itemsPerPage);
+  const pageCount = Math.ceil(totalGames / itemsPerPage);// totalGames로 페이지 수 계산
+
+    // const pageCount = Math.ceil(displayedGames.length / itemsPerPage);
+  // const offset = currentPage * itemsPerPage;
+  // const currentItems = gamesData.slice(offset, offset + itemsPerPage);
 
   // page change handler
   const handlePageClick = (event: { selected: number }) => {
@@ -249,7 +254,7 @@ function GameInterfaceComponent({
       </div>
 
       <div className="grid grid-cols-2 gap-2 items-center justify-center">
-        {currentItems.map((game) => (
+        {displayedGames.map((game) => (
           <>
             <div
               key={game.gameId}
@@ -320,7 +325,7 @@ function GameInterfaceComponent({
                         : ""
                     }
                   >
-                    Wager Size ({parseFloat(game.gameQuantity)} SOL)
+                    Wager Size ({parseFloat(game.gameQuantity)} SONIC)
                   </div>
                 </div>
               </div>
@@ -339,7 +344,7 @@ function GameInterfaceComponent({
       </div>
 
       {/* react-paginate 컴포넌트 */}
-      {gamesData.length > itemsPerPage && (
+      {totalGames > itemsPerPage && (
         <div className="flex justify-end mt-4 relative">
           <div className="flex justify-center items-center bg-black rounded-lg p-2">
             <ReactPaginate

@@ -58,14 +58,14 @@ export function SendSolWithEmbeddedWallet() {
     <div className="flex flex-col items-center space-y-4 max-w-[300px]">
       <input
         type="text"
-        placeholder="수신자 주소를 입력하세요"
+        placeholder="Enter recipient address"
         value={recipientAddress}
         onChange={(e) => setRecipientAddress(e.target.value)}
         className="px-4 py-2 rounded w-full"
       />
       <input
         type="number"
-        placeholder="전송할 SOL 양을 입력하세요"
+        placeholder="Amount of SONIC to send"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         className="px-4 py-2 rounded w-full"
@@ -75,7 +75,7 @@ export function SendSolWithEmbeddedWallet() {
         onClick={handleSend}
         className="px-4 py-2 bg-[#B3B3B3] w-full text-white rounded cursor-pointer"
       >
-        {amount} SONIC 전송
+        Send {amount} SONIC
       </button>
     </div>
   );
