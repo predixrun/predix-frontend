@@ -93,16 +93,10 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
       setBetStatus("fail");
       setTimeout(() => {
         setBetStatus("");
-      }, 1000);
+      }, 3000);
     }
   };
 
-  const handleFail = () => {
-    setBetStatus("fail");
-    setTimeout(() => {
-      setBetStatus("");
-    }, 1000);
-  };
 
   const isUserMatch = gameData.user.userId === currentUserId;
 
@@ -145,7 +139,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                   {gameData.user.name} | Ends: {gameData.gameExpiredAt}
                 </div>
               </div>
-              <div>Wager Size ({gameData.gameQuantity} SOL)</div>
+              <div>Wager Size ({gameData.gameQuantity} SONIC)</div>
             </div>
           </CardHeader>
           <CardContent className="mt-5">
@@ -157,7 +151,6 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
               </div>
               <div
                 className="gap-1 text-sm bg-black w-[120px] h-[32px] items-center flex justify-center rounded-full border-2 border-[#D74713] cursor-pointer"
-                onClick={handleFail}
               >
                 {gameData.joined.choiceType}
                 <svg
@@ -173,7 +166,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Your votes</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                    {quantity || "0"} SOL
+                    {quantity || "0"} SONIC
                   </div>
                 </div>
                 <div className="flex justify-center">
@@ -182,7 +175,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Potential reward</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                    {potentialReward || "0"} SOL
+                    {potentialReward || "0"} SONIC
                   </div>
                 </div>
               </div>

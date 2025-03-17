@@ -20,9 +20,13 @@ function Wallet() {
   const [walletBalance, setWalletBalance] = useState<string>("");
   const [Price, setPrice] = useState<number>(0);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
-  const [isDashboardView, setIsDashboardView] = useState<boolean>(false);
 
+  const [isDashboardView, setIsDashboardView] = useState<boolean>(false);
+  const [isSendModalOpen, setIsSendModalOpen] = useState(false);
+
+  const toggleSendModal = () => setIsSendModalOpen(!isSendModalOpen);
   const toggleDashboard = () => setIsDashboardView(!isDashboardView);
+
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = usePrivy();
@@ -128,6 +132,21 @@ function Wallet() {
   const minimizedPosition =
     location.pathname === "/chat" ? "top-15 -left-2" : "top-5 -left-2";
 
+  //share
+  const handleShare = () => {
+    const text = "Check out this awesome prediction market on PrediX!";
+    const url = referralCode
+      ? `https://PrediX.run/invite/${referralCode}`
+      : "https://PrediX.run";
+    const hashtags = "PrediX,PredictionMarket";
+
+    const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      text
+    )}&url=${encodeURIComponent(url)}&hashtags=${encodeURIComponent(hashtags)}`;
+
+    window.open(twitterShareUrl, "_blank");
+  };
+
   return (
     <div>
       {location.pathname === "/chat" && (
@@ -162,7 +181,21 @@ function Wallet() {
                   />
                   <span className="ml-2 text-sm">@{username}</span>
                 </div>
-                <div></div>
+                <div className="flex items-center">
+                  <span
+                    onClick={toggleSendModal}
+                    className="cursor-pointer hover:text-white"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="size-5"
+                    >
+                      <path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.897 28.897 0 0 0 15.293-7.155.75.75 0 0 0 0-1.114A28.897 28.897 0 0 0 3.105 2.288Z" />
+                    </svg>
+                  </span>
+                </div>
               </CardHeader>
               <CardTitle>
                 <>
@@ -287,19 +320,30 @@ function Wallet() {
                     </svg>
                   </div>
                 </div>
-                <SendSolWithEmbeddedWallet />
+                {isSendModalOpen && <SendSolWithEmbeddedWallet />}
               </CardContent>
               <CardFooter>
-                <div className="flex gap-4 text-[#B3B3B3]"></div>
-                <div
-                  onClick={handleMinimizeToggle}
-                  style={{ cursor: "pointer" }}
-                >
+                <div className="flex gap-4 text-[#B3B3B3]">
+                  <span
+                    className="cursor-pointer hover:text-white"
+                    onClick={() => handleShare()}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 512 512"
+                      className="size-5"
+                      fill="#B3B3B3"
+                    >
+                      <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z" />
+                    </svg>
+                  </span>
+                </div>
+                <div onClick={handleMinimizeToggle} className="cursor-pointer">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 16 16"
                     fill="currentColor"
-                    className="size-4"
+                    className="size-5"
                   >
                     <path
                       fillRule="evenodd"
@@ -319,7 +363,7 @@ function Wallet() {
         </Card>
       ) : (
         <div
-          className={`fade-in-from-left gap-2 font-prme absolute  min-w-[261px] h-[100px] text-white rounded-lg shadow-lg flex flex-col items-center justify-center z-20 bg-black ${minimizedPosition}`}
+          className={`fade-in-from-left gap-2 font-prme absolute  h-[120px] text-white rounded-lg shadow-lg flex flex-col items-center justify-center z-20 bg-black ${minimizedPosition}`}
         >
           {" "}
           <CardHeader>
