@@ -46,7 +46,9 @@ interface ChatMessage {
 
 function ChattingComponents() {
   const { user } = usePrivy();
-  const twitterAccount = user?.linkedAccounts[0] as { username: string } | undefined;
+  const twitterAccount = user?.linkedAccounts[0] as
+    | { username: string }
+    | undefined;
   const username = twitterAccount?.username;
   const [messages, setMessages] = useState<Chatting[]>([
     {
@@ -75,9 +77,21 @@ There are three options you can choose from:
       sender: "SYSTEM",
       data: {
         selections: [
-          { name: "Create Prediction", type: "option", description: "Start your own prediction market." },
-          { name: "Sports Search", type: "option", description: "Join an existing prediction market." },
-          { name: "Chat", type: "option", description: "Ask PrediX anything you want to know!" },
+          {
+            name: "Create Prediction",
+            type: "option",
+            description: "Start your own prediction market.",
+          },
+          {
+            name: "Sports Search",
+            type: "option",
+            description: "Join an existing prediction market.",
+          },
+          {
+            name: "Chat",
+            type: "option",
+            description: "Ask PrediX anything you want to know!",
+          },
         ],
       },
     },
@@ -94,7 +108,7 @@ There are three options you can choose from:
   const [externalId, setExternalId] = useState<string | null>(null);
   const isHomeMessageProcessed = useRef(false);
 
-  console.log(messages)
+  console.log(messages);
   useEffect(() => {
     chatAPI.connectSocket();
   }, []);
@@ -111,7 +125,7 @@ There are three options you can choose from:
       sendChatMessage(newMessage);
       navigate(location.pathname, { replace: true, state: {} });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeInputText, location.pathname, navigate]);
 
   useEffect(() => {
@@ -120,7 +134,7 @@ There are three options you can choose from:
     if (lastMessage?.messageType === "MARKET_FINALIZED") {
       CreateMessage();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
   const sendChatMessage = async (message: Chatting) => {
@@ -131,9 +145,13 @@ There are three options you can choose from:
     } catch (error) {
       console.error("WebSocket 전송 실패:", error);
     } finally {
-
       chatAPI.addSocketListener((msg: Chatting) => {
-        setMessages((prevMessages) => [...prevMessages, msg]);
+        const filteredContent = msg.content.replace(/\n\s*-\s*\*\*Fixture ID:\*\*\s*\d+/g, "");
+
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { ...msg, content: filteredContent.trim() }, 
+        ]);
         setLoading(false);
         if (!externalId && msg.conversationExternalId) {
           setExternalId(msg.conversationExternalId);
@@ -156,9 +174,10 @@ There are three options you can choose from:
 
   const handleButtonClick = (buttonText: string) => {
     if (!buttonText) return;
-    const text = buttonText.includes("Win") || buttonText.includes("Draw/Lose")
-      ? buttonText.split(" ").slice(-1)[0]
-      : buttonText;
+    const text =
+      buttonText.includes("Win") || buttonText.includes("Draw/Lose")
+        ? buttonText.split(" ").slice(-1)[0]
+        : buttonText;
     const newMessage: Chatting = {
       externalId: externalId,
       content: text,
@@ -177,8 +196,11 @@ There are three options you can choose from:
   const CreateMessage = async () => {
     setLoading(true);
     try {
-      const lastMarketMessage = messages.find(msg => msg.messageType === "MARKET_FINALIZED");
-      if (!lastMarketMessage) throw new Error("No MARKET_FINALIZED message found");
+      const lastMarketMessage = messages.find(
+        (msg) => msg.messageType === "MARKET_FINALIZED"
+      );
+      if (!lastMarketMessage)
+        throw new Error("No MARKET_FINALIZED message found");
 
       const userGameSelectionData: ChatMessage = {
         externalId: lastMarketMessage.conversationExternalId ?? null,
@@ -188,13 +210,18 @@ There are three options you can choose from:
           gameTitle: `${lastMarketMessage.data?.event?.home_team?.name} VS ${lastMarketMessage.data?.event?.away_team?.name}`,
           gameContent: lastMarketMessage.data?.market?.description,
           extras: "",
-          gameStartAt: formatToISO8601(lastMarketMessage.data?.event?.created_at),
+          gameStartAt: formatToISO8601(
+            lastMarketMessage.data?.event?.created_at
+          ),
           gameExpriedAt: lastMarketMessage.data?.market?.close_date,
           fixtureId: lastMarketMessage.data?.event?.fixture_id,
           gameRelations: lastMarketMessage.data?.selections?.map(
-            (selection: { type: string, name: string }, index: number) => ({
+            (selection: { type: string; name: string }, index: number) => ({
               key: index === 0 ? "A" : "B",
-              content: selection.type === "win" ? `${selection.name} WIN` : `${selection.name} DRAW_LOSE`,
+              content:
+                selection.type === "win"
+                  ? `${selection.name} WIN`
+                  : `${selection.name} DRAW_LOSE`,
             })
           ),
           quantity: lastMarketMessage.data.market?.amount?.toString(),
@@ -203,8 +230,10 @@ There are three options you can choose from:
         },
       };
 
+      const response = (await chatAPI.sendChatMessage(
+        userGameSelectionData
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await chatAPI.sendChatMessage(userGameSelectionData) as any;
+      )) as any;
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
           externalId: externalId,
@@ -216,7 +245,7 @@ There are three options you can choose from:
       }
 
       const { tr, transId } = response.data.message.data;
-      
+
       const transactionBuffer = Buffer.from(tr, "base64");
       const deserializedTransaction = Transaction.from(transactionBuffer);
       const signedTx = await wallet?.signTransaction(deserializedTransaction);
@@ -229,7 +258,11 @@ There are three options you can choose from:
     } finally {
       setTimeout(async () => {
         try {
-          await gameAPI.fetchGameHistory({ category: "Trending Game", page: 1, take: 8 });
+          await gameAPI.fetchGameHistory({
+            category: "Trending Game",
+            page: 1,
+            take: 8,
+          });
         } catch (error) {
           console.error("게임 히스토리 조회 실패:", error);
         }
@@ -244,11 +277,20 @@ There are three options you can choose from:
       <div className="flex flex-col h-screen text-white w-[700px]">
         <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden pb-[150px]">
           {messages.map((msg, index) => (
-            <ChatMessage key={index} message={msg} handleButtonClick={handleButtonClick} />
+            <ChatMessage
+              key={index}
+              message={msg}
+              handleButtonClick={handleButtonClick}
+            />
           ))}
           <div ref={chatEndRef} />
         </div>
-        <ChatInput sendMessage={sendMessage} inputText={inputText} setInputText={setInputText} loading={loading} />
+        <ChatInput
+          sendMessage={sendMessage}
+          inputText={inputText}
+          setInputText={setInputText}
+          loading={loading}
+        />
       </div>
     </div>
   );
