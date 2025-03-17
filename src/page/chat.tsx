@@ -131,9 +131,10 @@ There are three options you can choose from:
     } catch (error) {
       console.error("WebSocket 전송 실패:", error);
     } finally {
-      setLoading(false);
+
       chatAPI.addSocketListener((msg: Chatting) => {
         setMessages((prevMessages) => [...prevMessages, msg]);
+        setLoading(false);
         if (!externalId && msg.conversationExternalId) {
           setExternalId(msg.conversationExternalId);
         }
@@ -204,7 +205,6 @@ There are three options you can choose from:
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await chatAPI.sendChatMessage(userGameSelectionData) as any;
-      console.log("response",response)
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
           externalId: externalId,
@@ -216,6 +216,7 @@ There are three options you can choose from:
       }
 
       const { tr, transId } = response.data.message.data;
+      
       const transactionBuffer = Buffer.from(tr, "base64");
       const deserializedTransaction = Transaction.from(transactionBuffer);
       const signedTx = await wallet?.signTransaction(deserializedTransaction);
@@ -234,7 +235,7 @@ There are three options you can choose from:
         }
       }, 1000);
       setLoading(false);
-      // navigate("/");
+      navigate("/");
     }
   };
 

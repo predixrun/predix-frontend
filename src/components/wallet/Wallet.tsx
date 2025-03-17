@@ -276,7 +276,7 @@ function Wallet() {
                           <span className="text-sm ml-2">${Price}</span>
                         </div>
                       </div>
-                      <div
+                      {/* <div
                         className="mt-1.5 flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
                         onClick={toggleDashboard}
                       >
@@ -299,7 +299,7 @@ function Wallet() {
                           </div>
                           <div>1</div>
                         </span>
-                      </div>
+                      </div> */}
                     </div>
                   )}
                 </>
