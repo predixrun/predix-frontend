@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 
-// props 인터페이스 정의
 interface WalletDashboardProps {
   isOpen: boolean;
   onClose: () => void;
@@ -96,11 +95,11 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                     if (el) pageRefs.current[index] = el;
                   }}
                   className={`flex items-center rounded-xl p-2.5 gap-3 duration-200 transition-all border-transparent
-                    hover:scale-95 text-[#B3B3B3] hover:text-white hover:border-2 hover:border-[#383838]
+                    hover:scale-95 text-[#B3B3B3] hover:text-white  hover:border-2 hover:border-[#383838]
                     ${
                       entry.rank === 1
                         ? "bg-black text-black shadow-lg"
-                        : "text-white shadow-md"
+                        : "bg-[#2C2C2C] text-white shadow-md"
                     }`}
                 >
                   <div
@@ -166,7 +165,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                 className={`flex items-center rounded-xl p-2.5 gap-3 
                     hover:text-white  border-2 border-transparent  hover:border-[#505050] 
                     bg-[#1F1F1F]  duration-200 transition-all
-                    hover:scale-95 text-gray-300`}
+                    hover:scale-95 text-gray-300 cursor-pointer`}
               >
                 <div className="w-[28px] h-[32px] rounded-sm flex items-center justify-center font-semibold bg-black">
                   {entry.rank}

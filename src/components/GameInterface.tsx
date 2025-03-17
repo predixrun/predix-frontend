@@ -325,7 +325,7 @@ function GameInterfaceComponent({
                         : ""
                     }
                   >
-                    Wager Size ({parseFloat(game.gameQuantity)} SOL)
+                    Wager Size ({parseFloat(game.gameQuantity)} SONIC)
                   </div>
                 </div>
               </div>

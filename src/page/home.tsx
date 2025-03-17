@@ -12,7 +12,6 @@ function Home() {
   const [inputText, setInputText] = useState<string>("");
   const navigate = useNavigate();
 
-  
   const changeParents = () => {
     setSelectedCategory("");
   };
@@ -31,6 +30,7 @@ function Home() {
   return (
     <>
       {!isConnected && <Intro />}
+
 
       <div className="flex flex-col items-center justify-center font-dd font-family scrollbar-width: none">
         {/* base UI */}

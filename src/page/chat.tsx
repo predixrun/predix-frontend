@@ -54,17 +54,20 @@ function ChattingComponents() {
       content: `
 #### Hello, **${username}**! 
 There are three options you can choose from: 
+
 **Create Prediction**
 - Good! To create a prediction market, some information is needed. Please enter the information you know.
   - League
   - Team
   - DATE (e.g., next week, this month, 2025-06-18)
   - Creation command (Currently, only football supported)
+
 **Sports Search**
 - Great, I can fetch information related to sports. Currently, I only support football.
   - “What are the matches this Sunday?”
   - "Search for Manchester City matches."
   - "Search for Premier League information."
+
 **Chat**
 - Ask PrediX anything you want to know! :)
 `,
@@ -85,21 +88,16 @@ There are three options you can choose from:
   const homeInputText = location.state?.message || "";
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
-
   const [inputText, setInputText] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [externalId, setExternalId] = useState<string | null>(null);
   const isHomeMessageProcessed = useRef(false);
 
+  console.log(messages)
   useEffect(() => {
-    chatAPI.addSocketListener((msg: Chatting) => {
-      setMessages((prevMessages) => [...prevMessages, msg]);
-      if (!externalId && msg.conversationExternalId) {
-        setExternalId(msg.conversationExternalId);
-      }
-    });
-  }, [externalId]);
+    chatAPI.connectSocket();
+  }, []);
 
   useEffect(() => {
     if (!isHomeMessageProcessed.current && homeInputText.trim() !== "") {
@@ -113,6 +111,7 @@ There are three options you can choose from:
       sendChatMessage(newMessage);
       navigate(location.pathname, { replace: true, state: {} });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeInputText, location.pathname, navigate]);
 
   useEffect(() => {
@@ -128,12 +127,17 @@ There are three options you can choose from:
     setMessages((prevMessages) => [...prevMessages, message]);
     setLoading(true);
     try {
-      const test = chatAPI.sendSoketMessage(message);
-      console.log("test",test)
+      chatAPI.sendSoketMessage(message);
     } catch (error) {
       console.error("WebSocket 전송 실패:", error);
     } finally {
       setLoading(false);
+      chatAPI.addSocketListener((msg: Chatting) => {
+        setMessages((prevMessages) => [...prevMessages, msg]);
+        if (!externalId && msg.conversationExternalId) {
+          setExternalId(msg.conversationExternalId);
+        }
+      });
     }
   };
 
@@ -199,7 +203,8 @@ There are three options you can choose from:
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = chatAPI.sendSoketMessage(userGameSelectionData) as any;
+      const response = await chatAPI.sendChatMessage(userGameSelectionData) as any;
+      console.log("response",response)
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
           externalId: externalId,
@@ -229,7 +234,7 @@ There are three options you can choose from:
         }
       }, 1000);
       setLoading(false);
-      navigate("/");
+      // navigate("/");
     }
   };
 
