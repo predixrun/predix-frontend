@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 interface Selection {
@@ -26,9 +26,42 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
   handleButtonClick,
 }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [index, setIndex] = useState(0);
+  const speed = 10;
+  const messageContainerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (message.sender !== "AGENT") {
+      setDisplayText(message.content);
+      setIndex(message.content.length);
+    } else {
+      setDisplayText("");
+      setIndex(0);
+    }
+  }, [message]);
+
+  useEffect(() => {
+    if (message.sender === "AGENT" && index < message.content.length) {
+      const timeout = setTimeout(() => {
+        setDisplayText((prev) => prev + message.content.charAt(index));
+        setIndex((prev) => prev + 1);
+      }, speed);
+      return () => clearTimeout(timeout);
+    }
+  }, [index, message]);
+  useEffect(() => {
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [displayText]);
+
   return (
     <div
       className={`flex ${message.sender === null ? "justify-end" : ""} my-5`}
+      ref={messageContainerRef}
     >
       <div
         className={`text-lg ${
@@ -45,10 +78,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           }`}
         >
           <span className="text-base prose prose-invert max-w-none">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
+            <ReactMarkdown>{displayText}</ReactMarkdown>
           </span>
 
-          {/* 선택지 버튼 */}
           {message.messageType === "MARKET_OPTIONS" && (
             <div className="mt-3">
               {message.data.selections.map(
@@ -104,7 +136,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 )}
             </div>
           )}
-          {/* Yes / Win / Draw-Lose 버튼 */}
+          {/* Yes / Win / Draw-Lose */}
           {message.messageType === "BETTING_AMOUNT_REQUEST" && (
             <div className="mt-3">
               <>
