@@ -103,7 +103,7 @@ There are three options you can choose from:
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
   const [inputText, setInputText] = useState<string>("");
-  const chatEndRef = useRef<HTMLDivElement>(null);
+
   const [loading, setLoading] = useState<boolean>(false);
   const [externalId, setExternalId] = useState<string | null>(null);
   const isHomeMessageProcessed = useRef(false);
@@ -129,7 +129,6 @@ There are three options you can choose from:
   }, [homeInputText, location.pathname, navigate]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.messageType === "MARKET_FINALIZED") {
       CreateMessage();
@@ -146,11 +145,14 @@ There are three options you can choose from:
       console.error("WebSocket 전송 실패:", error);
     } finally {
       chatAPI.addSocketListener((msg: Chatting) => {
-        const filteredContent = msg.content.replace(/\n\s*-\s*\*\*Fixture ID:\*\*\s*\d+/g, "");
+        const filteredContent = msg.content.replace(
+          /\n\s*-\s*\*\*Fixture ID:\*\*\s*\d+/g,
+          ""
+        );
 
         setMessages((prevMessages) => [
           ...prevMessages,
-          { ...msg, content: filteredContent.trim() }, 
+          { ...msg, content: filteredContent.trim() },
         ]);
         setLoading(false);
         if (!externalId && msg.conversationExternalId) {
@@ -232,7 +234,7 @@ There are three options you can choose from:
 
       const response = (await chatAPI.sendChatMessage(
         userGameSelectionData
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       )) as any;
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
@@ -275,7 +277,7 @@ There are three options you can choose from:
   return (
     <div className="font-family">
       <div className="flex flex-col h-screen text-white w-[700px]">
-        <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden pb-[150px]">
+        <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden">
           {messages.map((msg, index) => (
             <ChatMessage
               key={index}
@@ -283,7 +285,6 @@ There are three options you can choose from:
               handleButtonClick={handleButtonClick}
             />
           ))}
-          <div ref={chatEndRef} />
         </div>
         <ChatInput
           sendMessage={sendMessage}
