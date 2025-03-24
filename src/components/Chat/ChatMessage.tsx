@@ -13,7 +13,6 @@ interface Chatting {
   sender?: string | null;
   content: string;
   messageType: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any | null;
 }
 
@@ -49,6 +48,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       return () => clearTimeout(timeout);
     }
   }, [index, message]);
+  // 한글자씩이 아닌 한줄씩 하게끔 수정 필요 \n구분하기?
   useEffect(() => {
     if (messageContainerRef.current) {
       messageContainerRef.current.scrollIntoView({
@@ -119,7 +119,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                     fixtureData.fixture.status === "Not Started"
                 )
                 .map(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   (fixtures: any, index: React.Key | null | undefined) => (
                     <button
                       key={index}

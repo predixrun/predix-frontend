@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { usePrivy, useSolanaWallets } from '@privy-io/react-auth';
-import authAPI from '@/components/api/Login';
+import React, { useEffect, useMemo } from "react";
+import { usePrivy } from "@privy-io/react-auth";
+import authAPI from "@/api/login/loginAPI";
 
 interface UserAuthInfo {
   token: string;
@@ -15,10 +15,7 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
   setIsConnected,
 }) => {
   const { login, ready, authenticated, user } = usePrivy();
-  const { wallets } = useSolanaWallets();
-  const externalWallet = wallets.find(
-    (wallet) => wallet.walletClientType === 'privy',
-  );
+
   // function getCookie(name: string) {
   //   return document.cookie
   //     .split('; ')
@@ -32,41 +29,43 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
     if (!ready) return;
     login();
   };
+  const externalWallet = useMemo(() => {
+    if (!user) return "";
+    const solanaWallet = user.linkedAccounts.find(
+      (account) =>
+        account.type === "wallet" && account.chainType === "solana"
+    ) as { address: string } | undefined;
+  
+    return solanaWallet?.address || "";
+  }, [user]);
 
   const handlePostLogin = async () => {
     if (!authenticated || !user) return;
 
-    const userAuthInfo: UserAuthInfo = {
-      token: privyToken || '',
-      authType: 'privy-twitter',
-      name: user.twitter?.username || '',
-      profileImage: user.twitter?.profilePictureUrl || '',
-      evmAddress: user.wallet?.address || '',
-      solanaAddress: externalWallet?.address || '',
-    };
 
-    for (const account of user.linkedAccounts) {
-      if (account.type === 'wallet') {
-        if (account.chainType === 'solana') {
-          userAuthInfo.solanaAddress = account.address;
-        }
-      }
-    }
+    const userAuthInfo: UserAuthInfo = {
+      token: privyToken || "",
+      authType: "privy-twitter",
+      name: user.twitter?.username || "",
+      profileImage: user.twitter?.profilePictureUrl || "",
+      evmAddress: user.wallet?.address || "",
+      solanaAddress: externalWallet,
+    };
 
     await handleSignUpVerify(userAuthInfo);
   };
   useEffect(() => {
-    if (authenticated && user) {
+    if (authenticated && user && externalWallet) {
       handlePostLogin();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authenticated, user]);
+  }, [authenticated, user, externalWallet]);
 
   const handleSignUpVerify = async (userAuthInfo: UserAuthInfo) => {
     try {
       const verifyResult = await authAPI.signUpVerify(userAuthInfo.token);
-
-      if (verifyResult.status === 'SUCCESS') {
+      console.log("verifyResult", verifyResult);
+      if (verifyResult.status === "SUCCESS") {
         if (verifyResult.data.verify) {
           const signUpSuccess = await handleSignUp(userAuthInfo);
           setIsConnected(signUpSuccess);
@@ -78,7 +77,7 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
         setIsConnected(false);
       }
     } catch (error) {
-      console.log('회원가입 가능 여부', error);
+      console.log("회원가입 가능 여부", error);
       setIsConnected(false);
     }
   };
@@ -90,20 +89,20 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
         authType: userAuthInfo.authType,
       });
 
-      if (signInResponse.status === 'SUCCESS' && signInResponse.data?.token) {
-        localStorage.setItem('auth_token', signInResponse.data.token);
-        window.dispatchEvent(new Event('auth_token_updated'));
+      if (signInResponse.status === "SUCCESS" && signInResponse.data?.token) {
+        localStorage.setItem("auth_token", signInResponse.data.token);
+        window.dispatchEvent(new Event("auth_token_updated"));
         const profileResponse = await authAPI.profile(
-          signInResponse.data?.token,
+          signInResponse.data?.token
         );
-        localStorage.setItem('profile_data', JSON.stringify(profileResponse));
+        localStorage.setItem("profile_data", JSON.stringify(profileResponse));
 
         return true;
       }
 
       return false;
     } catch (error) {
-      console.log('로그인 실패', error);
+      console.log("로그인 실패", error);
       return false;
     }
   };
@@ -112,19 +111,19 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
     try {
       const signUpResponse = await authAPI.signUp(userAuthInfo);
 
-      if (signUpResponse.status === 'SUCCESS' && signUpResponse.data?.token) {
-        localStorage.setItem('auth_token', signUpResponse.data.token);
-        window.dispatchEvent(new Event('auth_token_updated'));
+      if (signUpResponse.status === "SUCCESS" && signUpResponse.data?.token) {
+        localStorage.setItem("auth_token", signUpResponse.data.token);
+        window.dispatchEvent(new Event("auth_token_updated"));
         const profileResponse = await authAPI.profile(
-          signUpResponse.data?.token,
+          signUpResponse.data?.token
         );
-        localStorage.setItem('profile_data', JSON.stringify(profileResponse));
+        localStorage.setItem("profile_data", JSON.stringify(profileResponse));
         return true;
       }
 
       return false;
     } catch (error) {
-      console.log('회원가입 실패', error);
+      console.log("회원가입 실패", error);
       return false;
     }
   };

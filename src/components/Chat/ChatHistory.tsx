@@ -1,4 +1,4 @@
-import chatAPI from "@/components/api/Chat";
+import chatAPI from "@/api/chat/chatAPI";
 import { useEffect, useState } from "react";
 
 function ChatHistory() {

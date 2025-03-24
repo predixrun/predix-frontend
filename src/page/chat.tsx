@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import chatAPI from "@/components/api/Chat";
+import chatAPI from "@/api/chat/chatAPI";
 import "@/components/styles/game-dashboard-animations.css";
 import { Transaction } from "@solana/web3.js";
 import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
-import signGame from "@/components/api/SignCreate";
-import gameAPI from "@/components/api/Game";
-import ChatInput from "@/components/Chat/ChatInput";
-import ChatMessage from "@/components/Chat/ChatMessage";
+import signGame from "@/api/chat/signCreateAPI";
+import gameAPI from "@/api/game/gameAPI";
+import ChatInput from "@/components/chat/ChatInput";
+import ChatMessage from "@/components/chat/ChatMessage";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Chatting {
@@ -15,7 +15,6 @@ interface Chatting {
   sender?: string | null;
   content: string;
   messageType: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any | null;
 }
 
@@ -46,10 +45,8 @@ interface ChatMessage {
 
 function ChattingComponents() {
   const { user } = usePrivy();
-  const twitterAccount = user?.linkedAccounts[0] as
-    | { username: string }
-    | undefined;
-  const username = twitterAccount?.username;
+  const twitterAccount = user?.linkedAccounts[0] as { username: string };
+  const username = twitterAccount?.username || "Guest";
   const [messages, setMessages] = useState<Chatting[]>([
     {
       externalId: null,
@@ -58,20 +55,10 @@ function ChattingComponents() {
 There are three options you can choose from: 
 
 **Create Prediction**
-- Good! To create a prediction market, some information is needed. Please enter the information you know.
-  - League
-  - Team
-  - DATE (e.g., next week, this month, 2025-06-18)
-  - Creation command (Currently, only football supported)
 
 **Sports Search**
-- Great, I can fetch information related to sports. Currently, I only support football.
-  - “What are the matches this Sunday?”
-  - "Search for Manchester City matches."
-  - "Search for Premier League information."
 
 **Chat**
-- Ask PrediX anything you want to know! :)
 `,
       messageType: "Market_Info",
       sender: "SYSTEM",
@@ -108,7 +95,6 @@ There are three options you can choose from:
   const [externalId, setExternalId] = useState<string | null>(null);
   const isHomeMessageProcessed = useRef(false);
 
-  console.log(messages);
   useEffect(() => {
     chatAPI.connectSocket();
   }, []);
@@ -140,6 +126,8 @@ There are three options you can choose from:
     setMessages((prevMessages) => [...prevMessages, message]);
     setLoading(true);
     try {
+      const test = chatAPI.getChatMessages();
+      console.log("test",test)
       chatAPI.sendSoketMessage(message);
     } catch (error) {
       console.error("WebSocket 전송 실패:", error);
@@ -176,6 +164,58 @@ There are three options you can choose from:
 
   const handleButtonClick = (buttonText: string) => {
     if (!buttonText) return;
+
+    // "Create Prediction", "Sports Search", "Chat" 버튼에 대한 agent 메시지 처리
+    let isAgentMessage = false;
+    let content: string = "";
+
+    switch (buttonText) {
+      case "Create Prediction":
+        content = `
+  Good! To create a prediction market, some information is needed. Please enter the information you know.
+  - League
+  - Team
+  - DATE (e.g., next week, this month, 2025-06-18)
+  - Creation command (Currently, only football supported)
+        `.trim();
+        isAgentMessage = true;
+        break;
+      case "Sports Search":
+        content = `
+  Great, I can fetch information related to sports. Currently, I only support football.
+  - “What are the matches this Sunday?”
+  - "Search for Manchester City matches."
+  - "Search for Premier League information."
+        `.trim();
+        isAgentMessage = true;
+        break;
+      case "Chat":
+        content = "Ask PrediX anything you want to know! :)";
+        isAgentMessage = true;
+        break;
+    }
+    if (isAgentMessage) {
+      const userMessage: Chatting = {
+        externalId: externalId,
+        content: buttonText,
+        messageType: "TEXT",
+        sender: null,
+        data: null,
+      };
+      const agentMessage: Chatting = {
+        externalId: externalId,
+        content: content,
+        messageType: "TEXT",
+        sender: "AGENT",
+        data: null,
+      };
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        userMessage,
+        agentMessage,
+      ]);
+      return;
+    }
     const text =
       buttonText.includes("Win") || buttonText.includes("Draw/Lose")
         ? buttonText.split(" ").slice(-1)[0]
@@ -234,7 +274,6 @@ There are three options you can choose from:
 
       const response = (await chatAPI.sendChatMessage(
         userGameSelectionData
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       )) as any;
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {

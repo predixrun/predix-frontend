@@ -2,7 +2,7 @@ import "@/components/styles/gameinterface-animations.css";
 import GameDashboard from "./GameDashboard";
 import { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
-import gameAPI from "@/components/api/Game";
+import gameAPI from "@/api/game/gameAPI";
 
 interface GameInterfaceProps {
   changeParentsFunction: () => void;

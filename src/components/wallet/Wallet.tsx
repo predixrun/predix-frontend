@@ -17,8 +17,10 @@ import WalletDashboard from "./WalletDashboard";
 
 function Wallet() {
   const [currentState, setCurrentState] = useState<string>("delegate");
-  const [walletBalance, setWalletBalance] = useState<string>("");
-  const [Price, setPrice] = useState<number>(0);
+  const [solanaBalance, setSolanaBalance] = useState<string>("");
+  const [sonicBalance, setSonicBalance] = useState<string>("");
+  const [solanaPriceUSD, setSolanaPriceUSD] = useState(0);
+  const [sonicPriceUSD, setSonicPriceUSD] = useState(0);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
 
   const [isDashboardView, setIsDashboardView] = useState<boolean>(false);
@@ -64,42 +66,44 @@ function Wallet() {
     if (walletToDelegate) {
       const fetchBalance = async () => {
         try {
+          const publicKey = new web3.PublicKey(walletToDelegate.address);
           // solana
-          // const connection = new web3.Connection(
-          //   web3.clusterApiUrl("devnet"),
-          //   "confirmed"
-          // );
+          const solanaConnection = new web3.Connection(
+            web3.clusterApiUrl("devnet"),
+            "confirmed"
+          );
+          const solBalance = await solanaConnection.getBalance(publicKey);
+          setSolanaBalance((solBalance / 1000000000).toFixed(4));
 
           // sonic
-          const customRpcUrl = "https://api.testnet.sonic.game";
-          const connection = new web3.Connection(customRpcUrl, "confirmed");
-
-          const publicKey = new web3.PublicKey(walletToDelegate.address);
-          const balance = await connection.getBalance(publicKey);
-          setWalletBalance((balance / 1000000000).toFixed(4));
+          const sonicConnection = new web3.Connection(
+            "https://api.testnet.sonic.game",
+            "confirmed"
+          );
+          const sonicBal = await sonicConnection.getBalance(publicKey);
+          setSonicBalance((sonicBal / 1000000000).toFixed(4));
         } catch (err) {
           console.error(err);
         }
       };
       const fetchSolPrice = async () => {
         try {
-          //solana
-          // const response = await fetch(
-          //   "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
-          // );
-          // const data = await response.json();
-          // const solBalance = parseFloat(walletBalance);
-          // const solValueInUSD = solBalance * data.solana.usd;
-          // setSolPrice(parseFloat(solValueInUSD.toFixed(4)));
-
-          //sonic
           const response = await fetch(
-            "https://api.coingecko.com/api/v3/simple/price?ids=sonic-svm&vs_currencies=usd"
+            "https://api.coingecko.com/api/v3/simple/price?ids=solana,sonic-svm&vs_currencies=usd"
           );
           const data = await response.json();
-          const sonicBalance = parseFloat(walletBalance);
-          const sonicValueInUSD = sonicBalance * data["sonic-svm"].usd;
-          setPrice(parseFloat(sonicValueInUSD.toFixed(4)));
+
+          // Solana
+          const solBalanceNum = parseFloat(solanaBalance);
+          const solPrice = data.solana?.usd || 0;
+          const solUSDValue = solBalanceNum * solPrice;
+          setSolanaPriceUSD(parseFloat(solUSDValue.toFixed(4)));
+
+          // Sonic
+          const sonicBalanceNum = parseFloat(sonicBalance);
+          const sonicPrice = data["sonic-svm"]?.usd || 0;
+          const sonicUSDValue = sonicBalanceNum * sonicPrice;
+          setSonicPriceUSD(parseFloat(sonicUSDValue.toFixed(4)));
         } catch (err) {
           console.error("SOL Failed to retrieve", err);
         }
@@ -116,7 +120,7 @@ function Wallet() {
       }
       return prevState;
     });
-  }, [walletBalance, walletToDelegate]);
+  }, [solanaBalance, sonicBalance, walletToDelegate]);
   // Find user name
   const twitterAccount = user?.linkedAccounts[0] as
     | { username: string }
@@ -252,29 +256,38 @@ function Wallet() {
                     </div>
                   )}
                   {currentState === "confirmed" && (
-                    <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white">
-                      <div className="text-[36px] font-bold">${Price}</div>
-                      <div className="text-sl flex">
-                        <span className="text-lg text-[#7FED58] flex"></span>
+                    <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white gap-2">
+                      <div className="text-[32px] font-bold">
+                        $
+                        {parseFloat(
+                          (solanaPriceUSD + sonicPriceUSD).toFixed(4)
+                        )}
                       </div>
-                      <div className="flex items-center mt-2 bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between">
-                        <div className="ml-4 flex gap-2 items-center">
-                          {/* <img
-              src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
-              alt="Profile"
-              className="size-5"
-            /> */}
-                          {/* <span>{parseFloat(walletBalance)} SOL</span> */}
+
+                      {/* Solana */}
+                      <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
+                        <div className="flex items-center gap-2">
                           <img
-                            src="sonic-logo.png"
-                            alt="Profile"
+                            src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
+                            alt="Solana"
                             className="size-5"
                           />
-                          <span>{parseFloat(walletBalance)} Sonic</span>
+                          <span>{solanaBalance} SOL</span>
                         </div>
-                        <div className="mr-4">
-                          <span className="text-sm ml-2">${Price}</span>
+                        <div>${solanaPriceUSD}</div>
+                      </div>
+
+                      {/* Sonic */}
+                      <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src="sonic-logo.png"
+                            alt="Sonic"
+                            className="size-5"
+                          />
+                          <span>{sonicBalance} SONIC</span>
                         </div>
+                        <div>${sonicPriceUSD}</div>
                       </div>
                       {/* <div
                         className="mt-1.5 flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
@@ -381,28 +394,30 @@ function Wallet() {
             <div className="flex items-center gap-4 text-[#B3B3B3]"></div>
           </CardHeader>
           <CardFooter>
-            <div className="min-w-[261px] h-[54px] rounded bg-[#1E1E1E] flex items-center justify-between">
-              <div className="ml-2 flex gap-2 items-center">
-                <span className="size-8 p-1 ml-1">
-                  {/* <img
+            <div className="min-w-[261px] h-[54px] rounded bg-[#1E1E1E] flex items-center justify-between px-3">
+              <div className="flex gap-3 items-center">
+                <div className="flex gap-2 items-center">
+                  <img
                     src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
-                    alt="Profile"
-                    className="size-6"
-                  /> */}
-                  <img src="sonic-logo.png" alt="Profile" className="size-6" />
-                </span>
-                <div className="flex flex-col">
-                  {/* <span>{parseFloat(walletBalance)} SOL</span> */}
-                  <span>{parseFloat(walletBalance)} Sonic</span>
-                  <span className="text-sm text-[#B3B3B3] text-[14px]">
-                    ${Price}
-                  </span>
+                    alt="Solana"
+                    className="size-5"
+                  />
+                  <div className="flex flex-col text-sm">
+                    <span>{solanaBalance} SOL</span>
+                    <span className="text-[#B3B3B3]">${solanaPriceUSD}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 items-center ml-4">
+                  <img src="sonic-logo.png" alt="Sonic" className="size-5" />
+                  <div className="flex flex-col text-sm">
+                    <span>{sonicBalance} SONIC</span>
+                    <span className="text-[#B3B3B3]">${sonicPriceUSD}</span>
+                  </div>
                 </div>
               </div>
               <div
-                className="mr-4 rotate-270"
+                className="rotate-270 cursor-pointer"
                 onClick={handleMinimizeToggle}
-                style={{ cursor: "pointer" }}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
