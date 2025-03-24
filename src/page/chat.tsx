@@ -5,9 +5,9 @@ import { Transaction } from "@solana/web3.js";
 import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
 import signGame from "@/api/chat/signCreateAPI";
 import gameAPI from "@/api/game/gameAPI";
-import ChatInput from "@/components/chat/ChatInput";
 import ChatMessage from "@/components/chat/ChatMessage";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import ChatInput from "@/components/chat/ChatInput";
 
 interface Chatting {
   externalId?: string | null;
