@@ -14,7 +14,7 @@ import { CopyQRClipboard } from "./CopyQRClipboard";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SendSolWithEmbeddedWallet } from "./WalletTransfer";
 import WalletDashboard from "./WalletDashboard";
-import ChatHistory from "../chat/ChatHistory";
+import ChatHistory from "@/components/chat/ChatHistory";
 
 function Wallet() {
   const [currentState, setCurrentState] = useState<string>("delegate");
