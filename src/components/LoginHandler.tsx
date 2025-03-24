@@ -64,7 +64,6 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
   const handleSignUpVerify = async (userAuthInfo: UserAuthInfo) => {
     try {
       const verifyResult = await authAPI.signUpVerify(userAuthInfo.token);
-      console.log("verifyResult", verifyResult);
       if (verifyResult.status === "SUCCESS") {
         if (verifyResult.data.verify) {
           const signUpSuccess = await handleSignUp(userAuthInfo);

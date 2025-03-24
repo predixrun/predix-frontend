@@ -22,7 +22,7 @@ export function SendSolWithEmbeddedWallet() {
         console.error("no sender wallet.");
         return;
       }
-      console.log("senderWallet", senderWallet);
+
       const senderPubKey = new PublicKey(senderWallet.address);
       const recipientPubKey = new PublicKey(recipientAddress);
 
@@ -43,12 +43,10 @@ export function SendSolWithEmbeddedWallet() {
       );
 
       const signedTx = await senderWallet.signTransaction(transaction);
-      console.log("signedTx", signedTx);
-      const signature = await connection.sendRawTransaction(
+      await connection.sendRawTransaction(
         signedTx.serialize()
       );
 
-      console.log("Signature:", signature);
     } catch (error) {
       console.error("error:", error);
     }

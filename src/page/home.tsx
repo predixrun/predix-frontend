@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Category } from "@/components/Category";
+import { Category } from "@/components/game/Category";
 import "@/components/styles/home-animations.css";
-import GameInterfaceComponent from "@/components/GameInterface";
+import GameInterfaceComponent from "@/components/game/GameInterface";
 import LoginHandler from "@/components/LoginHandler";
 import Intro from "@/components/Intro";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +24,7 @@ function Home() {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       homeSendMessage();
+      
     }
   };
 

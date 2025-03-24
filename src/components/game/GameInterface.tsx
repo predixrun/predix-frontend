@@ -151,7 +151,6 @@ function GameInterfaceComponent({
 
     return isValidStatus;
   });
-  console.log("displayedGames",displayedGames)
   // Pagination settings
   const itemsPerPage = 8;
   const pageCount = Math.ceil(totalGames / itemsPerPage);// totalGames로 페이지 수 계산

@@ -57,20 +57,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       });
     }
   }, [displayText]);
-
+  const isUserMessage = message.sender === "USER" || message.sender === null;
   return (
     <div
-      className={`flex ${message.sender === null ? "justify-end" : ""} my-5`}
+      className={`flex ${isUserMessage ? "justify-end" : "justify-start"} my-5`}
       ref={messageContainerRef}
     >
       <div
-        className={`text-lg ${
-          message.sender === null ? "mr-3 max-w-[50ch]" : "ml-3"
-        }`}
+        className={`text-lg ${isUserMessage ? "mr-3 max-w-[50ch]" : "ml-3"}`}
       >
         <div
           className={`p-3 mt-2 ${
-            message.sender === null
+            isUserMessage
               ? `${
                   message.content.length > 50 ? "rounded-lg" : "rounded-full"
                 } bg-[#2C2C2C] break-words text-left`
@@ -118,21 +116,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                   (fixtureData: { fixture: { status: string } }) =>
                     fixtureData.fixture.status === "Not Started"
                 )
-                .map(
-                  (fixtures: any, index: React.Key | null | undefined) => (
-                    <button
-                      key={index}
-                      className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
-                      onClick={() =>
-                        handleButtonClick(
-                          `${fixtures.teams.home.name} vs ${fixtures.teams.away.name}`
-                        )
-                      }
-                    >
-                      {fixtures.teams.home.name} vs {fixtures.teams.away.name}
-                    </button>
-                  )
-                )}
+                .map((fixtures: any, index: React.Key | null | undefined) => (
+                  <button
+                    key={index}
+                    className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                    onClick={() =>
+                      handleButtonClick(
+                        `${fixtures.teams.home.name} vs ${fixtures.teams.away.name}`
+                      )
+                    }
+                  >
+                    {fixtures.teams.home.name} vs {fixtures.teams.away.name}
+                  </button>
+                ))}
             </div>
           )}
           {/* Yes / Win / Draw-Lose */}

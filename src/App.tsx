@@ -14,6 +14,7 @@ function App() {
             <Route element={<WalletLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/chat" element={<Chat />} />
+              <Route path="/chat/:externalId" element={<Chat />}/>
               <Route path="/*" element={<Home />} />
             </Route>
           </Routes>

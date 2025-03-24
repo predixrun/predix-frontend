@@ -14,6 +14,7 @@ import { CopyQRClipboard } from "./CopyQRClipboard";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SendSolWithEmbeddedWallet } from "./WalletTransfer";
 import WalletDashboard from "./WalletDashboard";
+import ChatHistory from "../chat/ChatHistory";
 
 function Wallet() {
   const [currentState, setCurrentState] = useState<string>("delegate");
@@ -60,67 +61,60 @@ function Wallet() {
       wallet.walletClientType === "privy" &&
       wallet.chainType === "solana"
   ) as { delegated: boolean; address: string } | undefined;
-
   useEffect(() => {
     if (!walletToDelegate) return;
-    if (walletToDelegate) {
-      const fetchBalance = async () => {
-        try {
-          const publicKey = new web3.PublicKey(walletToDelegate.address);
-          // solana
-          const solanaConnection = new web3.Connection(
-            web3.clusterApiUrl("devnet"),
-            "confirmed"
-          );
-          const solBalance = await solanaConnection.getBalance(publicKey);
-          setSolanaBalance((solBalance / 1000000000).toFixed(4));
 
-          // sonic
-          const sonicConnection = new web3.Connection(
-            "https://api.testnet.sonic.game",
-            "confirmed"
-          );
-          const sonicBal = await sonicConnection.getBalance(publicKey);
-          setSonicBalance((sonicBal / 1000000000).toFixed(4));
-        } catch (err) {
-          console.error(err);
-        }
-      };
-      const fetchSolPrice = async () => {
-        try {
-          const response = await fetch(
-            "https://api.coingecko.com/api/v3/simple/price?ids=solana,sonic-svm&vs_currencies=usd"
-          );
-          const data = await response.json();
+    const fetchBalance = async () => {
+      try {
+        const publicKey = new web3.PublicKey(walletToDelegate.address);
 
-          // Solana
-          const solBalanceNum = parseFloat(solanaBalance);
-          const solPrice = data.solana?.usd || 0;
-          const solUSDValue = solBalanceNum * solPrice;
-          setSolanaPriceUSD(parseFloat(solUSDValue.toFixed(4)));
+        // Solana
+        const solanaConnection = new web3.Connection(
+          web3.clusterApiUrl("devnet"),
+          "confirmed"
+        );
+        const solBalance = await solanaConnection.getBalance(publicKey);
+        const sol = (solBalance / 1_000_000_000).toFixed(4);
+        setSolanaBalance(sol);
 
-          // Sonic
-          const sonicBalanceNum = parseFloat(sonicBalance);
-          const sonicPrice = data["sonic-svm"]?.usd || 0;
-          const sonicUSDValue = sonicBalanceNum * sonicPrice;
-          setSonicPriceUSD(parseFloat(sonicUSDValue.toFixed(4)));
-        } catch (err) {
-          console.error("SOL Failed to retrieve", err);
-        }
-      };
-      fetchSolPrice();
-      fetchBalance();
-    }
+        // Sonic
+        const sonicConnection = new web3.Connection(
+          "https://api.testnet.sonic.game",
+          "confirmed"
+        );
+        const sonicBal = await sonicConnection.getBalance(publicKey);
+        const sonic = (sonicBal / 1_000_000_000).toFixed(4);
+        setSonicBalance(sonic);
+
+        const response = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=solana,sonic-svm&vs_currencies=usd"
+        );
+        const data = await response.json();
+
+        const solPrice = data.solana?.usd || 0;
+        const sonicPrice = data["sonic-svm"]?.usd || 0;
+
+        setSolanaPriceUSD(parseFloat((parseFloat(sol) * solPrice).toFixed(4)));
+        setSonicPriceUSD(
+          parseFloat((parseFloat(sonic) * sonicPrice).toFixed(4))
+        );
+      } catch (err) {
+        console.error("Failed to fetch balance or price:", err);
+      }
+    };
+
+    fetchBalance();
+
+    // 상태 설정
     setCurrentState((prevState) => {
-      if (walletToDelegate.delegated && prevState !== "deposit") {
+      if (walletToDelegate.delegated && prevState !== "deposit")
         return "deposit";
-      }
-      if (!walletToDelegate.delegated && prevState !== "delegate") {
+      if (!walletToDelegate.delegated && prevState !== "delegate")
         return "delegate";
-      }
       return prevState;
     });
-  }, [solanaBalance, sonicBalance, walletToDelegate]);
+  }, [walletToDelegate]);
+
   // Find user name
   const twitterAccount = user?.linkedAccounts[0] as
     | { username: string }
@@ -132,9 +126,9 @@ function Wallet() {
     | undefined;
   const ProfileUrl = twitterProfileUrl?.profilePictureUrl;
 
-  const cardMarginTop = location.pathname === "/chat" ? "mt-10" : "mt-0";
-  const minimizedPosition =
-    location.pathname === "/chat" ? "top-15 -left-2" : "top-5 -left-2";
+  const minimizedPosition = location.pathname.startsWith("/chat")
+    ? "top-15 -left-2"
+    : "top-5 -left-2";
 
   //share
   const handleShare = () => {
@@ -152,18 +146,18 @@ function Wallet() {
   };
 
   return (
-    <div>
-      {location.pathname === "/chat" && (
-        <div className="z-100">
+    <div className="absolute pt-4 left-3 z-100 flex flex-col h-svh gap-2">
+      {location.pathname.startsWith("/chat") && (
+        <div className="">
           <div
-            className="peer gap-2 p-3 opacity-30 hover:opacity-100 transition-all duration-300 text-[#B3B3B3] hover:text-white flex items-center font-family font-semibold left-0 top-0 absolute cursor-pointer"
+            className="peer gap-2 opacity-30 hover:opacity-100 transition-all duration-300 text-[#B3B3B3] hover:text-white flex items-center font-family font-semibold cursor-pointer"
             onClick={() => navigate("/")}
           >
             <img src="PrediX-logo.webp" alt="logo" className="size-8 " />
             <p>PrediX</p>
           </div>
 
-          <div className="absolute left-60 top-2 hidden peer-hover:block p-2 bg-[#1E1E1E] text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)]">
+          <div className="absolute left-60 top-0 hidden peer-hover:block p-2 bg-[#1E1E1E] text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)]">
             <div className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[10px] border-b-[10px] border-r-[10px] border-transparent border-r-[#1E1E1E]"></div>
             Back home
           </div>
@@ -172,7 +166,7 @@ function Wallet() {
 
       {!isMinimized ? (
         <Card
-          className={`py-4 absolute top-3 left-3 flex items-start min-w-[320px] bg-[#1E1E1E] text-[#767676] z-20 font-family font-semibold ${cardMarginTop}`}
+          className={`py-4 items-start min-w-[320px] bg-[#1E1E1E] text-[#767676] font-family font-semibold`}
         >
           {!isDashboardView ? (
             <>
@@ -333,7 +327,15 @@ function Wallet() {
                     </svg>
                   </div>
                 </div>
-                {isSendModalOpen && <SendSolWithEmbeddedWallet />}
+                <div
+                  className={` transition-all duration-500 ease-in-out ${
+                    isSendModalOpen
+                      ? "max-h-[500px] opacity-100"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <SendSolWithEmbeddedWallet />
+                </div>
               </CardContent>
               <CardFooter>
                 <div className="flex gap-4 text-[#B3B3B3]">
@@ -376,7 +378,7 @@ function Wallet() {
         </Card>
       ) : (
         <div
-          className={`fade-in-from-left gap-2 font-prme absolute  h-[120px] text-white rounded-lg shadow-lg flex flex-col items-center justify-center z-20 bg-black ${minimizedPosition}`}
+          className={`fade-in-from-left gap-2 font-prme  h-[120px] text-white rounded-lg shadow-lg flex flex-col items-center justify-center bg-black ${minimizedPosition}`}
         >
           {" "}
           <CardHeader>
@@ -436,6 +438,7 @@ function Wallet() {
           </CardFooter>
         </div>
       )}
+      {location.pathname.startsWith("/chat") && <ChatHistory />}
     </div>
   );
 }

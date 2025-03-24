@@ -2,7 +2,7 @@ import { io, Socket } from "socket.io-client";
 import { http } from "@/api/http";
 import { ChatMessage } from "./chatInterfaces";
 
-const SOCKET_URL = "wss://predix-dev.com";
+const SOCKET_URL = "https://predix-dev.com";
 
 let socket: Socket;
 
@@ -16,6 +16,10 @@ const connectSocket = () => {
     auth: {
       token: authToken,
     },
+    autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 2000,
   });
 
   socket.on("connect", () => {
@@ -39,7 +43,6 @@ const sendSoketMessage = (
 ): Promise<{ tr: string; transId: string }> => {
   return new Promise((resolve, reject) => {
     if (!socket || !socket.connected) {
-      console.warn("⚠️ WebSocket not connected, reconnecting...");
       const newSocket = connectSocket();
       if (!newSocket?.connected) {
         console.error("Failed to connect WebSocket");
@@ -67,8 +70,6 @@ const addSocketListener = (onMessage: (msg: ChatMessage) => void) => {
   socket?.on(
     "receiveMessage",
     (message: ChatMessage | { message: ChatMessage }) => {
-      console.log("📩 Raw received message:", message);
-
       const normalizedMessage = (message as any).message ?? message;
 
       onMessage(normalizedMessage);
@@ -78,9 +79,9 @@ const addSocketListener = (onMessage: (msg: ChatMessage) => void) => {
 };
 
 // Load chat messages
-export const getChatMessages = async () => {
+export const getChatMessages = async (conversationId: string) => {
   try {
-    return await http.get("/v1/chat");
+    return await http.get(`/v1/chat/${conversationId}`);
   } catch (error) {
     console.error("Error fetching chat messages:", error);
     throw error;
@@ -100,7 +101,7 @@ export const sendChatMessage = async (message: ChatMessage) => {
 // Get chat list
 export const getChatList = async () => {
   try {
-    return await http.get("/v1/chat/message");
+    return await http.get("/v1/chat");
   } catch (error) {
     console.error("Error fetching chat list:", error);
     throw error;
