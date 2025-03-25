@@ -121,9 +121,7 @@ There are three options you can choose from:
     }
   };
 
-  useEffect(() => {
-    chatAPI.connectSocket();
-  }, []);
+
   useEffect(() => {
     if (externalId) {
       fetchConversationMessages(externalId);
@@ -133,18 +131,28 @@ There are three options you can choose from:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [externalId]);
   useEffect(() => {
-    if (!isHomeMessageProcessed.current && homeInputText.trim() !== "") {
-      isHomeMessageProcessed.current = true;
-      const newMessage: Chatting = {
-        externalId: null,
-        content: homeInputText,
-        messageType: "TEXT",
-        sender: null,
-      };
-      sendChatMessage(newMessage);
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    chatAPI.connectSocket();
+  
+    const interval = setInterval(() => {
+      if (chatAPI.connectSocket()) {
+        clearInterval(interval);
+  
+        if (!isHomeMessageProcessed.current && homeInputText.trim() !== "") {
+          isHomeMessageProcessed.current = true;
+          const newMessage: Chatting = {
+            externalId: null,
+            content: homeInputText,
+            messageType: "TEXT",
+            sender: null,
+          };
+          sendChatMessage(newMessage);
+          navigate(location.pathname, { replace: true, state: {} });
+        }
+      }
+    }, 100); 
+  
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
