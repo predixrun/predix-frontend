@@ -1,15 +1,12 @@
 import axios from "axios";
+import { http } from "../http";
+import { SignUpParams } from "./loginInterfaces";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-interface SignUpParams {
-  token: string;
-  authType: string;
-  name: string;
-  profileImage: string;
-  evmAddress: string;
-  solanaAddress: string;
-}
+
+
+
 export const reteral = async (token: string) => {
   const response = await axios.get(`${BASE_URL}/v1/referral`, {
     headers: {
@@ -50,23 +47,18 @@ export const signUp = async ({
   evmAddress,
   solanaAddress,
 }: SignUpParams) => {
-  const response = await axios.post(
-    `${BASE_URL}/v1/auth/sign-up`,
-    {
-      token,
-      authType,
-      name,
-      profileImage,
-      evmAddress,
-      solanaAddress,
+  return await http.post("/v1/auth/sign-up", {
+    token,
+    authType,
+    name,
+    profileImage,
+    evmAddress,
+    solanaAddress,
+  }, {
+    headers: {
+      "Content-Type": "application/json",
     },
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-  return response.data;
+  });
 };
 
 export const signIn = async ({
@@ -76,19 +68,14 @@ export const signIn = async ({
   token: string;
   authType: string;
 }) => {
-  const response = await axios.post(
-    `${BASE_URL}/v1/auth/sign-in`,
-    {
-      token,
-      authType,
+  return await http.post("/v1/auth/sign-in", {
+    token,
+    authType,
+  }, {
+    headers: {
+      "Content-Type": "application/json",
     },
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-  return response.data;
+  });
 };
 
 const authAPI = {

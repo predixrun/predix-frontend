@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import "@/components/styles/game-dashboard-animations.css";
-import joinGame from "@/components/api/Join";
-import signGame from "@/components/api/SignCreate";
+import joinGame from "@/api/chat/joinAPI";
+import signGame from "@/api/chat/signCreateAPI";
 
 import { useSolanaWallets } from "@privy-io/react-auth/solana";
 import { Transaction } from "@solana/web3.js";

@@ -2,7 +2,7 @@ import "@/components/styles/gameinterface-animations.css";
 import GameDashboard from "./GameDashboard";
 import { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
-import gameAPI from "@/components/api/Game";
+import gameAPI from "@/api/game/gameAPI";
 
 interface GameInterfaceProps {
   changeParentsFunction: () => void;
@@ -151,7 +151,6 @@ function GameInterfaceComponent({
 
     return isValidStatus;
   });
-  console.log("displayedGames",displayedGames)
   // Pagination settings
   const itemsPerPage = 8;
   const pageCount = Math.ceil(totalGames / itemsPerPage);// totalGames로 페이지 수 계산
@@ -191,7 +190,7 @@ function GameInterfaceComponent({
             selectedCategory === "Recent Game") && (
             <>
               <button
-                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                className={` bg-custom-dark border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
                   filter === "ONGOING" ? "border-[#D74713] text-white" : ""
                 }`}
                 onClick={() => {
@@ -202,7 +201,7 @@ function GameInterfaceComponent({
                 Ongoing
               </button>
               <button
-                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                className={` bg-custom-dark border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
                   filter === "EXPIRED" ? "border-[#D74713] text-white" : ""
                 }`}
                 onClick={() => {
@@ -218,7 +217,7 @@ function GameInterfaceComponent({
             selectedCategory === "Created Game") && (
             <>
               <button
-                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                className={` bg-custom-dark border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
                   statusFilter === "ONGOING"
                     ? "border-[#D74713] text-white"
                     : ""
@@ -231,7 +230,7 @@ function GameInterfaceComponent({
                 Ongoing
               </button>
               <button
-                className={`bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
+                className={` bg-custom-dark border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
                   statusFilter === "END" ? "border-[#D74713] text-white" : ""
                 }`}
                 onClick={() => {
@@ -244,7 +243,7 @@ function GameInterfaceComponent({
             </>
           )}
           <button
-            className="bg-[#1E1E1E] border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white"
+            className=" bg-custom-dark border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white"
             onClick={changeParentsFunction}
           >
             close

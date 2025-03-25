@@ -25,7 +25,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="p-4 bg-[#1E1E1E] mx-auto w-[700px] rounded-lg border-2 border-[#2C2C2C] mt-10 mb-5">
+    <div className="p-4  bg-custom-dark mx-auto w-[700px] rounded-lg border-2 border-[#2C2C2C] mt-10 mb-5">
       <div className="flex flex-col h-full">
         <textarea
           className="p-3 rounded-lg resize-none"

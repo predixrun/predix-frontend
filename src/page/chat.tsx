@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import chatAPI from "@/components/api/Chat";
+import chatAPI from "@/api/chat/chatAPI";
 import "@/components/styles/game-dashboard-animations.css";
 import { Transaction } from "@solana/web3.js";
 import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
-import signGame from "@/components/api/SignCreate";
-import gameAPI from "@/components/api/Game";
-import ChatInput from "@/components/Chat/ChatInput";
+import signGame from "@/api/chat/signCreateAPI";
+import gameAPI from "@/api/game/gameAPI";
 import ChatMessage from "@/components/Chat/ChatMessage";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import ChatInput from "@/components/Chat/ChatInput";
 
 interface Chatting {
   externalId?: string | null;
@@ -15,7 +15,6 @@ interface Chatting {
   sender?: string | null;
   content: string;
   messageType: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any | null;
 }
 
@@ -44,75 +43,95 @@ interface ChatMessage {
   data: GameData;
 }
 
+interface ConversationResponse {
+  status: string;
+  data: {
+    conversation: {
+      externalId: string;
+      messages: Chatting[];
+    };
+  };
+}
+
 function ChattingComponents() {
   const { user } = usePrivy();
   const twitterAccount = user?.linkedAccounts[0] as
     | { username: string }
     | undefined;
-  const username = twitterAccount?.username;
-  const [messages, setMessages] = useState<Chatting[]>([
-    {
-      externalId: null,
-      content: `
-#### Hello, **${username}**! 
-There are three options you can choose from: 
-
-**Create Prediction**
-- Good! To create a prediction market, some information is needed. Please enter the information you know.
-  - League
-  - Team
-  - DATE (e.g., next week, this month, 2025-06-18)
-  - Creation command (Currently, only football supported)
-
-**Sports Search**
-- Great, I can fetch information related to sports. Currently, I only support football.
-  - “What are the matches this Sunday?”
-  - "Search for Manchester City matches."
-  - "Search for Premier League information."
-
-**Chat**
-- Ask PrediX anything you want to know! :)
-`,
-      messageType: "Market_Info",
-      sender: "SYSTEM",
-      data: {
-        selections: [
-          {
-            name: "Create Prediction",
-            type: "option",
-            description: "Start your own prediction market.",
-          },
-          {
-            name: "Sports Search",
-            type: "option",
-            description: "Join an existing prediction market.",
-          },
-          {
-            name: "Chat",
-            type: "option",
-            description: "Ask PrediX anything you want to know!",
-          },
-        ],
-      },
-    },
-  ]);
-
+  const username = twitterAccount?.username || "Guest";
+  const { externalId } = useParams<{ externalId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const homeInputText = location.state?.message || "";
   const { wallets } = useSolanaWallets();
   const wallet = wallets.find((w) => w.walletClientType === "privy");
+  const [messages, setMessages] = useState<Chatting[]>([]);
   const [inputText, setInputText] = useState<string>("");
-
   const [loading, setLoading] = useState<boolean>(false);
-  const [externalId, setExternalId] = useState<string | null>(null);
+  const [conversationExternalId, setConversationExternalId] = useState<
+    string | null
+  >(null);
   const isHomeMessageProcessed = useRef(false);
 
-  console.log(messages);
+  const getWelcomeMessage = (username: string): Chatting => ({
+    externalId: null,
+    content: `
+#### Hello, **${username}**! 
+There are three options you can choose from: 
+`,
+    messageType: "Market_Info",
+    sender: "SYSTEM",
+    data: {
+      selections: [
+        {
+          name: "Create Prediction",
+          type: "option",
+          description: "Start your own prediction market.",
+        },
+        {
+          name: "Sports Search",
+          type: "option",
+          description: "Join an existing prediction market.",
+        },
+        {
+          name: "Chat",
+          type: "option",
+          description: "Ask PrediX anything you want to know!",
+        },
+      ],
+    },
+  });
+
+  const fetchConversationMessages = async (id: string) => {
+    try {
+      setLoading(true);
+      const response: ConversationResponse = await chatAPI.getChatMessages(id);
+      if (response.status === "SUCCESS") {
+        setMessages([
+          getWelcomeMessage(username),
+          ...response.data.conversation.messages,
+        ]);
+        setConversationExternalId(response.data.conversation.externalId);
+      }
+    } catch (error) {
+      console.error("Error fetching conversation messages:", error);
+      setMessages([getWelcomeMessage(username)]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     chatAPI.connectSocket();
   }, []);
-
+  useEffect(() => {
+    if (externalId) {
+      fetchConversationMessages(externalId);
+    } else {
+      setMessages([getWelcomeMessage(username)]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalId]);
   useEffect(() => {
     if (!isHomeMessageProcessed.current && homeInputText.trim() !== "") {
       isHomeMessageProcessed.current = true;
@@ -126,7 +145,7 @@ There are three options you can choose from:
       navigate(location.pathname, { replace: true, state: {} });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [homeInputText, location.pathname, navigate]);
+  }, []);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
@@ -149,14 +168,13 @@ There are three options you can choose from:
           /\n\s*-\s*\*\*Fixture ID:\*\*\s*\d+/g,
           ""
         );
-
         setMessages((prevMessages) => [
           ...prevMessages,
           { ...msg, content: filteredContent.trim() },
         ]);
         setLoading(false);
-        if (!externalId && msg.conversationExternalId) {
-          setExternalId(msg.conversationExternalId);
+        if (!conversationExternalId && msg.conversationExternalId) {
+          setConversationExternalId(msg.conversationExternalId);
         }
       });
     }
@@ -165,10 +183,10 @@ There are three options you can choose from:
   const sendMessage = () => {
     if (inputText.trim() === "") return;
     const newMessage: Chatting = {
-      externalId: externalId,
+      externalId: conversationExternalId,
       content: inputText,
       messageType: "TEXT",
-      sender: null,
+      sender: "USER",
     };
     sendChatMessage(newMessage);
     setInputText("");
@@ -176,15 +194,68 @@ There are three options you can choose from:
 
   const handleButtonClick = (buttonText: string) => {
     if (!buttonText) return;
+
+    let isAgentMessage = false;
+    let content: string = "";
+
+    switch (buttonText) {
+      case "Create Prediction":
+        content = `
+Good! To create a prediction market, some information is needed. Please enter the information you know.
+- League
+- Team
+- DATE (e.g., next week, this month, 2025-06-18)
+- Creation command (Currently, only football supported)
+        `.trim();
+        isAgentMessage = true;
+        break;
+      case "Sports Search":
+        content = `
+Great, I can fetch information related to sports. Currently, I only support football.
+- “What are the matches this Sunday?”
+- "Search for Manchester City matches."
+- "Search for Premier League information."
+        `.trim();
+        isAgentMessage = true;
+        break;
+      case "Chat":
+        content = "Ask PrediX anything you want to know! :)";
+        isAgentMessage = true;
+        break;
+    }
+
+    if (isAgentMessage) {
+      const userMessage: Chatting = {
+        externalId: conversationExternalId,
+        content: buttonText,
+        messageType: "TEXT",
+        sender: "USER",
+        data: null,
+      };
+      const agentMessage: Chatting = {
+        externalId: conversationExternalId,
+        content: content,
+        messageType: "TEXT",
+        sender: "AGENT",
+        data: null,
+      };
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        userMessage,
+        agentMessage,
+      ]);
+      return;
+    }
+
     const text =
       buttonText.includes("Win") || buttonText.includes("Draw/Lose")
         ? buttonText.split(" ").slice(-1)[0]
         : buttonText;
     const newMessage: Chatting = {
-      externalId: externalId,
+      externalId: conversationExternalId,
       content: text,
       messageType: "TEXT",
-      sender: null,
+      sender: "USER",
     };
     sendChatMessage(newMessage);
   };
@@ -234,11 +305,10 @@ There are three options you can choose from:
 
       const response = (await chatAPI.sendChatMessage(
         userGameSelectionData
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       )) as any;
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
-          externalId: externalId,
+          externalId: conversationExternalId,
           content: response.data.message.content,
           messageType: "TEXT",
           sender: "AGENT",
@@ -247,7 +317,6 @@ There are three options you can choose from:
       }
 
       const { tr, transId } = response.data.message.data;
-
       const transactionBuffer = Buffer.from(tr, "base64");
       const deserializedTransaction = Transaction.from(transactionBuffer);
       const signedTx = await wallet?.signTransaction(deserializedTransaction);
@@ -278,13 +347,17 @@ There are three options you can choose from:
     <div className="font-family">
       <div className="flex flex-col h-screen text-white w-[700px]">
         <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden">
-          {messages.map((msg, index) => (
-            <ChatMessage
-              key={index}
-              message={msg}
-              handleButtonClick={handleButtonClick}
-            />
-          ))}
+          {loading ? (
+            <div>Loading...</div>
+          ) : (
+            messages.map((msg, index) => (
+              <ChatMessage
+                key={index}
+                message={msg}
+                handleButtonClick={handleButtonClick}
+              />
+            ))
+          )}
         </div>
         <ChatInput
           sendMessage={sendMessage}
