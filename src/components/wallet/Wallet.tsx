@@ -328,10 +328,10 @@ function Wallet() {
                   </div>
                 </div>
                 <div
-                  className={` transition-all duration-500 ease-in-out ${
+                  className={`transition-all duration-500 ease-in-out overflow-hidden ${
                     isSendModalOpen
-                      ? "max-h-[500px] opacity-100"
-                      : "max-h-0 opacity-0"
+                      ? "opacity-100 visible pointer-events-auto max-h-[500px]"
+                      : "opacity-0 invisible pointer-events-none max-h-0"
                   }`}
                 >
                   <SendSolWithEmbeddedWallet />
