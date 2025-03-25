@@ -157,7 +157,7 @@ function Wallet() {
             <p>PrediX</p>
           </div>
 
-          <div className="absolute left-60 top-0 hidden peer-hover:block p-2 bg-[#1E1E1E] text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)]">
+          <div className="absolute left-60 top-0 hidden peer-hover:block p-2  bg-custom-dark text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)]">
             <div className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[10px] border-b-[10px] border-r-[10px] border-transparent border-r-[#1E1E1E]"></div>
             Back home
           </div>
@@ -166,7 +166,7 @@ function Wallet() {
 
       {!isMinimized ? (
         <Card
-          className={`py-4 items-start min-w-[320px] bg-[#1E1E1E] text-[#767676] font-family font-semibold`}
+          className={`py-4 items-start min-w-[320px]  bg-custom-dark text-[#767676] font-family font-semibold`}
         >
           {!isDashboardView ? (
             <>
@@ -396,7 +396,7 @@ function Wallet() {
             <div className="flex items-center gap-4 text-[#B3B3B3]"></div>
           </CardHeader>
           <CardFooter>
-            <div className="min-w-[261px] h-[54px] rounded bg-[#1E1E1E] flex items-center justify-between px-3">
+            <div className="min-w-[261px] h-[54px] rounded  bg-custom-dark flex items-center justify-between px-3">
               <div className="flex gap-3 items-center">
                 <div className="flex gap-2 items-center">
                   <img

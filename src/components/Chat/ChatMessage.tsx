@@ -85,7 +85,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 (selection: Selection, index: React.Key | null | undefined) => (
                   <button
                     key={index}
-                    className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                    className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
                     onClick={() => handleButtonClick(`${selection.type}`)}
                   >
                     {selection.type}
@@ -100,7 +100,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 (selection: Selection, index: React.Key | null | undefined) => (
                   <button
                     key={index}
-                    className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                    className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
                     onClick={() => handleButtonClick(selection.name)}
                   >
                     {selection.name}
@@ -119,7 +119,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 .map((fixtures: any, index: React.Key | null | undefined) => (
                   <button
                     key={index}
-                    className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                    className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
                     onClick={() =>
                       handleButtonClick(
                         `${fixtures.teams.home.name} vs ${fixtures.teams.away.name}`
@@ -136,13 +136,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             <div className="mt-3">
               <>
                 <button
-                  className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                  className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
                   onClick={() => handleButtonClick("Confirm")}
                 >
                   Confirm
                 </button>
                 <button
-                  className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                  className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
                   onClick={() => handleButtonClick("No")}
                 >
                   No
