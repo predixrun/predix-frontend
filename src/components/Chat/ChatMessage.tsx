@@ -13,7 +13,6 @@ interface Chatting {
   sender?: string | null;
   content: string;
   messageType: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any | null;
 }
 
@@ -49,6 +48,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       return () => clearTimeout(timeout);
     }
   }, [index, message]);
+  // 한글자씩이 아닌 한줄씩 하게끔 수정 필요 \n구분하기?
   useEffect(() => {
     if (messageContainerRef.current) {
       messageContainerRef.current.scrollIntoView({
@@ -57,20 +57,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       });
     }
   }, [displayText]);
-
+  const isUserMessage = message.sender === "USER" || message.sender === null;
   return (
     <div
-      className={`flex ${message.sender === null ? "justify-end" : ""} my-5`}
+      className={`flex ${isUserMessage ? "justify-end" : "justify-start"} my-5`}
       ref={messageContainerRef}
     >
       <div
-        className={`text-lg ${
-          message.sender === null ? "mr-3 max-w-[50ch]" : "ml-3"
-        }`}
+        className={`text-lg ${isUserMessage ? "mr-3 max-w-[50ch]" : "ml-3"}`}
       >
         <div
           className={`p-3 mt-2 ${
-            message.sender === null
+            isUserMessage
               ? `${
                   message.content.length > 50 ? "rounded-lg" : "rounded-full"
                 } bg-[#2C2C2C] break-words text-left`
@@ -87,7 +85,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 (selection: Selection, index: React.Key | null | undefined) => (
                   <button
                     key={index}
-                    className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                    className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
                     onClick={() => handleButtonClick(`${selection.type}`)}
                   >
                     {selection.type}
@@ -102,7 +100,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 (selection: Selection, index: React.Key | null | undefined) => (
                   <button
                     key={index}
-                    className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                    className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
                     onClick={() => handleButtonClick(selection.name)}
                   >
                     {selection.name}
@@ -118,22 +116,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                   (fixtureData: { fixture: { status: string } }) =>
                     fixtureData.fixture.status === "Not Started"
                 )
-                .map(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (fixtures: any, index: React.Key | null | undefined) => (
-                    <button
-                      key={index}
-                      className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
-                      onClick={() =>
-                        handleButtonClick(
-                          `${fixtures.teams.home.name} vs ${fixtures.teams.away.name}`
-                        )
-                      }
-                    >
-                      {fixtures.teams.home.name} vs {fixtures.teams.away.name}
-                    </button>
-                  )
-                )}
+                .map((fixtures: any, index: React.Key | null | undefined) => (
+                  <button
+                    key={index}
+                    className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                    onClick={() =>
+                      handleButtonClick(
+                        `${fixtures.teams.home.name} vs ${fixtures.teams.away.name}`
+                      )
+                    }
+                  >
+                    {fixtures.teams.home.name} vs {fixtures.teams.away.name}
+                  </button>
+                ))}
             </div>
           )}
           {/* Yes / Win / Draw-Lose */}
@@ -141,13 +136,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             <div className="mt-3">
               <>
                 <button
-                  className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                  className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
                   onClick={() => handleButtonClick("Confirm")}
                 >
                   Confirm
                 </button>
                 <button
-                  className="px-3 py-1 mx-2 bg-[#1E1E1E] text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                  className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
                   onClick={() => handleButtonClick("No")}
                 >
                   No

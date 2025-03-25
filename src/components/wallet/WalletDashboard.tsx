@@ -74,7 +74,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
   return (
     <div className="flex items-center justify-center z-50 w-full text-sm">
       <div
-        className="bg-[#1E1E1E] rounded-xl p-2 relative w-[280px]"
+        className=" bg-custom-dark rounded-xl p-2 relative w-[280px]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 리더보드 클릭 시 전체 보기 */}
