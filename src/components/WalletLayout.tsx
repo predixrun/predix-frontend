@@ -3,12 +3,8 @@ import { Outlet } from "react-router-dom";
 import Wallet from "./wallet/Wallet";
 
 const WalletLayout: React.FC = () => {
-  const [refreshToken, setRefreshToken] = useState<string | null>(
-    localStorage.getItem("auth_token")
-  );
-  const [privyToken, setPrivyToken] = useState<string | null>(
-    localStorage.getItem("privy:token")
-  );
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [privyToken, setPrivyToken] = useState<string | null>(null);
 
   useEffect(() => {
     const handleAuthTokenUpdate = () => {
