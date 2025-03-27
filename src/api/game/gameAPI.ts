@@ -36,7 +36,6 @@ export const fetchGameHistory = async ({
         type,
         page,
         take,
-        _t: new Date().getTime(),
       }
     });
 

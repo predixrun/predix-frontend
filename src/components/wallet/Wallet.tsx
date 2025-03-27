@@ -16,8 +16,15 @@ import { SendSolWithEmbeddedWallet } from "./WalletTransfer";
 import WalletDashboard from "./WalletDashboard";
 import ChatHistory from "@/components/Chat/ChatHistory";
 
+const WALLET_STATE = {
+  DELEGATE: "delegate",
+  DEPOSIT: "deposit",
+  QRCODE: "qrCode",
+  CONFIRMED: "confirmed",
+} as const;
+
 function Wallet() {
-  const [currentState, setCurrentState] = useState<string>("delegate");
+  const [currentState, setCurrentState] = useState<string>(WALLET_STATE.DELEGATE);
   const [solanaBalance, setSolanaBalance] = useState<string>("");
   const [sonicBalance, setSonicBalance] = useState<string>("");
   const [solanaPriceUSD, setSolanaPriceUSD] = useState(0);
@@ -71,7 +78,7 @@ function Wallet() {
         // Solana
         const solanaConnection = new web3.Connection(
           web3.clusterApiUrl("devnet"),
-          "confirmed"
+          WALLET_STATE.CONFIRMED
         );
         const solBalance = await solanaConnection.getBalance(publicKey);
         const sol = (solBalance / 1_000_000_000).toFixed(4);
@@ -80,7 +87,7 @@ function Wallet() {
         // Sonic
         const sonicConnection = new web3.Connection(
           "https://api.testnet.sonic.game",
-          "confirmed"
+          WALLET_STATE.CONFIRMED
         );
         const sonicBal = await sonicConnection.getBalance(publicKey);
         const sonic = (sonicBal / 1_000_000_000).toFixed(4);
@@ -107,10 +114,10 @@ function Wallet() {
 
     // 상태 설정
     setCurrentState((prevState) => {
-      if (walletToDelegate.delegated && prevState !== "deposit")
-        return "deposit";
-      if (!walletToDelegate.delegated && prevState !== "delegate")
-        return "delegate";
+      if (walletToDelegate.delegated && prevState !== WALLET_STATE.DEPOSIT)
+        return WALLET_STATE.DEPOSIT;
+      if (!walletToDelegate.delegated && prevState !== WALLET_STATE.DELEGATE)
+        return WALLET_STATE.DELEGATE;
       return prevState;
     });
   }, [walletToDelegate]);
@@ -142,11 +149,16 @@ function Wallet() {
       text
     )}&url=${encodeURIComponent(url)}&hashtags=${encodeURIComponent(hashtags)}`;
 
-    window.open(twitterShareUrl, "_blank");
+    const popup = window.open(twitterShareUrl, "_blank");
+    if (!popup) alert("Please allow popups to share on Twitter");
   };
 
   return (
-    <div className="absolute pt-4 left-3 z-100 flex flex-col h-svh gap-2">
+    <div   className={`absolute left-3 z-100 flex flex-col gap-2 ${
+      location.pathname.startsWith("/chat")
+        ? "h-svh pt-4"
+        : "h-auto top-3"
+    }`}>
       {location.pathname.startsWith("/chat") && (
         <div className="">
           <div
@@ -197,35 +209,35 @@ function Wallet() {
               </CardHeader>
               <CardTitle>
                 <>
-                  {currentState !== "confirmed" && (
+                  {currentState !== WALLET_STATE.CONFIRMED && (
                     <div
                       className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${
-                        currentState === "delegate"
+                        currentState === WALLET_STATE.DELEGATE
                           ? "h-[103px]"
-                          : currentState === "deposit"
+                          : currentState === WALLET_STATE.DEPOSIT
                           ? "h-[144px]"
                           : "h-[256px]"
                       }`}
                     >
-                      {currentState === "delegate" && (
+                      {currentState === WALLET_STATE.DELEGATE && (
                         <div className="h-full flex justify-center items-center font-prme text-[36px] text-white cursor-pointer">
                           <DelegateWalletButton
                             setCurrentState={setCurrentState}
                           />
                         </div>
                       )}
-                      {currentState === "deposit" && (
+                      {currentState === WALLET_STATE.DEPOSIT && (
                         <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-prme text-white p-5 gap-1">
                           <div className=" text-[36px]">Deposit</div>
                           <button
                             className="transform bg-[#FA6631] text-black px-4 py-2 rounded cursor-pointer text-[14px] w-[242px] leading-[13px] bg-gradient-to-r from-[#FFEE00] to-[#FA6631]"
-                            onClick={() => setCurrentState("qrCode")}
+                            onClick={() => setCurrentState(WALLET_STATE.QRCODE)}
                           >
                             QR/Address
                           </button>
                         </div>
                       )}
-                      {currentState === "qrCode" && (
+                      {currentState === WALLET_STATE.QRCODE && (
                         <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-family text-white">
                           <div className="p-2 bg-white rounded-lg inline-block">
                             <QRCodeCanvas
@@ -241,7 +253,7 @@ function Wallet() {
                           </div>
                           <button
                             className="mt-4 bg-[#161414] text-[#B3B3B3] px-4 py-2 rounded text-[14px] w-[264px] cursor-pointer"
-                            onClick={() => setCurrentState("confirmed")}
+                            onClick={() => setCurrentState(WALLET_STATE.CONFIRMED)}
                           >
                             I confirmed the address!
                           </button>
@@ -249,7 +261,7 @@ function Wallet() {
                       )}
                     </div>
                   )}
-                  {currentState === "confirmed" && (
+                  {currentState === WALLET_STATE.CONFIRMED && (
                     <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white gap-2">
                       <div className="text-[32px] font-bold">
                         $

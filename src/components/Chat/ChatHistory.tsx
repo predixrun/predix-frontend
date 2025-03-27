@@ -1,21 +1,7 @@
 import chatAPI from "@/api/chat/chatAPI";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-interface Conversation {
-  createdAt: string;
-  externalId: string;
-  id: number;
-  title: string;
-  updatedAt: string;
-  userId: number;
-}
-
-interface ChatListResponse {
-  data: {
-    conversations: Conversation[];
-  };
-}
+import { ChatListResponse, Conversation } from "./chatTypes";
 
 function ChatHistory() {
   const [messages, setMessages] = useState<Conversation[]>([]);
@@ -67,7 +53,6 @@ function ChatHistory() {
       </div>
     </div>
   );
-  
 }
 
 export default ChatHistory;

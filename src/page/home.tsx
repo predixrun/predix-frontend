@@ -7,7 +7,9 @@ import Intro from "@/components/Intro";
 import { useNavigate } from "react-router-dom";
 
 function Home() {
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState<boolean>(() => {
+    return !!localStorage.getItem("auth_token");
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [inputText, setInputText] = useState<string>("");
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ function Home() {
 
       <div className="flex flex-col items-center justify-center font-dd font-family scrollbar-width: none">
         {/* base UI */}
+        {!isConnected && (
         <div
           className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center ${
             isConnected ? "absolute fade-out" : ""
@@ -62,7 +65,7 @@ function Home() {
           <div className="mt-6 text-base">
             <Category onSelect={setSelectedCategory} />
           </div>
-        </div>
+        </div>        )}
 
         {/* new UI */}
         <div

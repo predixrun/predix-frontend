@@ -6,43 +6,7 @@ import signGame from "@/api/chat/signCreateAPI";
 
 import { useSolanaWallets } from "@privy-io/react-auth/solana";
 import { Transaction } from "@solana/web3.js";
-
-interface GameRelation {
-  key: string;
-  content: string;
-  thumbnail: string;
-  count: number;
-}
-
-interface GameData {
-  gameId: number;
-  gameTitle: string;
-  gameContent: string;
-  gameQuantity: string;
-  gameStatus: string;
-  gameExpiredAt: string;
-  gameRelation: GameRelation[];
-  joined: {
-    choiceKey: string;
-    quantity: string;
-    choiceType: string;
-    choiceResult?: string | null;
-    rewardResult?: string | null;
-  };
-  user: {
-    userId: number;
-    name: string;
-    profileImg: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface GameDashboardProps {
-  gameData: GameData;
-  onClose: () => void;
-}
-
+import { GameDashboardProps } from "./gameTypes";
 
 function GameDashboard({ gameData, onClose }: GameDashboardProps) {
   const [closing, setClosing] = useState(false);
@@ -97,26 +61,20 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
     }
   };
 
-
   const isUserMatch = gameData.user.userId === currentUserId;
 
   const quantity =
     gameData.joined.choiceKey === ""
       ? ""
       : isUserMatch
-      ? parseFloat(gameData.gameQuantity)
-      : parseFloat(gameData.joined.quantity);
-  const potentialReward =
-    gameData.joined.choiceKey === ""
-      ? ""
-      : isUserMatch
-      ? parseFloat(gameData.gameQuantity) * 2
-      : parseFloat(gameData.joined.quantity) * 2;
+      ? parseFloat(gameData.gameQuantity) || 0
+      : parseFloat(gameData.joined.quantity) || 0;
+  const potentialReward = quantity ? quantity * 2 : "";
 
   return (
     <>
       <div
-        className={`rounded-full font-family max-w-[600px] max-h-[580px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${
+        className={`rounded-full font-family max-w-[600px] max-h-[580px]  ${
           closing ? "fade-out" : "fade-in"
         }`}
       >
@@ -146,12 +104,10 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
             <div className="flex-col flex items-center gap-2 border rounded-lg bg-[#1B191E] text-base px-6 py-5">
               <div>Your answer is '{gameData.joined.choiceType || ""}'</div>
               <div className="text-xs text-[#767676] text-center">
-                Title: {gameData.gameTitle}<br/>
-                "{gameData.gameContent}"
+                Title: {gameData.gameTitle}
+                <br />"{gameData.gameContent}"
               </div>
-              <div
-                className="gap-1 text-sm bg-black w-[120px] h-[32px] items-center flex justify-center rounded-full border-2 border-[#D74713] cursor-pointer"
-              >
+              <div className="gap-1 text-sm bg-black w-[120px] h-[32px] items-center flex justify-center rounded-full border-2 border-[#D74713] cursor-pointer">
                 {gameData.joined.choiceType}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -180,7 +136,6 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                 </div>
               </div>
               <div className="flex text-center text-xs text-[#767676]">
-
                 After confirming the results, the smart contract is
                 automatically distributed (3% deduction for platform fees)
               </div>
