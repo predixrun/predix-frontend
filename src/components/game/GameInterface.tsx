@@ -1,63 +1,23 @@
 import "@/components/styles/gameinterface-animations.css";
 import GameDashboard from "./GameDashboard";
 import { useEffect, useState } from "react";
-import ReactPaginate from "react-paginate";
 import gameAPI from "@/api/game/gameAPI";
-
-interface GameInterfaceProps {
-  changeParentsFunction: () => void;
-  selectedCategory: string;
-}
-interface GameRelation {
-  key: string;
-  content: string;
-  thumbnail: string;
-  count: number;
-}
-
-interface Game {
-  gameId: number;
-  gameTitle: string;
-  gameContent: string;
-  gameQuantity: string;
-  gameStatus: string;
-  gameExpiredAt: string;
-  gameRelation: {
-    key: string;
-    content: string;
-    thumbnail: string;
-    count: number;
-  }[];
-  joined: {
-    choiceKey: string;
-    quantity: string;
-    choiceType: string;
-    choiceResult?: string | null;
-    rewardResult?: string | null;
-  };
-  user: {
-    userId: number;
-    name: string;
-    profileImg: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
+import { Game, GameInterfaceProps, GameRelation } from "./gameTypes";
+import strategyMap from "@/lib/gameStrategy";
 
 function GameInterfaceComponent({
   changeParentsFunction,
   selectedCategory,
 }: GameInterfaceProps) {
   const [selectedGame, setSelectedGame] = useState<number | null>(null);
-  const [filter, setFilter] = useState<"ONGOING" | "EXPIRED">("ONGOING");
   const [currentPage, setCurrentPage] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [gamesData, setGamesData] = useState<Game[]>([]);
   const [totalGames, setTotalGames] = useState(0);
 
-  const [statusFilter, setStatusFilter] = useState<"ONGOING" | "END">(
-    "ONGOING"
-  );
+  const [statusFilter, setStatusFilter] = useState<
+    "ONGOING" | "EXPIRED" | "END"
+  >("ONGOING");
   const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
   const currentUserId = userProfile?.data?.id || null;
 
@@ -72,15 +32,12 @@ function GameInterfaceComponent({
   };
   useEffect(() => {
     const loadGames = async () => {
-      const gameData = await gameAPI.fetchGameHistory({
-        category: selectedCategory,
-        page: currentPage + 1,
-        take: 8,
-        status:
-          selectedCategory === "History" || selectedCategory === "Created Game"
-            ? statusFilter
-            : undefined,
-      });
+      const strategy = strategyMap[selectedCategory];
+      if (!strategy) return;
+
+      const params = strategy.getApiParams(currentPage, statusFilter);
+
+      const gameData = await gameAPI.fetchGameHistory(params);
 
       if (gameData && gameData.items) {
         const formattedGames = gameData.items.map((game: Game) => ({
@@ -113,51 +70,20 @@ function GameInterfaceComponent({
         }));
 
         setGamesData(formattedGames);
-        setTotalGames(gameData.total)
+        setTotalGames(gameData.total);
       }
     };
 
     loadGames();
   }, [currentPage, selectedCategory, statusFilter]);
-  const games: Game[] = gamesData;
 
-  const displayedGames = games.filter((game) => {
-    const isCreatedGame = selectedCategory === "Created Game";
-    const isHistory = selectedCategory === "History";
-    const isUserGame = isCreatedGame
-      ? game.user.userId === currentUserId
-      : true;
+  const strategy = strategyMap[selectedCategory];
+  const displayedGames =
+    strategy?.filterGames(gamesData, currentUserId, statusFilter) || [];
 
-    if (isHistory) {
-      return (
-        game.joined.choiceKey !== "" &&
-        (statusFilter === "END"
-          ? game.gameStatus === "EXPIRED"
-          : game.gameStatus === "ONGOING" || game.gameStatus === "READY")
-      );
-    }
-
-    if (isCreatedGame) {
-      return (
-        isUserGame &&
-        (statusFilter === "END"
-          ? game.gameStatus === "EXPIRED"
-          : game.gameStatus === "ONGOING" || game.gameStatus === "READY")
-      );
-    }
-
-    const isValidStatus =
-      game.gameStatus === filter || game.gameStatus === "READY";
-
-    return isValidStatus;
-  });
   // Pagination settings
   const itemsPerPage = 8;
-  const pageCount = Math.ceil(totalGames / itemsPerPage);// totalGames로 페이지 수 계산
-
-    // const pageCount = Math.ceil(displayedGames.length / itemsPerPage);
-  // const offset = currentPage * itemsPerPage;
-  // const currentItems = gamesData.slice(offset, offset + itemsPerPage);
+  const pageCount = Math.ceil(totalGames / itemsPerPage);
 
   // page change handler
   const handlePageClick = (event: { selected: number }) => {
@@ -191,10 +117,12 @@ function GameInterfaceComponent({
             <>
               <button
                 className={` bg-custom-dark border-2 border-[#2C2C2C] text-[#B3B3B3] w-[87px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
-                  filter === "ONGOING" ? "border-[#D74713] text-white" : ""
+                  statusFilter === "ONGOING"
+                    ? "border-[#D74713] text-white"
+                    : ""
                 }`}
                 onClick={() => {
-                  setFilter("ONGOING");
+                  setStatusFilter("ONGOING");
                   setCurrentPage(0);
                 }}
               >
@@ -202,10 +130,12 @@ function GameInterfaceComponent({
               </button>
               <button
                 className={` bg-custom-dark border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
-                  filter === "EXPIRED" ? "border-[#D74713] text-white" : ""
+                  statusFilter === "EXPIRED"
+                    ? "border-[#D74713] text-white"
+                    : ""
                 }`}
                 onClick={() => {
-                  setFilter("EXPIRED");
+                  setStatusFilter("EXPIRED");
                   setCurrentPage(0);
                 }}
               >
@@ -331,7 +261,7 @@ function GameInterfaceComponent({
             </div>
 
             {selectedGame === game.gameId && selectedGameData && (
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-100">
+              <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-100">
                 <GameDashboard
                   gameData={selectedGameData}
                   onClose={closeDashboard}
@@ -346,16 +276,6 @@ function GameInterfaceComponent({
       {totalGames > itemsPerPage && (
         <div className="flex justify-end mt-4 relative">
           <div className="flex justify-center items-center bg-black rounded-lg p-2">
-            <ReactPaginate
-              previousLabel={null}
-              nextLabel={null}
-              breakLabel={null}
-              marginPagesDisplayed={0}
-              pageRangeDisplayed={0}
-              onPageChange={handlePageClick}
-              forcePage={currentPage}
-              pageCount={0}
-            />
             <button
               className="text-white text-xl bg-transparent border-none cursor-pointer mx-4 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => handlePageClick({ selected: currentPage - 1 })}
@@ -390,7 +310,7 @@ function GameInterfaceComponent({
                 </svg>
               </span>
               {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-full bg-[#2C2C2C] rounded shadow-lg z-10">
+                <div className="absolute top-full left-0 mt-2 w-full bg-[#2C2C2C] rounded shadow-lg max-h-[100px] overflow-scroll [&::-webkit-scrollbar]:hidden">
                   {[...Array(pageCount)].map((_, i) => {
                     return (
                       <div

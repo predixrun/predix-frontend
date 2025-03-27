@@ -1,25 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-
-interface Selection {
-  name: string;
-  type: string;
-  description: string;
-}
-
-interface Chatting {
-  externalId?: string | null;
-  conversationExternalId?: string;
-  sender?: string | null;
-  content: string;
-  messageType: string;
-  data?: any | null;
-}
-
-interface ChatMessageProps {
-  message: Chatting;
-  handleButtonClick: (buttonText: string) => void;
-}
+import { ChatMessageProps, Selection } from "./chatTypes";
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
