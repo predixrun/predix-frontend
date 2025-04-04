@@ -114,7 +114,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
 
                   <div className="flex items-center gap-2 flex-1">
                     <img
-                      src="sonic-logo.png"
+                      src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
                       alt="profile"
                       className="w-[30px] h-[30px] rounded-full"
                     />
@@ -173,7 +173,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
 
                 <div className="flex items-center gap-2 flex-1">
                   <img
-                    src="sonic-logo.png"
+                    src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
                     alt="profile"
                     className="w-[30px] h-[30px] rounded-full"
                   />

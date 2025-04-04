@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, useLogout } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
 import * as web3 from "@solana/web3.js";
 import DelegateWalletButton from "./DelegateWallet";
@@ -26,9 +26,7 @@ const WALLET_STATE = {
 function Wallet() {
   const [currentState, setCurrentState] = useState<string>(WALLET_STATE.DELEGATE);
   const [solanaBalance, setSolanaBalance] = useState<string>("");
-  const [sonicBalance, setSonicBalance] = useState<string>("");
   const [solanaPriceUSD, setSolanaPriceUSD] = useState(0);
-  const [sonicPriceUSD, setSonicPriceUSD] = useState(0);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
 
   const [isDashboardView, setIsDashboardView] = useState<boolean>(false);
@@ -40,6 +38,15 @@ function Wallet() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = usePrivy();
+  const { logout } = useLogout({
+    onSuccess: () => {
+      if (location.pathname === "/") {
+        window.location.reload() 
+      } else {
+        navigate("/"); 
+      }
+    },
+  });
 
   const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
   let referralCode = "";
@@ -84,27 +91,16 @@ function Wallet() {
         const sol = (solBalance / 1_000_000_000).toFixed(4);
         setSolanaBalance(sol);
 
-        // Sonic
-        const sonicConnection = new web3.Connection(
-          "https://api.testnet.sonic.game",
-          WALLET_STATE.CONFIRMED
-        );
-        const sonicBal = await sonicConnection.getBalance(publicKey);
-        const sonic = (sonicBal / 1_000_000_000).toFixed(4);
-        setSonicBalance(sonic);
 
         const response = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=solana,sonic-svm&vs_currencies=usd"
+          "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
         );
         const data = await response.json();
 
         const solPrice = data.solana?.usd || 0;
-        const sonicPrice = data["sonic-svm"]?.usd || 0;
 
         setSolanaPriceUSD(parseFloat((parseFloat(sol) * solPrice).toFixed(4)));
-        setSonicPriceUSD(
-          parseFloat((parseFloat(sonic) * sonicPrice).toFixed(4))
-        );
+
       } catch (err) {
         console.error("Failed to fetch balance or price:", err);
       }
@@ -154,11 +150,10 @@ function Wallet() {
   };
 
   return (
-    <div   className={`absolute left-3 z-100 flex flex-col gap-2 ${
-      location.pathname.startsWith("/chat")
-        ? "h-svh pt-4"
-        : "h-auto top-3"
-    }`}>
+    <div className={`absolute left-3 z-100 flex flex-col gap-2 ${location.pathname.startsWith("/chat")
+      ? "h-svh pt-4"
+      : "h-auto top-3"
+      }`}>
       {location.pathname.startsWith("/chat") && (
         <div className="">
           <div
@@ -191,7 +186,7 @@ function Wallet() {
                   />
                   <span className="ml-2 text-sm">@{username}</span>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center gap-4">
                   <span
                     onClick={toggleSendModal}
                     className="cursor-pointer hover:text-white"
@@ -205,19 +200,22 @@ function Wallet() {
                       <path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.897 28.897 0 0 0 15.293-7.155.75.75 0 0 0 0-1.114A28.897 28.897 0 0 0 3.105 2.288Z" />
                     </svg>
                   </span>
+                  <button onClick={logout} className="cursor-pointer"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
+                    <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M6 10a.75.75 0 0 1 .75-.75h9.546l-1.048-.943a.75.75 0 1 1 1.004-1.114l2.5 2.25a.75.75 0 0 1 0 1.114l-2.5 2.25a.75.75 0 1 1-1.004-1.114l1.048-.943H6.75A.75.75 0 0 1 6 10Z" clipRule="evenodd" />
+                  </svg></button>
                 </div>
               </CardHeader>
               <CardTitle>
                 <>
                   {currentState !== WALLET_STATE.CONFIRMED && (
                     <div
-                      className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${
-                        currentState === WALLET_STATE.DELEGATE
-                          ? "h-[103px]"
-                          : currentState === WALLET_STATE.DEPOSIT
+                      className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${currentState === WALLET_STATE.DELEGATE
+                        ? "h-[103px]"
+                        : currentState === WALLET_STATE.DEPOSIT
                           ? "h-[144px]"
                           : "h-[256px]"
-                      }`}
+                        }`}
                     >
                       {currentState === WALLET_STATE.DELEGATE && (
                         <div className="h-full flex justify-center items-center font-prme text-[36px] text-white cursor-pointer">
@@ -266,7 +264,7 @@ function Wallet() {
                       <div className="text-[32px] font-bold">
                         $
                         {parseFloat(
-                          (solanaPriceUSD + sonicPriceUSD).toFixed(4)
+                          (solanaPriceUSD).toFixed(4)
                         )}
                       </div>
 
@@ -283,18 +281,6 @@ function Wallet() {
                         <div>${solanaPriceUSD}</div>
                       </div>
 
-                      {/* Sonic */}
-                      <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <img
-                            src="sonic-logo.png"
-                            alt="Sonic"
-                            className="size-5"
-                          />
-                          <span>{sonicBalance} SONIC</span>
-                        </div>
-                        <div>${sonicPriceUSD}</div>
-                      </div>
                       {/* <div
                         className="mt-1.5 flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
                         onClick={toggleDashboard}
@@ -340,11 +326,10 @@ function Wallet() {
                   </div>
                 </div>
                 <div
-                  className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                    isSendModalOpen
-                      ? "opacity-100 visible pointer-events-auto max-h-[500px]"
-                      : "opacity-0 invisible pointer-events-none max-h-0"
-                  }`}
+                  className={`transition-all duration-500 ease-in-out overflow-hidden ${isSendModalOpen
+                    ? "opacity-100 visible pointer-events-auto max-h-[500px]"
+                    : "opacity-0 invisible pointer-events-none max-h-0"
+                    }`}
                 >
                   <SendSolWithEmbeddedWallet />
                 </div>
@@ -419,13 +404,6 @@ function Wallet() {
                   <div className="flex flex-col text-sm">
                     <span>{solanaBalance} SOL</span>
                     <span className="text-[#B3B3B3]">${solanaPriceUSD}</span>
-                  </div>
-                </div>
-                <div className="flex gap-2 items-center ml-4">
-                  <img src="sonic-logo.png" alt="Sonic" className="size-5" />
-                  <div className="flex flex-col text-sm">
-                    <span>{sonicBalance} SONIC</span>
-                    <span className="text-[#B3B3B3]">${sonicPriceUSD}</span>
                   </div>
                 </div>
               </div>

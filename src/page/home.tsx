@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Category } from "@/components/game/Category";
 import "@/components/styles/home-animations.css";
 import GameInterfaceComponent from "@/components/game/GameInterface";
 import LoginHandler from "@/components/LoginHandler";
 import Intro from "@/components/Intro";
 import { useNavigate } from "react-router-dom";
+import { usePrivy } from "@privy-io/react-auth";
 
 function Home() {
+  const { authenticated } = usePrivy();
   const [isConnected, setIsConnected] = useState<boolean>(() => {
-    return !!localStorage.getItem("auth_token");
+    return !!authenticated;
   });
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [inputText, setInputText] = useState<string>("");
@@ -26,10 +28,14 @@ function Home() {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       homeSendMessage();
-      
+
     }
   };
-
+  useEffect(() => {
+    authenticated
+      ? setIsConnected(true)
+      : setIsConnected(false);
+  }, [authenticated]);
   return (
     <>
       {!isConnected && <Intro />}
@@ -38,40 +44,38 @@ function Home() {
       <div className="flex flex-col items-center justify-center font-dd font-family scrollbar-width: none">
         {/* base UI */}
         {!isConnected && (
-        <div
-          className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center ${
-            isConnected ? "absolute fade-out" : ""
-          }`}
-        >
-          <div className="w-full h-[77px] overflow-hidden mx-4">
-            <div className="p-[1px] rounded-full w-full h-full bg-gradient-to-r from-[#FFEE00] to-[#FA6631] flex items-center">
-              <div className="flex-grow h-full flex items-center bg-black rounded-full">
-                <div className="flex justify-between items-center w-full">
-                  <span className="pl-8 text-white text-lg">
-                    Please connect wallet {"->"}
-                  </span>
-                  <LoginHandler setIsConnected={setIsConnected} />
+          <div
+            className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center ${isConnected ? "absolute fade-out" : ""
+              }`}
+          >
+            <div className="w-full h-[77px] overflow-hidden mx-4">
+              <div className="p-[1px] rounded-full w-full h-full bg-gradient-to-r from-[#FFEE00] to-[#FA6631] flex items-center">
+                <div className="flex-grow h-full flex items-center bg-black rounded-full">
+                  <div className="flex justify-between items-center w-full">
+                    <span className="pl-8 text-white text-lg">
+                      Please connect wallet {"->"}
+                    </span>
+                    <LoginHandler setIsConnected={setIsConnected} />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          {!selectedCategory && (
-            <p className="text-gray-500 text-center mt-12 text-base">
-              Hello! I'm the AI for the Prediction Game. <br />
-              Just tell me what you need, and I'll assist you quickly and
-              efficiently!
-            </p>
-          )}
-          <div className="mt-6 text-base">
-            <Category onSelect={setSelectedCategory} />
-          </div>
-        </div>        )}
+            {!selectedCategory && (
+              <p className="text-gray-500 text-center mt-12 text-base">
+                Hello! I'm the AI for the Prediction Game. <br />
+                Just tell me what you need, and I'll assist you quickly and
+                efficiently!
+              </p>
+            )}
+            <div className="mt-6 text-base">
+              <Category onSelect={setSelectedCategory} />
+            </div>
+          </div>)}
 
         {/* new UI */}
         <div
-          className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center ${
-            !selectedCategory ? "ml-60" : ""
-          } ${isConnected ? "fade-in" : "hidden"}`}
+          className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center ${!selectedCategory ? "ml-60" : ""
+            } ${isConnected ? "fade-in" : "hidden"}`}
         >
           <div className="w-full h-[77px] overflow-hidden mx-4">
             <div className="p-[1px] rounded-full w-full h-full flex items-center">
@@ -109,11 +113,11 @@ function Home() {
         {["Trending Game", "Recent Game", "History", "Created Game"].includes(
           selectedCategory
         ) && (
-          <GameInterfaceComponent
-            changeParentsFunction={changeParents}
-            selectedCategory={selectedCategory}
-          />
-        )}
+            <GameInterfaceComponent
+              changeParentsFunction={changeParents}
+              selectedCategory={selectedCategory}
+            />
+          )}
       </div>
     </>
   );
