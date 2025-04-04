@@ -1,5 +1,7 @@
+import { CoinBase } from "@/types/coins";
 import { useSolanaWallets } from "@privy-io/react-auth/solana";
 import {
+  clusterApiUrl,
   Connection,
   PublicKey,
   SystemProgram,
@@ -9,7 +11,7 @@ import { useState } from "react";
 
 export function SendSolWithEmbeddedWallet() {
   const { wallets } = useSolanaWallets();
-  const connection = new Connection("https://api.testnet.sonic.game");
+  const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
@@ -82,7 +84,7 @@ export function SendSolWithEmbeddedWallet() {
         type="number"
         min="0"
         step="any"
-        placeholder="Amount of SONIC to send"
+        placeholder="Amount of SOL to send"
         value={amount}
         onChange={handleAmountChange}
         className="px-4 py-2 rounded w-full"
@@ -96,7 +98,7 @@ export function SendSolWithEmbeddedWallet() {
             : "bg-[#B3B3B3] hover:bg-[#4a4a4a]"
         }`}
       >
-        Send {amount || 0} SONIC
+        Send {amount || 0} {CoinBase.SOL}
       </button>
       {modalMessage !== "" && (
         <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50">

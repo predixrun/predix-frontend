@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import "@/components/styles/game-dashboard-animations.css";
 import joinGame from "@/api/chat/joinAPI";
 import signGame from "@/api/chat/signCreateAPI";
+import { CoinBase } from "@/types/coins";
 
 import { useSolanaWallets } from "@privy-io/react-auth/solana";
 import { Transaction } from "@solana/web3.js";
@@ -97,7 +98,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                   {gameData.user.name} | Ends: {gameData.gameExpiredAt}
                 </div>
               </div>
-              <div>Wager Size ({gameData.gameQuantity} SONIC)</div>
+              <div>Wager Size ({gameData.gameQuantity} {CoinBase.SOL})</div>
             </div>
           </CardHeader>
           <CardContent className="mt-5">
@@ -122,7 +123,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Your votes</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                    {quantity || "0"} SONIC
+                    {quantity || "0"} {CoinBase.SOL}
                   </div>
                 </div>
                 <div className="flex justify-center">
@@ -131,7 +132,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Potential reward</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                    {potentialReward || "0"} SONIC
+                    {potentialReward || "0"} {CoinBase.SOL}
                   </div>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import gameAPI from "@/api/game/gameAPI";
 import { Game, GameInterfaceProps, GameRelation } from "./gameTypes";
 import strategyMap from "@/lib/gameStrategy";
+import { CoinBase } from "@/types/coins";
 
 function GameInterfaceComponent({
   changeParentsFunction,
@@ -254,7 +255,7 @@ function GameInterfaceComponent({
                         : ""
                     }
                   >
-                    Wager Size ({parseFloat(game.gameQuantity)} SONIC)
+                    Wager Size ({parseFloat(game.gameQuantity)} {CoinBase.SOL})
                   </div>
                 </div>
               </div>
