@@ -8,7 +8,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
   const [displayText, setDisplayText] = useState("");
   const [index, setIndex] = useState(0);
-  const [bridge, setBridge] = useState(false);
   const speed = 10;
   const messageContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {

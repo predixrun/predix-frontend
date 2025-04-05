@@ -4,10 +4,8 @@ import "@/components/styles/game-dashboard-animations.css";
 import joinGame from "@/api/chat/joinAPI";
 import signGame from "@/api/chat/signCreateAPI";
 import { CoinBase } from "@/types/coins";
-
-import { useSolanaWallets } from "@privy-io/react-auth/solana";
-import { Transaction } from "@solana/web3.js";
 import { Game } from "./gameTypes";
+import signTransaction from "../wallet/SignWallet";
 
 export interface GameDashboardProps {
   game: Game;
@@ -22,9 +20,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
   const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
   const currentUserId = userProfile?.data?.id || null;
 
-  const { wallets } = useSolanaWallets();
-  console.log("wallets", wallets);
-  const wallet = wallets.find((w) => w.walletClientType === "privy");
+  const wallet = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
 
   const handleClose = () => {
     setClosing(true);
@@ -42,14 +38,9 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
 
       const { tr, transId } = result.data;
 
-      const transactionBuffer = Buffer.from(tr, "base64");
+      const rawTransaction = await signTransaction(tr, wallet.solPrivateKey);
 
-      const deserializedTransaction = Transaction.from(transactionBuffer);
 
-      const signedTx = await wallet?.signTransaction(deserializedTransaction);
-
-      const signedTransaction = signedTx?.serialize();
-      const rawTransaction = signedTransaction?.toString("base64");
 
       await signGame(transId, rawTransaction);
 

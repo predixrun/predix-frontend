@@ -18,9 +18,9 @@ export default function GameCard({ game, onCardClick }: GameCardProps) {
         <div className="title-line flex items-center rounded-full w-full h-[42px] justify-between bg-[#1B191E] px-3">
           <div className="title-text text-xs">{game.gameTitle}</div>
           <div className="mr-3 text-xs flex items-center gap-2">
-            <img src={game.gameRelation[0].thumbnail} alt="home" className="size-5" />
+            <img src={game.gameRelation[0].thumbnail || "PrediX-logo.webp"} alt="home" className="size-5" />
             vs
-            <img src={game.gameRelation[1].thumbnail} alt="away" className="size-5" />
+            <img src={game.gameRelation[1].thumbnail || "PrediX-logo.webp"} alt="away" className="size-5" />
             {game.gameStatus === "EXPIRED" && (
               <span className="text-red-500 ml-2">Expired</span>
             )}

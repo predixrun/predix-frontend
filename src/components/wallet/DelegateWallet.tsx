@@ -1,7 +1,6 @@
 import {
   useDelegatedActions,
   usePrivy,
-  useSolanaWallets,
   WalletWithMetadata,
 } from "@privy-io/react-auth";
 
@@ -11,12 +10,10 @@ interface DelegateWalletButtonProps {
 
 function DelegateWalletButton({ setCurrentState }: DelegateWalletButtonProps) {
   const { user, ready } = usePrivy();
-  const { wallets } = useSolanaWallets();
   const { delegateWallet } = useDelegatedActions();
 
-  const walletToDelegate = wallets.find(
-    (wallet) => wallet.walletClientType === "privy"
-  );
+  const walletToDelegate = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
+  console.log("walletToDelegate", walletToDelegate)
 
   const isAlreadyDelegated = !!user?.linkedAccounts.find(
     (account): account is WalletWithMetadata =>
@@ -26,7 +23,7 @@ function DelegateWalletButton({ setCurrentState }: DelegateWalletButtonProps) {
   const onDelegate = async () => {
     if (!walletToDelegate || !ready) return;
 
-    const isSolana = walletToDelegate.address === "solana";
+    const isSolana = walletToDelegate.solPublicKey
     const chainType = isSolana ? "solana" : "ethereum";
 
     try {

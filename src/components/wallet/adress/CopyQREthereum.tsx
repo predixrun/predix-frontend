@@ -7,17 +7,12 @@ const CopyQREthereum = () => {
   console.log("user", user);
   const [copied, setCopied] = useState(false);
 
-  const walletToEVM = user?.linkedAccounts.find(
-    (wallet) =>
-      wallet.type === "wallet" &&
-      wallet.chainType === "ethereum" &&
-      wallet.walletClientType === "privy"
-  ) as { address: string } | undefined;
+  const walletToEVM = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
 
   const handleCopy = async () => {
-    if (walletToEVM?.address) {
+    if (walletToEVM?.evmPublicKey) {
       try {
-        await navigator.clipboard.writeText(walletToEVM.address);
+        await navigator.clipboard.writeText(walletToEVM.evmPublicKey);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch (err) {
@@ -26,12 +21,12 @@ const CopyQREthereum = () => {
     }
   };
 
-  if (!walletToEVM?.address) return null;
+  if (!walletToEVM?.evmPublicKey) return null;
 
   return (
     <div className="flex items-center gap-2">
       <span className={`text-sm text-[${colors.text.gray}]`}>
-        {`${walletToEVM.address.slice(0, 4)}...${walletToEVM.address.slice(-4)}`}
+        {`${walletToEVM.evmPublicKey.slice(0, 4)}...${walletToEVM.evmPublicKey.slice(-4)}`}
       </span>
       <button
         onClick={handleCopy}
