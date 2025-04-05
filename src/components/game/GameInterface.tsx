@@ -17,7 +17,6 @@ export default function GameInterfaceComponent({
   const [totalGames, setTotalGames] = useState(0);
   const [statusFilter, setStatusFilter] = useState<GameStatus>("ONGOING");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
   const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
   const currentUserId = userProfile?.data?.id || null;
 

@@ -1,3 +1,4 @@
+import { CoinBase } from "@/types/coins";
 import { Game } from "./gameTypes";
 
 interface GameCardProps {
@@ -6,7 +7,7 @@ interface GameCardProps {
   truncateMiddle: (text: string, maxLength: number) => string;
 }
 
-export default function GameCard({ game, onCardClick, truncateMiddle }: GameCardProps) {
+export default function GameCard({ game, onCardClick }: GameCardProps) {
   return (
     <div
       key={game.gameId}
@@ -16,8 +17,10 @@ export default function GameCard({ game, onCardClick, truncateMiddle }: GameCard
       <div className="animated-card-inner">
         <div className="title-line flex items-center rounded-full w-full h-[42px] justify-between bg-[#1B191E] px-3">
           <div className="title-text text-xs">{game.gameTitle}</div>
-          <div className="mr-3 text-xs">
-            {truncateMiddle(game.gameContent, 10)}
+          <div className="mr-3 text-xs flex items-center gap-2">
+            <img src={game.gameRelation[0].thumbnail} alt="home" className="size-5" />
+            vs
+            <img src={game.gameRelation[1].thumbnail} alt="away" className="size-5" />
             {game.gameStatus === "EXPIRED" && (
               <span className="text-red-500 ml-2">Expired</span>
             )}
@@ -32,9 +35,11 @@ export default function GameCard({ game, onCardClick, truncateMiddle }: GameCard
                 className="w-6 h-6 rounded-full mr-2"
               />
               <span className="text-sm">{game.user.name}</span>
+              |
+              <span className="text-sm">{(game.gameExpiredAt)}</span>
             </div>
             <div className="text-sm text-gray-400">
-              {game.gameExpiredAt}
+              <span className="text-sm">{Number(game.gameQuantity).toFixed(6)} {CoinBase.SOL}</span>
             </div>
           </div>
         </div>

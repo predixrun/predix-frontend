@@ -23,7 +23,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
   const currentUserId = userProfile?.data?.id || null;
 
   const { wallets } = useSolanaWallets();
-
+  console.log("wallets", wallets);
   const wallet = wallets.find((w) => w.walletClientType === "privy");
 
   const handleClose = () => {
@@ -73,16 +73,15 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
     game.joined.choiceKey === ""
       ? ""
       : isUserMatch
-      ? parseFloat(game.gameQuantity) || 0
-      : parseFloat(game.joined.quantity) || 0;
+        ? parseFloat(game.gameQuantity) || 0
+        : parseFloat(game.joined.quantity) || 0;
   const potentialReward = quantity ? quantity * 2 : "";
 
   return (
     <>
       <div
-        className={`rounded-full font-family max-w-[600px] max-h-[580px]  ${
-          closing ? "fade-out" : "fade-in"
-        }`}
+        className={`rounded-full font-family max-w-[600px] max-h-[580px]  ${closing ? "fade-out" : "fade-in"
+          }`}
       >
         <Card className="bg-[#1C1C1D] text-white">
           <CardHeader className="flex-col rounded-t-lg drop-shadow-lg shadow-2xl shadow-black bg-gradient-to-b from-[#2C2C2C] to-black p-3">
@@ -109,9 +108,14 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
           <CardContent className="mt-5">
             <div className="flex-col flex items-center gap-2 border rounded-lg bg-[#1B191E] text-base px-6 py-5">
               <div>Your answer is '{game.joined.choiceType || ""}'</div>
-              <div className="text-xs text-[#767676] text-center">
+              <div className="text-xs text-[#767676] text-center ">
                 Title: {game.gameTitle}
-                <br />"{game.gameContent}"
+                <br />
+                <div className="flex items-center gap-2 justify-center my-2">
+                  <img src={game.gameRelation[0].thumbnail} alt="home" className="size-5" />
+                  vs
+                  <img src={game.gameRelation[1].thumbnail} alt="away" className="size-5" />
+                </div>
               </div>
               <div className="gap-1 text-sm bg-black w-[120px] h-[32px] items-center flex justify-center rounded-full border-2 border-[#D74713] cursor-pointer">
                 {game.joined.choiceType}

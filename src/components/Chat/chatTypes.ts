@@ -39,3 +39,30 @@ export interface ChatListResponse {
     conversations: Conversation[];
   };
 }
+
+type NetworkName = string;
+
+export interface BaseMessage {
+  externalId: string | null;
+  content: string;
+}
+
+export interface CreateSwapMessage extends BaseMessage {
+  messageType: 'CREATE_SWAP';
+  data: {
+    svmPk: string;
+    evmPk: string;
+    fromNetwork: NetworkName;
+    toNetwork: NetworkName;
+    fromAsset: string; // 수량 같은 문자열
+    toAsset: string;
+    quantity: string;
+  };
+}
+
+export interface TextMessage extends BaseMessage {
+  messageType: 'TEXT';
+  data: null;
+}
+
+export type AgentMessage = CreateSwapMessage | TextMessage;

@@ -35,7 +35,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ['buffer'],
   },
-  esbuild: {
-    drop: ['console', 'debugger'],
-  },
+  // esbuild: {
+  //   drop: ['console', 'debugger'],
+  // },
 });
