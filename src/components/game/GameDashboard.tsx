@@ -7,9 +7,14 @@ import { CoinBase } from "@/types/coins";
 
 import { useSolanaWallets } from "@privy-io/react-auth/solana";
 import { Transaction } from "@solana/web3.js";
-import { GameDashboardProps } from "./gameTypes";
+import { Game } from "./gameTypes";
 
-function GameDashboard({ gameData, onClose }: GameDashboardProps) {
+export interface GameDashboardProps {
+  game: Game;
+  onClose: () => void;
+}
+
+function GameDashboard({ game, onClose }: GameDashboardProps) {
   const [closing, setClosing] = useState(false);
   const [betStatus, setBetStatus] = useState<
     "pending" | "success" | "fail" | ""
@@ -32,7 +37,7 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
     setBetStatus("pending");
 
     try {
-      const gameId = gameData.gameId;
+      const gameId = game.gameId;
       const result = await joinGame(gameId);
 
       const { tr, transId } = result.data;
@@ -62,14 +67,14 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
     }
   };
 
-  const isUserMatch = gameData.user.userId === currentUserId;
+  const isUserMatch = game.user.userId === currentUserId;
 
   const quantity =
-    gameData.joined.choiceKey === ""
+    game.joined.choiceKey === ""
       ? ""
       : isUserMatch
-      ? parseFloat(gameData.gameQuantity) || 0
-      : parseFloat(gameData.joined.quantity) || 0;
+      ? parseFloat(game.gameQuantity) || 0
+      : parseFloat(game.joined.quantity) || 0;
   const potentialReward = quantity ? quantity * 2 : "";
 
   return (
@@ -82,34 +87,34 @@ function GameDashboard({ gameData, onClose }: GameDashboardProps) {
         <Card className="bg-[#1C1C1D] text-white">
           <CardHeader className="flex-col rounded-t-lg drop-shadow-lg shadow-2xl shadow-black bg-gradient-to-b from-[#2C2C2C] to-black p-3">
             <div className="justify-between flex p-1 mt-1 text-xl">
-              <div>[{gameData.gameTitle}]</div>
+              <div>[{game.gameTitle}]</div>
               <div className="text-sm items-center flex">
-                {gameData.joined.choiceResult || ""}
+                {game.joined.choiceResult || ""}
               </div>
             </div>
             <div className="justify-between flex p-1 mb-1 text-sm">
               <div>
                 <div className="flex gap-2 items-center">
                   <img
-                    src={gameData.user.profileImg}
+                    src={game.user.profileImg}
                     alt="profileImg"
                     className="size-6 rounded-full"
                   />{" "}
-                  {gameData.user.name} | Ends: {gameData.gameExpiredAt}
+                  {game.user.name} | Ends: {game.gameExpiredAt}
                 </div>
               </div>
-              <div>Wager Size ({gameData.gameQuantity} {CoinBase.SOL})</div>
+              <div>Wager Size ({game.gameQuantity} {CoinBase.SOL})</div>
             </div>
           </CardHeader>
           <CardContent className="mt-5">
             <div className="flex-col flex items-center gap-2 border rounded-lg bg-[#1B191E] text-base px-6 py-5">
-              <div>Your answer is '{gameData.joined.choiceType || ""}'</div>
+              <div>Your answer is '{game.joined.choiceType || ""}'</div>
               <div className="text-xs text-[#767676] text-center">
-                Title: {gameData.gameTitle}
-                <br />"{gameData.gameContent}"
+                Title: {game.gameTitle}
+                <br />"{game.gameContent}"
               </div>
               <div className="gap-1 text-sm bg-black w-[120px] h-[32px] items-center flex justify-center rounded-full border-2 border-[#D74713] cursor-pointer">
-                {gameData.joined.choiceType}
+                {game.joined.choiceType}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"

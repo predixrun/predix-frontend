@@ -8,6 +8,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
   const [displayText, setDisplayText] = useState("");
   const [index, setIndex] = useState(0);
+  const [swap, setSwap] =useState(false);
   const speed = 10;
   const messageContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -124,6 +125,24 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 </button>
                 <button
                   className="px-3 py-1 mx-2  bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                  onClick={() => handleButtonClick("No")}
+                >
+                  No
+                </button>
+              </>
+            </div>
+          )}
+          {message.messageType === "TOKEN_BRIDGE" && (
+            <div className="mt-3">
+              <>
+                <button
+                  className="px-3 py-1 mx-2 bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
+                  onClick={() => handleButtonClick("Yes")}
+                >
+                  Yes
+                </button>
+                <button
+                  className="px-3 py-1 mx-2 bg-custom-dark text-[12px] text-white border-2 border-[#2C2C2C] rounded-full opacity-30 hover:opacity-100 hover:text-white hover:border-white transition-all duration-300 hover:shadow-[0px_0px_30px_rgba(255,255,255,0.4)] cursor-pointer"
                   onClick={() => handleButtonClick("No")}
                 >
                   No

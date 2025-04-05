@@ -72,7 +72,7 @@ function ChattingComponents() {
     string | null
   >(null);
   const isHomeMessageProcessed = useRef(false);
-
+  console.log("messages", messages);
   const getWelcomeMessage = (username: string): Chatting => ({
     externalId: null,
     content: `
@@ -355,9 +355,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
     <div className="font-family">
       <div className="flex flex-col h-screen text-white w-[700px]">
         <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden">
-          {loading ? (
-            <div>Loading...</div>
-          ) : (
+          {
             messages.map((msg, index) => (
               <ChatMessage
                 key={index}
@@ -365,7 +363,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
                 handleButtonClick={handleButtonClick}
               />
             ))
-          )}
+          }
         </div>
         <ChatInput
           sendMessage={sendMessage}

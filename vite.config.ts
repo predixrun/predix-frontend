@@ -1,20 +1,33 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import path from "path";
 import tailwindcss from "@tailwindcss/vite";
-import inject from "@rollup/plugin-inject";
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    nodePolyfills({
+      include: ['buffer', 'crypto', 'util', 'stream'],
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+    }),
+    tailwindcss()
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  build: {
-    rollupOptions: {
-      plugins: [inject({ Buffer: ["buffer", "Buffer"] })],
-    },
+
+  define: {
+    global: {},
+    'process.env': {},
+  },
+  optimizeDeps: {
+    include: ['buffer'],
   },
   esbuild: {
     drop: ['console', 'debugger'],
