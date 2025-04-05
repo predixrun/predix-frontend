@@ -3,6 +3,8 @@ import react from "@vitejs/plugin-react";
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import path from "path";
 import tailwindcss from "@tailwindcss/vite";
+import inject from "@rollup/plugin-inject";
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -21,7 +23,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-
+  build: {
+    rollupOptions: {
+      plugins: [inject({ Buffer: ["buffer", "Buffer"] })],
+    },
+  },
   define: {
     global: {},
     'process.env': {},
