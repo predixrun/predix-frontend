@@ -5,28 +5,35 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, useLogout } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
 import * as web3 from "@solana/web3.js";
-import DelegateWalletButton from "./DelegateWallet";
 import { QRCodeCanvas } from "qrcode.react";
-import { CopyQRClipboard } from "./CopyQRClipboard";
+import CopyQRClipboard from "@/components/wallet/adress/CopyQRClipboard";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SendSolWithEmbeddedWallet } from "./WalletTransfer";
 import WalletDashboard from "./WalletDashboard";
 import ChatHistory from "@/components/Chat/ChatHistory";
+import Profile from "../Profile/Profile";
+import AdressSelection from "./adress/AdressSelection";
+import BalanceFetch from "./token/WalletBalance";
+
+const WALLET_STATE = {
+  DELEGATE: "delegate",
+  DEPOSIT: "deposit",
+  QRCODE: "qrCode",
+  CONFIRMED: "confirmed",
+} as const;
 
 function Wallet() {
-  const [currentState, setCurrentState] = useState<string>("delegate");
+  const [currentState, setCurrentState] = useState<string>(WALLET_STATE.DEPOSIT);
   const [solanaBalance, setSolanaBalance] = useState<string>("");
-  const [sonicBalance, setSonicBalance] = useState<string>("");
   const [solanaPriceUSD, setSolanaPriceUSD] = useState(0);
-  const [sonicPriceUSD, setSonicPriceUSD] = useState(0);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
 
   const [isDashboardView, setIsDashboardView] = useState<boolean>(false);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
-
+  const [isAdressSelection, setIsAdressSelection] = useState(false);
   const toggleSendModal = () => setIsSendModalOpen(!isSendModalOpen);
   const toggleDashboard = () => setIsDashboardView(!isDashboardView);
 
@@ -34,70 +41,54 @@ function Wallet() {
   const navigate = useNavigate();
   const { user } = usePrivy();
 
-  const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
-  let referralCode = "";
-  if (userProfile?.data?.referral?.code) {
-    referralCode = userProfile.data.referral.code;
-  }
+  const { logout } = useLogout({
+    onSuccess: () => {
+      localStorage.removeItem("profile_data");
+      localStorage.removeItem("auth_token");
 
-  const copyToReferralCode = () => {
-    if (referralCode) {
-      navigator.clipboard
-        .writeText(referralCode)
-        .then(() => {
-          alert("Invite code copied to clipboard!");
-        })
-        .catch((err) => {
-          console.error("Failed to copy text:", err);
-        });
-    }
-  };
+      if (location.pathname === "/") {
+        window.location.reload()
+      } else {
+        navigate("/");
+      }
+    },
+  });
+
+
+
+
+
   const handleMinimizeToggle = () => {
     setIsMinimized(!isMinimized);
   };
-  const walletToDelegate = user?.linkedAccounts.find(
-    (wallet) =>
-      wallet.type === "wallet" &&
-      wallet.walletClientType === "privy" &&
-      wallet.chainType === "solana"
-  ) as { delegated: boolean; address: string } | undefined;
+  const walletToDelegate = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
+
   useEffect(() => {
     if (!walletToDelegate) return;
 
     const fetchBalance = async () => {
       try {
-        const publicKey = new web3.PublicKey(walletToDelegate.address);
+        const publicKey = new web3.PublicKey(walletToDelegate.solPublicKey);
 
         // Solana
         const solanaConnection = new web3.Connection(
           web3.clusterApiUrl("devnet"),
-          "confirmed"
+          WALLET_STATE.CONFIRMED
         );
         const solBalance = await solanaConnection.getBalance(publicKey);
         const sol = (solBalance / 1_000_000_000).toFixed(4);
         setSolanaBalance(sol);
 
-        // Sonic
-        const sonicConnection = new web3.Connection(
-          "https://api.testnet.sonic.game",
-          "confirmed"
-        );
-        const sonicBal = await sonicConnection.getBalance(publicKey);
-        const sonic = (sonicBal / 1_000_000_000).toFixed(4);
-        setSonicBalance(sonic);
 
         const response = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=solana,sonic-svm&vs_currencies=usd"
+          "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
         );
         const data = await response.json();
 
         const solPrice = data.solana?.usd || 0;
-        const sonicPrice = data["sonic-svm"]?.usd || 0;
 
         setSolanaPriceUSD(parseFloat((parseFloat(sol) * solPrice).toFixed(4)));
-        setSonicPriceUSD(
-          parseFloat((parseFloat(sonic) * sonicPrice).toFixed(4))
-        );
+
       } catch (err) {
         console.error("Failed to fetch balance or price:", err);
       }
@@ -105,16 +96,7 @@ function Wallet() {
 
     fetchBalance();
 
-    // 상태 설정
-    setCurrentState((prevState) => {
-      if (walletToDelegate.delegated && prevState !== "deposit")
-        return "deposit";
-      if (!walletToDelegate.delegated && prevState !== "delegate")
-        return "delegate";
-      return prevState;
-    });
   }, [walletToDelegate]);
-
   // Find user name
   const twitterAccount = user?.linkedAccounts[0] as
     | { username: string }
@@ -133,20 +115,27 @@ function Wallet() {
   //share
   const handleShare = () => {
     const text = "Check out this awesome prediction market on PrediX!";
-    const url = referralCode
-      ? `https://PrediX.run/invite/${referralCode}`
-      : "https://PrediX.run";
+    const url =
+      "https://PrediX.run";
     const hashtags = "PrediX,PredictionMarket";
 
     const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       text
     )}&url=${encodeURIComponent(url)}&hashtags=${encodeURIComponent(hashtags)}`;
 
-    window.open(twitterShareUrl, "_blank");
+    const popup = window.open(twitterShareUrl, "_blank");
+    if (!popup) alert("Please allow popups to share on Twitter");
   };
 
+
+  const handleAdressSelection = () => {
+    setIsAdressSelection(!isAdressSelection);
+  }
   return (
-    <div className="absolute pt-4 left-3 z-100 flex flex-col h-svh gap-2">
+    <div className={`absolute left-3 z-100 flex flex-col gap-2 ${location.pathname.startsWith("/chat")
+      ? "h-svh pt-4"
+      : "h-auto top-3"
+      }`}>
       {location.pathname.startsWith("/chat") && (
         <div className="">
           <div
@@ -164,6 +153,7 @@ function Wallet() {
         </div>
       )}
 
+
       {!isMinimized ? (
         <Card
           className={`py-4 items-start min-w-[320px]  bg-custom-dark text-[#767676] font-family font-semibold`}
@@ -171,18 +161,11 @@ function Wallet() {
           {!isDashboardView ? (
             <>
               <CardHeader>
-                <div className="flex items-center">
-                  <img
-                    src={ProfileUrl}
-                    alt="Profile"
-                    className="rounded-full w-10 h-10"
-                  />
-                  <span className="ml-2 text-sm">@{username}</span>
-                </div>
-                <div className="flex items-center">
+                <Profile Selection={false} />
+                <div className="flex items-center gap-4">
                   <span
                     onClick={toggleSendModal}
-                    className="cursor-pointer hover:text-white"
+                    className="cursor-pointer transition-all duration-300 hover:text-white hover:scale-110"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -193,55 +176,53 @@ function Wallet() {
                       <path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.897 28.897 0 0 0 15.293-7.155.75.75 0 0 0 0-1.114A28.897 28.897 0 0 0 3.105 2.288Z" />
                     </svg>
                   </span>
+                  <button onClick={logout} className="cursor-pointer transition-all duration-300 hover:text-white hover:scale-110"> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
+                    <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M6 10a.75.75 0 0 1 .75-.75h9.546l-1.048-.943a.75.75 0 1 1 1.004-1.114l2.5 2.25a.75.75 0 0 1 0 1.114l-2.5 2.25a.75.75 0 1 1-1.004-1.114l1.048-.943H6.75A.75.75 0 0 1 6 10Z" clipRule="evenodd" />
+                  </svg></button>
                 </div>
               </CardHeader>
               <CardTitle>
                 <>
-                  {currentState !== "confirmed" && (
+                  {currentState !== WALLET_STATE.CONFIRMED && (
                     <div
-                      className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${
-                        currentState === "delegate"
-                          ? "h-[103px]"
-                          : currentState === "deposit"
+                      className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${currentState === WALLET_STATE.DELEGATE
+                        ? "h-[103px]"
+                        : currentState === WALLET_STATE.DEPOSIT
                           ? "h-[144px]"
                           : "h-[256px]"
-                      }`}
+                        }`}
                     >
-                      {currentState === "delegate" && (
-                        <div className="h-full flex justify-center items-center font-prme text-[36px] text-white cursor-pointer">
-                          <DelegateWalletButton
-                            setCurrentState={setCurrentState}
-                          />
-                        </div>
-                      )}
-                      {currentState === "deposit" && (
+
+                      {currentState === WALLET_STATE.DEPOSIT && (
                         <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-prme text-white p-5 gap-1">
                           <div className=" text-[36px]">Deposit</div>
                           <button
                             className="transform bg-[#FA6631] text-black px-4 py-2 rounded cursor-pointer text-[14px] w-[242px] leading-[13px] bg-gradient-to-r from-[#FFEE00] to-[#FA6631]"
-                            onClick={() => setCurrentState("qrCode")}
+                            onClick={() => setCurrentState(WALLET_STATE.QRCODE)}
                           >
                             QR/Address
                           </button>
                         </div>
                       )}
-                      {currentState === "qrCode" && (
+                      {currentState === WALLET_STATE.QRCODE && (
                         <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-family text-white">
                           <div className="p-2 bg-white rounded-lg inline-block">
                             <QRCodeCanvas
-                              value={walletToDelegate?.address ?? ""}
+                              value={walletToDelegate?.solPublicKey ?? ""}
                               size={100}
                               level="H"
                               bgColor="#FFFFFF"
                               fgColor="#000000"
                             />
                           </div>
-                          <div className="mt-4 mb-2 flex items-center gap-4">
-                            <CopyQRClipboard />
+                          <div className="mt-4 flex flex-col items-center gap-4">
+                            <CopyQRClipboard type="solana" />
+                            <CopyQRClipboard type="ethereum" />
                           </div>
                           <button
                             className="mt-4 bg-[#161414] text-[#B3B3B3] px-4 py-2 rounded text-[14px] w-[264px] cursor-pointer"
-                            onClick={() => setCurrentState("confirmed")}
+                            onClick={() => setCurrentState(WALLET_STATE.CONFIRMED)}
                           >
                             I confirmed the address!
                           </button>
@@ -249,12 +230,12 @@ function Wallet() {
                       )}
                     </div>
                   )}
-                  {currentState === "confirmed" && (
+                  {currentState === WALLET_STATE.CONFIRMED && (
                     <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white gap-2">
                       <div className="text-[32px] font-bold">
                         $
                         {parseFloat(
-                          (solanaPriceUSD + sonicPriceUSD).toFixed(4)
+                          (solanaPriceUSD).toFixed(4)
                         )}
                       </div>
 
@@ -270,19 +251,7 @@ function Wallet() {
                         </div>
                         <div>${solanaPriceUSD}</div>
                       </div>
-
-                      {/* Sonic */}
-                      <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <img
-                            src="sonic-logo.png"
-                            alt="Sonic"
-                            className="size-5"
-                          />
-                          <span>{sonicBalance} SONIC</span>
-                        </div>
-                        <div>${sonicPriceUSD}</div>
-                      </div>
+                      <BalanceFetch />
                       {/* <div
                         className="mt-1.5 flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
                         onClick={toggleDashboard}
@@ -312,48 +281,51 @@ function Wallet() {
                 </>
               </CardTitle>
               <CardContent>
-                <div className="text-sm mb-3 flex justify-between">
-                  <div className="ml-2">Invite code: {referralCode}</div>
-                  <div className="mr-2 cursor-pointer">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="size-5 fill-[#767676]"
-                      onClick={copyToReferralCode}
-                    >
-                      <path d="M2 4.25A2.25 2.25 0 0 1 4.25 2h6.5A2.25 2.25 0 0 1 13 4.25V5.5H9.25A3.75 3.75 0 0 0 5.5 9.25V13H4.25A2.25 2.25 0 0 1 2 10.75v-6.5Z" />
-                      <path d="M9.25 7A2.25 2.25 0 0 0 7 9.25v6.5A2.25 2.25 0 0 0 9.25 18h6.5A2.25 2.25 0 0 0 18 15.75v-6.5A2.25 2.25 0 0 0 15.75 7h-6.5Z" />
-                    </svg>
-                  </div>
-                </div>
+
                 <div
-                  className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                    isSendModalOpen
-                      ? "opacity-100 visible pointer-events-auto max-h-[500px]"
-                      : "opacity-0 invisible pointer-events-none max-h-0"
-                  }`}
+                  className={`mb-4 transition-all duration-500 ease-in-out overflow-hidden ${isSendModalOpen
+                    ? "opacity-100 visible pointer-events-auto max-h-[500px]"
+                    : "opacity-0 invisible pointer-events-none max-h-0"
+                    }`}
                 >
                   <SendSolWithEmbeddedWallet />
+
+                </div>
+                <div className="flex items-center justify-center bg-black rounded-xl min-h-[42px]">
+                  <AdressSelection
+                    section={isAdressSelection}
+                    onSelect={handleAdressSelection}
+                  />
                 </div>
               </CardContent>
               <CardFooter>
-                <div className="flex gap-4 text-[#B3B3B3]">
-                  <span
-                    className="cursor-pointer hover:text-white"
+                <div className="flex gap-4">
+                  <button className="cursor-pointer transition-all duration-300 hover:text-white hover:scale-110">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+                  </button>
+                  <button className="cursor-pointer transition-all duration-300 hover:text-white hover:scale-110">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
+                      <path fillRule="evenodd" d="M13.2 2.24a.75.75 0 0 0 .04 1.06l2.1 1.95H6.75a.75.75 0 0 0 0 1.5h8.59l-2.1 1.95a.75.75 0 1 0 1.02 1.1l3.5-3.25a.75.75 0 0 0 0-1.1l-3.5-3.25a.75.75 0 0 0-1.06.04Zm-6.4 8a.75.75 0 0 0-1.06-.04l-3.5 3.25a.75.75 0 0 0 0 1.1l3.5 3.25a.75.75 0 1 0 1.02-1.1l-2.1-1.95h8.59a.75.75 0 0 0 0-1.5H4.66l2.1-1.95a.75.75 0 0 0 .04-1.06Z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  <button
+                    className="cursor-pointer transition-all duration-300 hover:text-white hover:scale-110"
                     onClick={() => handleShare()}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 512 512"
                       className="size-5"
-                      fill="#B3B3B3"
+                      fill="currentColor"
                     >
                       <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z" />
                     </svg>
-                  </span>
+                  </button>
                 </div>
-                <div onClick={handleMinimizeToggle} className="cursor-pointer">
+                <div onClick={handleMinimizeToggle} className="cursor-pointer hover:text-white">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 16 16"
@@ -407,13 +379,6 @@ function Wallet() {
                   <div className="flex flex-col text-sm">
                     <span>{solanaBalance} SOL</span>
                     <span className="text-[#B3B3B3]">${solanaPriceUSD}</span>
-                  </div>
-                </div>
-                <div className="flex gap-2 items-center ml-4">
-                  <img src="sonic-logo.png" alt="Sonic" className="size-5" />
-                  <div className="flex flex-col text-sm">
-                    <span>{sonicBalance} SONIC</span>
-                    <span className="text-[#B3B3B3]">${sonicPriceUSD}</span>
                   </div>
                 </div>
               </div>

@@ -1,11 +1,7 @@
 import React from "react";
+import { ChatInputProps } from "./chatTypes";
 
-interface ChatInputProps {
-  sendMessage: () => void;
-  inputText: string;
-  setInputText: (text: string) => void;
-  loading: boolean;
-}
+
 
 const ChatInput: React.FC<ChatInputProps> = ({
   sendMessage,

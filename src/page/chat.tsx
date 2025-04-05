@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import chatAPI from "@/api/chat/chatAPI";
 import "@/components/styles/game-dashboard-animations.css";
-import { Transaction } from "@solana/web3.js";
-import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
+import { usePrivy } from "@privy-io/react-auth";
 import signGame from "@/api/chat/signCreateAPI";
 import gameAPI from "@/api/game/gameAPI";
 import ChatMessage from "@/components/Chat/ChatMessage";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ChatInput from "@/components/Chat/ChatInput";
+import signTransaction from "@/components/wallet/SignWallet";
+import Loading from "@/components/styles/spiner/wormhole/Loading";
 
 interface Chatting {
   externalId?: string | null;
@@ -28,11 +29,13 @@ interface GameData {
   gameContent: string;
   extras: string;
   gameStartAt: string;
+  gameEndAt: string;
   gameExpriedAt: string;
   fixtureId: number;
   gameRelations: GameRelation[];
   quantity: string;
   key: string;
+  asset: string;
   choiceType: string;
 }
 
@@ -55,6 +58,7 @@ interface ConversationResponse {
 
 function ChattingComponents() {
   const { user } = usePrivy();
+
   const twitterAccount = user?.linkedAccounts[0] as
     | { username: string }
     | undefined;
@@ -63,16 +67,19 @@ function ChattingComponents() {
   const navigate = useNavigate();
   const location = useLocation();
   const homeInputText = location.state?.message || "";
-  const { wallets } = useSolanaWallets();
-  const wallet = wallets.find((w) => w.walletClientType === "privy");
+  const wallet = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
+  console.log("wallet", wallet);
   const [messages, setMessages] = useState<Chatting[]>([]);
   const [inputText, setInputText] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [conversationExternalId, setConversationExternalId] = useState<
     string | null
   >(null);
-  const isHomeMessageProcessed = useRef(false);
 
+  const [bridgeLoading, setBridgeLoading] = useState<boolean>(false);
+  const [bridge, setBridge] = useState<"yes" | "no">("no");
+  const isHomeMessageProcessed = useRef(false);
+  console.log("messages", messages);
   const getWelcomeMessage = (username: string): Chatting => ({
     externalId: null,
     content: `
@@ -132,11 +139,11 @@ There are three options you can choose from:
   }, [externalId]);
   useEffect(() => {
     chatAPI.connectSocket();
-  
+
     const interval = setInterval(() => {
       if (chatAPI.connectSocket()) {
         clearInterval(interval);
-  
+
         if (!isHomeMessageProcessed.current && homeInputText.trim() !== "") {
           isHomeMessageProcessed.current = true;
           const newMessage: Chatting = {
@@ -149,17 +156,24 @@ There are three options you can choose from:
           navigate(location.pathname, { replace: true, state: {} });
         }
       }
-    }, 100); 
-  
+    }, 100);
+
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    const lastMarketMessage = messages.find(
+      (msg) => msg.messageType === "TOKEN_BRIDGE"
+    );
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.messageType === "MARKET_FINALIZED") {
       CreateMessage();
     }
+    if (lastMarketMessage && bridge.toLowerCase() === "yes") {
+      BridgeCreateMessage();
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
@@ -220,7 +234,7 @@ Good! To create a prediction market, some information is needed. Please enter th
       case "Sports Search":
         content = `
 Great, I can fetch information related to sports. Currently, I only support football.
-- “What are the matches this Sunday?”
+- "What are the matches this Sunday?"
 - "Search for Manchester City matches."
 - "Search for Premier League information."
         `.trim();
@@ -229,6 +243,12 @@ Great, I can fetch information related to sports. Currently, I only support foot
       case "Chat":
         content = "Ask PrediX anything you want to know! :)";
         isAgentMessage = true;
+        break;
+      case "Yes":
+        setBridge("yes");
+        break;
+      case "No":
+        setBridge("no");
         break;
     }
 
@@ -280,6 +300,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
       const lastMarketMessage = messages.find(
         (msg) => msg.messageType === "MARKET_FINALIZED"
       );
+
       if (!lastMarketMessage)
         throw new Error("No MARKET_FINALIZED message found");
 
@@ -294,23 +315,25 @@ Great, I can fetch information related to sports. Currently, I only support foot
           gameStartAt: formatToISO8601(
             lastMarketMessage.data?.event?.created_at
           ),
+          gameEndAt: lastMarketMessage.data?.market?.close_date,
           gameExpriedAt: lastMarketMessage.data?.market?.close_date,
           fixtureId: lastMarketMessage.data?.event?.fixture_id,
           gameRelations: lastMarketMessage.data?.selections?.map(
-            (selection: { type: string; name: string }, index: number) => ({
+            (selection: { type: string; name: string; thumbnail: string }, index: number) => ({
               key: index === 0 ? "A" : "B",
               content:
                 selection.type === "win"
                   ? `${selection.name} WIN`
                   : `${selection.name} DRAW_LOSE`,
+              thumbnail: selection.thumbnail
             })
           ),
           quantity: lastMarketMessage.data.market?.amount?.toString(),
+          asset: lastMarketMessage.data.market?.currency,
           key: lastMarketMessage.data.selected_type === "win" ? "A" : "B",
           choiceType: lastMarketMessage.data.selected_type ?? "WIN",
         },
       };
-
       const response = (await chatAPI.sendChatMessage(
         userGameSelectionData
       )) as any;
@@ -325,15 +348,35 @@ Great, I can fetch information related to sports. Currently, I only support foot
       }
 
       const { tr, transId } = response.data.message.data;
-      const transactionBuffer = Buffer.from(tr, "base64");
-      const deserializedTransaction = Transaction.from(transactionBuffer);
-      const signedTx = await wallet?.signTransaction(deserializedTransaction);
-      const signedTransaction = signedTx?.serialize();
-      const rawTransaction = signedTransaction?.toString("base64");
-      await signGame(transId, rawTransaction);
+      console.log("tr", tr);
+      if (!wallet) {
+        throw new Error("Wallet is undefined");
+      }
+
+      try {
+        if (!wallet.solPrivateKey) {
+          throw new Error("Wallet does not support transaction signing");
+        }
+        let rawTransaction;
+        try {
+          rawTransaction = await signTransaction(tr, wallet.solPrivateKey);
+        } catch (err: any) {
+          console.error("Transaction signing error:", err);
+          throw new Error(`Failed to sign transaction: ${err.message}`);
+        }
+
+        if (!rawTransaction) {
+          throw new Error("Signed transaction is null");
+        }
+
+        await signGame(transId, rawTransaction);
+      } catch (error) {
+        console.error("Transaction processing error:", error);
+        throw error;
+      }
     } catch (error) {
       console.error("CreateMessage 실패:", error);
-      alert("게임 생성에 실패했습니다.");
+      alert("게임 생성에 실패했습니다: " + error);
     } finally {
       setTimeout(async () => {
         try {
@@ -351,13 +394,50 @@ Great, I can fetch information related to sports. Currently, I only support foot
     }
   };
 
+
+  const BridgeCreateMessage = async () => {
+    setBridgeLoading(true);
+    try {
+      const lastMarketMessage = messages.find(
+        (msg) => msg.messageType === "TOKEN_BRIDGE"
+      );
+
+      if (!lastMarketMessage)
+        throw new Error("No TOKEN_BRIDGE message found");
+
+      const userBridgeData: any = {
+        externalId: lastMarketMessage.conversationExternalId ?? null,
+        content: bridge,
+        messageType: "CREATE_SWAP",
+        data: {
+          svmPk: JSON.parse(localStorage.getItem("user_wallet_info") || "{}").solPrivateKey,
+          evmPk: JSON.parse(localStorage.getItem("user_wallet_info") || "{}").evmPrivateKey,
+          fromNetwork: "SOLANA",
+          toNetwork: "BASE",
+          fromAsset: lastMarketMessage.data.from_asset,
+          toAsset: lastMarketMessage.data.to_asset,
+          quantity: lastMarketMessage.data.amount.toString(),
+        },
+      };
+      await chatAPI.sendChatMessage(
+        userBridgeData
+      )
+    } catch (error) {
+      console.error("BridgeCreateMessage 실패:", error);
+    } finally {
+      setBridgeLoading(false);
+
+    }
+  };
+
   return (
     <div className="font-family">
+      {bridgeLoading && (
+        <Loading />
+      )}
       <div className="flex flex-col h-screen text-white w-[700px]">
         <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden">
-          {loading ? (
-            <div>Loading...</div>
-          ) : (
+          {
             messages.map((msg, index) => (
               <ChatMessage
                 key={index}
@@ -365,7 +445,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
                 handleButtonClick={handleButtonClick}
               />
             ))
-          )}
+          }
         </div>
         <ChatInput
           sendMessage={sendMessage}
@@ -374,6 +454,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
           loading={loading}
         />
       </div>
+
     </div>
   );
 }

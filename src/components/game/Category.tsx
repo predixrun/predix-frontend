@@ -1,3 +1,5 @@
+import { CategoryProps } from "./gameTypes";
+
 const categories = [
   {
     text: "Trending Game",
@@ -60,9 +62,7 @@ const categories = [
     ),
   },
 ];
-type CategoryProps = {
-  onSelect: (categoryText: string) => void;
-};
+
 
 export function Category({ onSelect }: CategoryProps) {
   return (
