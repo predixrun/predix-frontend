@@ -1,11 +1,8 @@
-import axios from "axios";
-import { http } from "../http";
-import { SignUpParams } from "./loginInterfaces";
+import axios from 'axios';
+import { http } from '../http';
+import { SignUpParams } from './loginInterfaces';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-
-
-
 
 export const reteral = async (token: string) => {
   const response = await axios.get(`${BASE_URL}/v1/referral`, {
@@ -32,9 +29,9 @@ export const signUpVerify = async (token: string) => {
     },
     {
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
-    }
+    },
   );
   return response.data;
 };
@@ -47,18 +44,22 @@ export const signUp = async ({
   evmAddress,
   solanaAddress,
 }: SignUpParams) => {
-  return await http.post("/v1/auth/sign-up", {
-    token,
-    authType,
-    name,
-    profileImage,
-    evmAddress,
-    solanaAddress,
-  }, {
-    headers: {
-      "Content-Type": "application/json",
+  return await http.post(
+    '/v1/auth/sign-up',
+    {
+      token,
+      authType,
+      name,
+      profileImage,
+      evmAddress,
+      solanaAddress,
     },
-  });
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
 };
 
 export const signIn = async ({
@@ -68,14 +69,39 @@ export const signIn = async ({
   token: string;
   authType: string;
 }) => {
-  return await http.post("/v1/auth/sign-in", {
-    token,
-    authType,
-  }, {
-    headers: {
-      "Content-Type": "application/json",
+  return await http.post(
+    '/v1/auth/sign-in',
+    {
+      token,
+      authType,
     },
-  });
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+};
+
+export const registerWallet = async (
+  evmAddress: string,
+  solanaAddress: string,
+  token: string,
+) => {
+  const response = await axios.post(
+    `${BASE_URL}/v1/auth/register/wallet`,
+    {
+      evmAddress,
+      solanaAddress,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+  return response.data;
 };
 
 const authAPI = {
@@ -84,6 +110,7 @@ const authAPI = {
   signIn,
   reteral,
   profile,
+  registerWallet,
 };
 
 export default authAPI;

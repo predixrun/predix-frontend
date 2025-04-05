@@ -1,9 +1,9 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import path from "path";
-import tailwindcss from "@tailwindcss/vite";
-import inject from "@rollup/plugin-inject";
+import path from 'path';
+import tailwindcss from '@tailwindcss/vite';
+import inject from '@rollup/plugin-inject';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -13,19 +13,19 @@ export default defineConfig({
       globals: {
         Buffer: true,
         global: true,
-        process: true
+        process: true,
       },
     }),
-    tailwindcss()
+    tailwindcss(),
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   build: {
     rollupOptions: {
-      plugins: [inject({ Buffer: ["buffer", "Buffer"] })],
+      plugins: [inject({ Buffer: ['buffer', 'Buffer'] })],
     },
   },
   define: {
@@ -36,6 +36,6 @@ export default defineConfig({
     include: ['buffer'],
   },
   esbuild: {
-    drop: ['console', 'debugger'],
+    // drop: ['console', 'debugger'],
   },
 });

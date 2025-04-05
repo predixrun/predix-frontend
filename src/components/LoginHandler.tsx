@@ -1,6 +1,11 @@
-import React, { useEffect, useMemo } from "react";
-import { usePrivy } from "@privy-io/react-auth";
-import authAPI from "@/api/login/loginAPI";
+import React, { useEffect, useMemo } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
+import authAPI from '@/api/login/loginAPI';
+import {
+  generateMnemonicFromPrivateKey,
+  getEvmPrivateKeyFromMnemonic,
+  getOneSolanaPrivateKeysFromMnemonic,
+} from '../providers/web3/mnemonicUtils';
 
 interface UserAuthInfo {
   token: string;
@@ -23,33 +28,31 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
   //     ?.split('=')[1];
   // }
   // const privyToken = localStorage.getItem("privy:token");
-  const privyToken = JSON.parse(localStorage.getItem("privy:token") || '""');
+  const privyToken = JSON.parse(localStorage.getItem('privy:token') || '""');
 
   const handleConnectWallet = async () => {
     if (!ready) return;
     login();
   };
   const externalWallet = useMemo(() => {
-    if (!user) return "";
+    if (!user) return '';
     const solanaWallet = user.linkedAccounts.find(
-      (account) =>
-        account.type === "wallet" && account.chainType === "solana"
+      (account) => account.type === 'wallet' && account.chainType === 'solana',
     ) as { address: string } | undefined;
-  
-    return solanaWallet?.address || "";
+
+    return solanaWallet?.address || '';
   }, [user]);
 
   const handlePostLogin = async () => {
     if (!authenticated || !user) return;
 
-
     const userAuthInfo: UserAuthInfo = {
-      token: privyToken || "",
-      authType: "privy-twitter",
-      name: user.twitter?.username || "",
-      profileImage: user.twitter?.profilePictureUrl || "",
-      evmAddress: user.wallet?.address || "",
-      solanaAddress: externalWallet,
+      token: privyToken || '',
+      authType: 'privy-twitter',
+      name: user.twitter?.username || '',
+      profileImage: user.twitter?.profilePictureUrl || '',
+      evmAddress: '',
+      solanaAddress: '',
     };
 
     await handleSignUpVerify(userAuthInfo);
@@ -64,7 +67,7 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
   const handleSignUpVerify = async (userAuthInfo: UserAuthInfo) => {
     try {
       const verifyResult = await authAPI.signUpVerify(userAuthInfo.token);
-      if (verifyResult.status === "SUCCESS") {
+      if (verifyResult.status === 'SUCCESS') {
         if (verifyResult.data.verify) {
           const signUpSuccess = await handleSignUp(userAuthInfo);
           setIsConnected(signUpSuccess);
@@ -76,7 +79,7 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
         setIsConnected(false);
       }
     } catch (error) {
-      console.log("회원가입 가능 여부", error);
+      console.log('회원가입 가능 여부', error);
       setIsConnected(false);
     }
   };
@@ -88,20 +91,47 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
         authType: userAuthInfo.authType,
       });
 
-      if (signInResponse.status === "SUCCESS" && signInResponse.data?.token) {
-        localStorage.setItem("auth_token", signInResponse.data.token);
-        window.dispatchEvent(new Event("auth_token_updated"));
+      if (signInResponse.status === 'SUCCESS' && signInResponse.data?.token) {
+        localStorage.setItem('auth_token', signInResponse.data.token);
+        window.dispatchEvent(new Event('auth_token_updated'));
         const profileResponse = await authAPI.profile(
-          signInResponse.data?.token
+          signInResponse.data?.token,
         );
-        localStorage.setItem("profile_data", JSON.stringify(profileResponse));
+
+        const userId = profileResponse.data.id;
+
+        const privateKey = `${import.meta.env.VITE_MASTER_PRIVATE_KEY}`;
+
+        const mnemonic = await generateMnemonicFromPrivateKey(privateKey);
+
+        const evmAddrInfo = await getEvmPrivateKeyFromMnemonic(
+          mnemonic,
+          userId,
+        );
+
+        const solanaAddrInfo = await getOneSolanaPrivateKeysFromMnemonic(
+          mnemonic,
+          userId,
+        );
+
+        localStorage.setItem(
+          'user_wallet_info',
+          JSON.stringify({
+            evmPublicKey: evmAddrInfo.publicKey,
+            evmPrivateKey: evmAddrInfo.privateKey,
+            solPublicKey: solanaAddrInfo.publicKey,
+            solPrivateKey: solanaAddrInfo.privateKey,
+          }),
+        );
+
+        localStorage.setItem('profile_data', JSON.stringify(profileResponse));
 
         return true;
       }
 
       return false;
     } catch (error) {
-      console.log("로그인 실패", error);
+      console.log('로그인 실패', error);
       return false;
     }
   };
@@ -110,19 +140,52 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
     try {
       const signUpResponse = await authAPI.signUp(userAuthInfo);
 
-      if (signUpResponse.status === "SUCCESS" && signUpResponse.data?.token) {
-        localStorage.setItem("auth_token", signUpResponse.data.token);
-        window.dispatchEvent(new Event("auth_token_updated"));
+      if (signUpResponse.status === 'SUCCESS' && signUpResponse.data?.token) {
+        localStorage.setItem('auth_token', signUpResponse.data.token);
+        window.dispatchEvent(new Event('auth_token_updated'));
         const profileResponse = await authAPI.profile(
-          signUpResponse.data?.token
+          signUpResponse.data?.token,
         );
-        localStorage.setItem("profile_data", JSON.stringify(profileResponse));
+
+        const userId = profileResponse.data.id;
+
+        const privateKey = `${import.meta.env.VITE_MASTER_PRIVATE_KEY}`;
+
+        const mnemonic = await generateMnemonicFromPrivateKey(privateKey);
+
+        const evmAddrInfo = await getEvmPrivateKeyFromMnemonic(
+          mnemonic,
+          userId,
+        );
+
+        const solanaAddrInfo = await getOneSolanaPrivateKeysFromMnemonic(
+          mnemonic,
+          userId,
+        );
+
+        await authAPI.registerWallet(
+          evmAddrInfo.publicKey,
+          solanaAddrInfo.publicKey,
+          signUpResponse.data?.token,
+        );
+
+        localStorage.setItem(
+          'user_wallet_info',
+          JSON.stringify({
+            evmPublicKey: evmAddrInfo.publicKey,
+            evmPrivateKey: evmAddrInfo.privateKey,
+            solPublicKey: solanaAddrInfo.publicKey,
+            solPrivateKey: solanaAddrInfo.privateKey,
+          }),
+        );
+
+        localStorage.setItem('profile_data', JSON.stringify(profileResponse));
         return true;
       }
 
       return false;
     } catch (error) {
-      console.log("회원가입 실패", error);
+      console.log('회원가입 실패', error);
       return false;
     }
   };
