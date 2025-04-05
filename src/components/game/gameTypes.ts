@@ -1,6 +1,6 @@
 // types/gameTypes.ts
 
-export type Status = "ONGOING" | "EXPIRED" | "END";
+export type GameStatus = "ONGOING" | "EXPIRED" | "END";
 
 export type CategoryProps = {
   onSelect: (categoryText: string) => void;
@@ -48,10 +48,10 @@ export interface Game {
 }
 
 export interface GameStrategy {
-  getApiParams: (page: number, statusFilter: Status) => any;
+  getApiParams: (page: number, statusFilter: GameStatus) => any;
   filterGames: (
     games: Game[],
     currentUserId: number,
-    statusFilter: Status
+    statusFilter: GameStatus
   ) => Game[];
 }
