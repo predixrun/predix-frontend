@@ -286,7 +286,7 @@ function Wallet() {
                         </div>
                         <div>${solanaPriceUSD}</div>
                       </div>
-                      <BalanceFetch />
+                      {/* <BalanceFetch /> */}
                       {/* <div
                         className="mt-1.5 flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
                         onClick={toggleDashboard}

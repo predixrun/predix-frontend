@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills({
-      include: ['crypto', 'buffer', 'stream'],
+      include: ['crypto', 'buffer', 'stream', 'process'],
       globals: {
         Buffer: true,
         global: true,
@@ -35,7 +35,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ['buffer'],
   },
-  // esbuild: {
-  //   drop: ['console', 'debugger'],
-  // },
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
 });
