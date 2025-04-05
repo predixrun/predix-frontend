@@ -8,7 +8,6 @@ import {
 import { usePrivy, useLogout } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
 import * as web3 from "@solana/web3.js";
-import DelegateWalletButton from "./DelegateWallet";
 import { QRCodeCanvas } from "qrcode.react";
 import CopyQRClipboard from "@/components/wallet/adress/CopyQRClipboard";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -16,8 +15,8 @@ import { SendSolWithEmbeddedWallet } from "./WalletTransfer";
 import WalletDashboard from "./WalletDashboard";
 import ChatHistory from "@/components/Chat/ChatHistory";
 import Profile from "../Profile/Profile";
-import BalanceFetch from "./token/WalletBalance";
 import AdressSelection from "./adress/AdressSelection";
+import BalanceFetch from "./token/WalletBalance";
 
 const WALLET_STATE = {
   DELEGATE: "delegate",
@@ -27,7 +26,7 @@ const WALLET_STATE = {
 } as const;
 
 function Wallet() {
-  const [currentState, setCurrentState] = useState<string>(WALLET_STATE.DELEGATE);
+  const [currentState, setCurrentState] = useState<string>(WALLET_STATE.DEPOSIT);
   const [solanaBalance, setSolanaBalance] = useState<string>("");
   const [solanaPriceUSD, setSolanaPriceUSD] = useState(0);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
@@ -55,39 +54,21 @@ function Wallet() {
     },
   });
 
-  const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
-  let referralCode = "";
-  if (userProfile?.data?.referral?.code) {
-    referralCode = userProfile.data.referral.code;
-  }
 
-  const copyToReferralCode = () => {
-    if (referralCode) {
-      navigator.clipboard
-        .writeText(referralCode)
-        .then(() => {
-          alert("Invite code copied to clipboard!");
-        })
-        .catch((err) => {
-          console.error("Failed to copy text:", err);
-        });
-    }
-  };
+
+
+
   const handleMinimizeToggle = () => {
     setIsMinimized(!isMinimized);
   };
-  const walletToDelegate = user?.linkedAccounts.find(
-    (wallet) =>
-      wallet.type === "wallet" &&
-      wallet.walletClientType === "privy" &&
-      wallet.chainType === "solana"
-  ) as { delegated: boolean; address: string } | undefined;
+  const walletToDelegate = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
+
   useEffect(() => {
     if (!walletToDelegate) return;
 
     const fetchBalance = async () => {
       try {
-        const publicKey = new web3.PublicKey(walletToDelegate.address);
+        const publicKey = new web3.PublicKey(walletToDelegate.solPublicKey);
 
         // Solana
         const solanaConnection = new web3.Connection(
@@ -115,16 +96,7 @@ function Wallet() {
 
     fetchBalance();
 
-    // 상태 설정
-    setCurrentState((prevState) => {
-      if (walletToDelegate.delegated && prevState !== WALLET_STATE.DEPOSIT)
-        return WALLET_STATE.DEPOSIT;
-      if (!walletToDelegate.delegated && prevState !== WALLET_STATE.DELEGATE)
-        return WALLET_STATE.DELEGATE;
-      return prevState;
-    });
   }, [walletToDelegate]);
-
   // Find user name
   const twitterAccount = user?.linkedAccounts[0] as
     | { username: string }
@@ -143,9 +115,8 @@ function Wallet() {
   //share
   const handleShare = () => {
     const text = "Check out this awesome prediction market on PrediX!";
-    const url = referralCode
-      ? `https://PrediX.run/invite/${referralCode}`
-      : "https://PrediX.run";
+    const url =
+      "https://PrediX.run";
     const hashtags = "PrediX,PredictionMarket";
 
     const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
@@ -222,13 +193,7 @@ function Wallet() {
                           : "h-[256px]"
                         }`}
                     >
-                      {currentState === WALLET_STATE.DELEGATE && (
-                        <div className="h-full flex justify-center items-center font-prme text-[36px] text-white cursor-pointer">
-                          <DelegateWalletButton
-                            setCurrentState={setCurrentState}
-                          />
-                        </div>
-                      )}
+
                       {currentState === WALLET_STATE.DEPOSIT && (
                         <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-prme text-white p-5 gap-1">
                           <div className=" text-[36px]">Deposit</div>
@@ -244,7 +209,7 @@ function Wallet() {
                         <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-family text-white">
                           <div className="p-2 bg-white rounded-lg inline-block">
                             <QRCodeCanvas
-                              value={walletToDelegate?.address ?? ""}
+                              value={walletToDelegate?.solPublicKey ?? ""}
                               size={100}
                               level="H"
                               bgColor="#FFFFFF"
@@ -286,7 +251,7 @@ function Wallet() {
                         </div>
                         <div>${solanaPriceUSD}</div>
                       </div>
-                      {/* <BalanceFetch /> */}
+                      <BalanceFetch />
                       {/* <div
                         className="mt-1.5 flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
                         onClick={toggleDashboard}
@@ -316,23 +281,9 @@ function Wallet() {
                 </>
               </CardTitle>
               <CardContent>
-                <div className="text-sm mb-3 flex justify-between">
-                  <div className="ml-2">Invite code: {referralCode}</div>
-                  <div className="mr-2 cursor-pointer">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="size-5 fill-[#767676]"
-                      onClick={copyToReferralCode}
-                    >
-                      <path d="M2 4.25A2.25 2.25 0 0 1 4.25 2h6.5A2.25 2.25 0 0 1 13 4.25V5.5H9.25A3.75 3.75 0 0 0 5.5 9.25V13H4.25A2.25 2.25 0 0 1 2 10.75v-6.5Z" />
-                      <path d="M9.25 7A2.25 2.25 0 0 0 7 9.25v6.5A2.25 2.25 0 0 0 9.25 18h6.5A2.25 2.25 0 0 0 18 15.75v-6.5A2.25 2.25 0 0 0 15.75 7h-6.5Z" />
-                    </svg>
-                  </div>
-                </div>
+
                 <div
-                  className={`transition-all duration-500 ease-in-out overflow-hidden ${isSendModalOpen
+                  className={`mb-4 transition-all duration-500 ease-in-out overflow-hidden ${isSendModalOpen
                     ? "opacity-100 visible pointer-events-auto max-h-[500px]"
                     : "opacity-0 invisible pointer-events-none max-h-0"
                     }`}
@@ -341,8 +292,8 @@ function Wallet() {
 
                 </div>
                 <div className="flex items-center justify-center bg-black rounded-xl min-h-[42px]">
-                  <AdressSelection 
-                    section={isAdressSelection} 
+                  <AdressSelection
+                    section={isAdressSelection}
                     onSelect={handleAdressSelection}
                   />
                 </div>

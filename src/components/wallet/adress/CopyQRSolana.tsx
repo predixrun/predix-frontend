@@ -1,22 +1,15 @@
-import { usePrivy } from "@privy-io/react-auth";
 import { useState } from "react";
 import { colors } from "@/lib/colors";
 
 const CopyQRSolana = () => {
-  const { user } = usePrivy();
   const [copied, setCopied] = useState(false);
 
-  const walletToSOL = user?.linkedAccounts.find(
-    (wallet) =>
-      wallet.type === "wallet" &&
-      wallet.chainType === "solana" &&
-      wallet.walletClientType === "privy"
-  ) as { address: string } | undefined;
+  const walletToSOL = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
 
   const handleCopy = async () => {
-    if (walletToSOL?.address) {
+    if (walletToSOL?.solPublicKey) {
       try {
-        await navigator.clipboard.writeText(walletToSOL.address);
+        await navigator.clipboard.writeText(walletToSOL.solPublicKey);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch (err) {
@@ -25,12 +18,12 @@ const CopyQRSolana = () => {
     }
   };
 
-  if (!walletToSOL?.address) return null;
+  if (!walletToSOL?.solPublicKey) return null;
 
   return (
     <div className="flex items-center gap-2">
       <span className={`text-sm text-[${colors.text.gray}]`}>
-        {`${walletToSOL.address.slice(0, 4)}...${walletToSOL.address.slice(-4)}`}
+        {`${walletToSOL.solPublicKey.slice(0, 4)}...${walletToSOL.solPublicKey.slice(-4)}`}
       </span>
       <button
         onClick={handleCopy}

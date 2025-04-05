@@ -1,8 +1,9 @@
-import { useSolanaWallets } from "@privy-io/react-auth/solana";
 import { colors } from "@/lib/colors";
+import bs58 from 'bs58';
 import {
   clusterApiUrl,
   Connection,
+  Keypair,
   PublicKey,
   SystemProgram,
   Transaction,
@@ -10,16 +11,13 @@ import {
 import { useState } from "react";
 
 export function SendSolWithEmbeddedWallet() {
-  const { wallets } = useSolanaWallets();
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [modalMessage, setModalMessage] = useState("");
 
-  const senderWallet = wallets.find(
-    (wallet) => wallet.walletClientType === "privy"
-  );
+  const senderWallet =  JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
 
   const handleSend = async () => {
     try {
@@ -28,7 +26,7 @@ export function SendSolWithEmbeddedWallet() {
         return;
       }
 
-      const senderPubKey = new PublicKey(senderWallet.address);
+      const senderPubKey = new PublicKey(senderWallet.solPublicKey);
       const recipientPubKey = new PublicKey(recipientAddress);
       const lamports = parseFloat(amount) * 1e9;
 
@@ -45,10 +43,18 @@ export function SendSolWithEmbeddedWallet() {
           lamports,
         })
       );
-
-      const signedTx = await senderWallet.signTransaction(transaction);
+    // private key를 이용하여 트랜잭션 서명
+    const senderArray = bs58.decode(senderWallet.solPrivateKey);
+    const keypair = Keypair.fromSecretKey(senderArray);
+   
+    // keypair를 사용하여 트랜잭션 서명
+    transaction.sign(keypair);
+    
+    //rawTransaction base64로 인코딩
+    const signedTransaction = transaction.serialize();
+      const rawTransaction = signedTransaction.toString('base64');
       const confirmation = await connection.sendRawTransaction(
-        signedTx.serialize()
+        Buffer.from(rawTransaction, 'base64')
       );
       if (confirmation) {
         setModalMessage("✅ Transaction successful!");

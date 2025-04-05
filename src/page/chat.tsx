@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import chatAPI from "@/api/chat/chatAPI";
 import "@/components/styles/game-dashboard-animations.css";
-import { Transaction } from "@solana/web3.js";
-import { usePrivy, useSolanaWallets, WalletWithMetadata } from "@privy-io/react-auth";
+import { usePrivy } from "@privy-io/react-auth";
 import signGame from "@/api/chat/signCreateAPI";
 import gameAPI from "@/api/game/gameAPI";
 import ChatMessage from "@/components/Chat/ChatMessage";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ChatInput from "@/components/Chat/ChatInput";
-import { AgentMessage } from "@/components/Chat/chatTypes";
+import signTransaction from "@/components/wallet/SignWallet";
+import Loading from "@/components/styles/spiner/wormhole/Loading";
 
 interface Chatting {
   externalId?: string | null;
@@ -29,11 +29,13 @@ interface GameData {
   gameContent: string;
   extras: string;
   gameStartAt: string;
+  gameEndAt: string;
   gameExpriedAt: string;
   fixtureId: number;
   gameRelations: GameRelation[];
   quantity: string;
   key: string;
+  asset: string;
   choiceType: string;
 }
 
@@ -55,8 +57,8 @@ interface ConversationResponse {
 }
 
 function ChattingComponents() {
-  const { user, ready, authenticated, exportWallet } = usePrivy();
-  const { exportWallet: exportSolanaWallet } = useSolanaWallets();
+  const { user } = usePrivy();
+
   const twitterAccount = user?.linkedAccounts[0] as
     | { username: string }
     | undefined;
@@ -65,8 +67,7 @@ function ChattingComponents() {
   const navigate = useNavigate();
   const location = useLocation();
   const homeInputText = location.state?.message || "";
-  const { wallets } = useSolanaWallets();
-  const wallet = wallets.find((w) => w.walletClientType === "privy");
+  const wallet = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
   console.log("wallet", wallet);
   const [messages, setMessages] = useState<Chatting[]>([]);
   const [inputText, setInputText] = useState<string>("");
@@ -74,7 +75,7 @@ function ChattingComponents() {
   const [conversationExternalId, setConversationExternalId] = useState<
     string | null
   >(null);
-  
+
   const [bridgeLoading, setBridgeLoading] = useState<boolean>(false);
   const [bridge, setBridge] = useState<"yes" | "no">("no");
   const isHomeMessageProcessed = useRef(false);
@@ -138,11 +139,11 @@ There are three options you can choose from:
   }, [externalId]);
   useEffect(() => {
     chatAPI.connectSocket();
-  
+
     const interval = setInterval(() => {
       if (chatAPI.connectSocket()) {
         clearInterval(interval);
-  
+
         if (!isHomeMessageProcessed.current && homeInputText.trim() !== "") {
           isHomeMessageProcessed.current = true;
           const newMessage: Chatting = {
@@ -155,22 +156,24 @@ There are three options you can choose from:
           navigate(location.pathname, { replace: true, state: {} });
         }
       }
-    }, 100); 
-  
+    }, 100);
+
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    
+    const lastMarketMessage = messages.find(
+      (msg) => msg.messageType === "TOKEN_BRIDGE"
+    );
     const lastMessage = messages[messages.length - 1];
-    const lastMessage2 = messages[messages.length - 2];
     if (lastMessage?.messageType === "MARKET_FINALIZED") {
       CreateMessage();
     }
-    if (lastMessage2?.messageType === "CREATE_SWAP" && bridge === "yes") {
+    if (lastMarketMessage && bridge.toLowerCase() === "yes") {
       BridgeCreateMessage();
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
@@ -297,6 +300,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
       const lastMarketMessage = messages.find(
         (msg) => msg.messageType === "MARKET_FINALIZED"
       );
+
       if (!lastMarketMessage)
         throw new Error("No MARKET_FINALIZED message found");
 
@@ -311,6 +315,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
           gameStartAt: formatToISO8601(
             lastMarketMessage.data?.event?.created_at
           ),
+          gameEndAt: lastMarketMessage.data?.market?.close_date,
           gameExpriedAt: lastMarketMessage.data?.market?.close_date,
           fixtureId: lastMarketMessage.data?.event?.fixture_id,
           gameRelations: lastMarketMessage.data?.selections?.map(
@@ -324,6 +329,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
             })
           ),
           quantity: lastMarketMessage.data.market?.amount?.toString(),
+          asset: lastMarketMessage.data.market?.currency,
           key: lastMarketMessage.data.selected_type === "win" ? "A" : "B",
           choiceType: lastMarketMessage.data.selected_type ?? "WIN",
         },
@@ -343,39 +349,24 @@ Great, I can fetch information related to sports. Currently, I only support foot
 
       const { tr, transId } = response.data.message.data;
       console.log("tr", tr);
-      const transactionBuffer = Buffer.from(tr, "base64");
-      console.log("transactionBuffer", transactionBuffer);
-      
       if (!wallet) {
         throw new Error("Wallet is undefined");
       }
-      
+
       try {
-        const deserializedTransaction = Transaction.from(transactionBuffer);
-        console.log("deserializedTransaction", deserializedTransaction);
-        
-        if (!wallet.signTransaction) {
+        if (!wallet.solPrivateKey) {
           throw new Error("Wallet does not support transaction signing");
         }
-
-        // 트랜잭션 서명 시도
-        const signedTx = await wallet.signTransaction(deserializedTransaction).catch((err) => {
+        let rawTransaction;
+        try {
+          rawTransaction = await signTransaction(tr, wallet.solPrivateKey);
+        } catch (err: any) {
           console.error("Transaction signing error:", err);
           throw new Error(`Failed to sign transaction: ${err.message}`);
-        });
-
-        if (!signedTx) {
-          throw new Error("Signed transaction is null");
         }
 
-        console.log("signedTx", signedTx);
-        const signedTransaction = signedTx.serialize();
-        console.log("signedTransaction", signedTransaction);
-        const rawTransaction = signedTransaction.toString("base64");
-        console.log("rawTransaction", rawTransaction);
-        
         if (!rawTransaction) {
-          throw new Error("Raw transaction is null");
+          throw new Error("Signed transaction is null");
         }
 
         await signGame(transId, rawTransaction);
@@ -403,39 +394,6 @@ Great, I can fetch information related to sports. Currently, I only support foot
     }
   };
 
-  const getEthereumKey = async () => {
-    if (!ready || !authenticated || !user) return null;
-
-    const ethereumWallet = user.linkedAccounts.find(
-        (account): account is WalletWithMetadata =>
-            account.type === 'wallet' &&
-            account.walletClientType === 'privy' &&
-            account.chainType === 'ethereum'
-    );
-    if (!ethereumWallet?.address) {
-        throw new Error('Ethereum wallet address is undefined');
-    }
-    const address = await exportWallet({address: ethereumWallet.address});
-    console.log("address", address);
-    return address;
-  }
-
-  const getSolanaKey = async () => {
-    if (!ready || !authenticated || !user) return null;
-
-    const solanaWallet = user.linkedAccounts.find(
-        (account): account is WalletWithMetadata =>
-            account.type === 'wallet' &&
-            account.walletClientType === 'privy' &&
-            account.chainType === 'solana'
-    );
-    if (!solanaWallet?.address) {
-        throw new Error('Solana wallet address is undefined');
-    }
-    const address = await exportSolanaWallet({address: solanaWallet.address});
-    console.log("address", address);
-    return address;
-  }
 
   const BridgeCreateMessage = async () => {
     setBridgeLoading(true);
@@ -443,33 +401,40 @@ Great, I can fetch information related to sports. Currently, I only support foot
       const lastMarketMessage = messages.find(
         (msg) => msg.messageType === "TOKEN_BRIDGE"
       );
+
       if (!lastMarketMessage)
         throw new Error("No TOKEN_BRIDGE message found");
 
-      const userBridgeData: AgentMessage = {
+      const userBridgeData: any = {
         externalId: lastMarketMessage.conversationExternalId ?? null,
         content: bridge,
         messageType: "CREATE_SWAP",
         data: {
-          svmPk: (await getSolanaKey()) ?? "",
-          evmPk: (await getEthereumKey()) ?? "",
-          fromNetwork: lastMarketMessage.data.fromNetwork,
-          toNetwork: lastMarketMessage.data.toNetwork,
-          fromAsset: lastMarketMessage.data.fromAsset,
-          toAsset: lastMarketMessage.data.toAsset,
-          quantity: lastMarketMessage.data.quantity,
+          svmPk: JSON.parse(localStorage.getItem("user_wallet_info") || "{}").solPrivateKey,
+          evmPk: JSON.parse(localStorage.getItem("user_wallet_info") || "{}").evmPrivateKey,
+          fromNetwork: "SOLANA",
+          toNetwork: "BASE",
+          fromAsset: lastMarketMessage.data.from_asset,
+          toAsset: lastMarketMessage.data.to_asset,
+          quantity: lastMarketMessage.data.amount.toString(),
         },
       };
-      console.log("userBridgeData", userBridgeData);
+      await chatAPI.sendChatMessage(
+        userBridgeData
+      )
     } catch (error) {
       console.error("BridgeCreateMessage 실패:", error);
     } finally {
       setBridgeLoading(false);
+
     }
   };
 
   return (
     <div className="font-family">
+      {bridgeLoading && (
+        <Loading />
+      )}
       <div className="flex flex-col h-screen text-white w-[700px]">
         <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden">
           {
@@ -489,6 +454,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
           loading={loading}
         />
       </div>
+
     </div>
   );
 }

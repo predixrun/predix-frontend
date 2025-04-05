@@ -9,10 +9,12 @@ export interface GameData {
   extras: string;
   gameStartAt: string;
   gameExpriedAt: string;
+  gameEndAt: string;
   fixtureId: number;
   gameRelations: GameRelation[];
   quantity: string;
   key: string;
+  asset: string;
   choiceType: string;
 }
 
