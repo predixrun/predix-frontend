@@ -9,11 +9,11 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills({
-      include: ['buffer', 'crypto', 'util', 'stream'],
+      include: ['crypto', 'buffer', 'stream'],
       globals: {
         Buffer: true,
         global: true,
-        process: true,
+        process: true
       },
     }),
     tailwindcss()
