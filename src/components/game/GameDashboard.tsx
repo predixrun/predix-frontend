@@ -17,8 +17,6 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
   const [betStatus, setBetStatus] = useState<
     "pending" | "success" | "fail" | ""
   >("");
-  const userProfile = JSON.parse(localStorage.getItem("profile_data") || "{}");
-  const currentUserId = userProfile?.data?.id || null;
 
   const wallet = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
 
@@ -58,14 +56,10 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
     }
   };
 
-  const isUserMatch = game.user.userId === currentUserId;
-
   const quantity =
     game.joined.choiceKey === ""
-      ? ""
-      : isUserMatch
-        ? parseFloat(game.gameQuantity) || 0
-        : parseFloat(game.joined.quantity) || 0;
+      ? parseFloat(game.gameQuantity)
+      : parseFloat(game.joined.quantity)
   const potentialReward = quantity ? quantity * 2 : "";
 
   return (
@@ -103,9 +97,9 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
                 Title: {game.gameTitle}
                 <br />
                 <div className="flex items-center gap-2 justify-center my-2">
-                  <img src={game.gameRelation[0].thumbnail} alt="home" className="size-5" />
+                  <img src={game.gameRelation[0].thumbnail || "PrediX-logo.webp"} alt="home" className="size-5" />
                   vs
-                  <img src={game.gameRelation[1].thumbnail} alt="away" className="size-5" />
+                  <img src={game.gameRelation[1].thumbnail || "PrediX-logo.webp"} alt="away" className="size-5" />
                 </div>
               </div>
               <div className="gap-1 text-sm bg-black w-[120px] h-[32px] items-center flex justify-center rounded-full border-2 border-[#D74713] cursor-pointer">
