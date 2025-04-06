@@ -17,12 +17,8 @@ export default function BalanceFetch() {
     const fetchWalletBalances = async () => {
         try {
 
-
-
-            // 응답에 data가 없는 경우 빈 객체로 설정
             const response = await walletAPI.getWalletBalance(walletToETH, walletToSOL);
 
-            // Solana 토큰 정보 설정
             const solanaTokens = [
                 {
                     mint: "USDC",
@@ -32,12 +28,10 @@ export default function BalanceFetch() {
             ];
             setSolanaTokens(solanaTokens);
 
-            // 이더리움 네트워크 토큰 정보 설정
             const ethereumTokens = [];
 
-            // BNB 체인 USDC
             ethereumTokens.push({
-                address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", // 예시 주소
+                address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
                 name: "USD Coin (BNB Chain)",
                 symbol: "USDC",
                 amount: parseFloat(String(response.data.bnbUSDC || "0")),
@@ -45,9 +39,8 @@ export default function BalanceFetch() {
                 network: "BNB"
             });
 
-            // Base 체인 USDC
             ethereumTokens.push({
-                address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", // 예시 주소
+                address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", 
                 name: "USD Coin (Base)",
                 symbol: "USDC",
                 amount: parseFloat(String(response.data.baseUSDC || "0")),
@@ -55,9 +48,8 @@ export default function BalanceFetch() {
                 network: "Base"
             });
 
-            // Arbitrum 체인 USDC
             ethereumTokens.push({
-                address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", // 예시 주소
+                address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", 
                 name: "USD Coin (Arbitrum)",
                 symbol: "USDC",
                 amount: parseFloat(String(response.data.arbUSDC || "0")),
@@ -65,9 +57,8 @@ export default function BalanceFetch() {
                 network: "Arbitrum"
             });
 
-            // Optimism 체인 USDC
             ethereumTokens.push({
-                address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", // 예시 주소
+                address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", 
                 name: "USD Coin (Optimism)",
                 symbol: "USDC",
                 amount: parseFloat(String(response.data.optUSDC || "0")),
@@ -78,13 +69,12 @@ export default function BalanceFetch() {
             setEthereumTokens(ethereumTokens);
 
         } catch (err) {
-            console.error("지갑 잔액 조회 오류:", err);
+            console.error("Failed to fetch wallet balance:", err);
             setSolanaTokens([]);
             setEthereumTokens([]);
         }
     };
 
-    // 체인 로고 매핑
     const getChainLogo = (network: string) => {
         switch (network) {
             case "BNB":
