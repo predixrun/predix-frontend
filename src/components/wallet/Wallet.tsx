@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { usePrivy, useLogout } from "@privy-io/react-auth";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as web3 from "@solana/web3.js";
 import { QRCodeCanvas } from "qrcode.react";
 import CopyQRClipboard from "@/components/wallet/adress/CopyQRClipboard";
@@ -40,7 +40,8 @@ function Wallet() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = usePrivy();
-
+  const lastFetchedRef = useRef<number>(0)
+  
   const { logout } = useLogout({
     onSuccess: () => {
       localStorage.removeItem("profile_data");
@@ -67,6 +68,10 @@ function Wallet() {
     if (!walletToDelegate) return;
 
     const fetchBalance = async () => {
+      const now = Date.now();
+
+      if (now - lastFetchedRef.current < 10000) return;
+      lastFetchedRef.current = now;
       try {
         const publicKey = new web3.PublicKey(walletToDelegate.solPublicKey);
 
@@ -243,7 +248,7 @@ function Wallet() {
                       <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
                         <div className="flex items-center gap-2">
                           <img
-                            src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
+                            src="SolanaIcon.svg"
                             alt="Solana"
                             className="size-5"
                           />

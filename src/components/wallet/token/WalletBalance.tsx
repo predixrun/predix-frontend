@@ -35,7 +35,7 @@ export default function BalanceFetch() {
                 name: "USD Coin (BNB Chain)",
                 symbol: "USDC",
                 amount: parseFloat(String(response.data.bnbUSDC || "0")),
-                logo: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png",
+                logo: "UsdcIcon.svg",
                 network: "BNB"
             });
 
@@ -44,7 +44,7 @@ export default function BalanceFetch() {
                 name: "USD Coin (Base)",
                 symbol: "USDC",
                 amount: parseFloat(String(response.data.baseUSDC || "0")),
-                logo: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png",
+                logo: "UsdcIcon.svg",
                 network: "Base"
             });
 
@@ -53,7 +53,7 @@ export default function BalanceFetch() {
                 name: "USD Coin (Arbitrum)",
                 symbol: "USDC",
                 amount: parseFloat(String(response.data.arbUSDC || "0")),
-                logo: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png",
+                logo: "UsdcIcon.svg",
                 network: "Arbitrum"
             });
 
@@ -62,7 +62,7 @@ export default function BalanceFetch() {
                 name: "USD Coin (Optimism)",
                 symbol: "USDC",
                 amount: parseFloat(String(response.data.optUSDC || "0")),
-                logo: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png",
+                logo: "UsdcIcon.svg",
                 network: "Optimism"
             });
 
@@ -78,9 +78,9 @@ export default function BalanceFetch() {
     const getChainLogo = (network: string) => {
         switch (network) {
             case "BNB":
-                return "https://cryptologos.cc/logos/bnb-bnb-logo.png";
+                return "bnbIcon.svg";
             case "Base":
-                return "https://cryptologos.cc/logos/base-logo.png";
+                return "baseIcon.svg";
             case "Arbitrum":
                 return "https://cryptologos.cc/logos/arbitrum-arb-logo.png";
             case "Optimism":
@@ -100,8 +100,8 @@ export default function BalanceFetch() {
                         <div key={idx} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <TokenWithSolanaBadge
-                                    tokenSrc="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
-                                    solanaSrc="https://cryptologos.cc/logos/solana-sol-logo.png"
+                                    tokenSrc="UsdcIcon.svg"
+                                    solanaSrc="SolanaIcon.svg"
                                     altToken={token.symbol}
                                     altSolana="Solana Logo"
                                 />
@@ -110,7 +110,7 @@ export default function BalanceFetch() {
                             <div>${token.amount.toFixed(3)}</div>
                         </div>
                     ))}
-                    {(SolanaTokens.length === 0) && (
+                    {(SolanaTokens.length === 0 || SolanaTokens.every(token => token.amount === 0)) && (
                         <p className="text-sm text-gray-400">No SPL tokens held</p>
                     )}
 
@@ -127,7 +127,7 @@ export default function BalanceFetch() {
                                     <img
                                         src={getChainLogo(token.network)}
                                         alt={`${token.network} Logo`}
-                                        className="w-3 h-3 absolute -bottom-1 -right-1 rounded-full"
+                                        className="w-3 h-3 absolute -bottom-1 -right-1"
                                     />
                                 </div>
                                 <p>{token.amount.toFixed(3)} {token.symbol} ({token.network})</p>

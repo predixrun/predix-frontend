@@ -32,9 +32,7 @@ function Home() {
     }
   };
   useEffect(() => {
-    authenticated
-      ? setIsConnected(true)
-      : setIsConnected(false);
+    setIsConnected(authenticated);
   }, [authenticated]);
   return (
     <>
