@@ -41,6 +41,7 @@ function Wallet() {
   const navigate = useNavigate();
   const { user } = usePrivy();
   const lastFetchedRef = useRef<number>(0)
+  const walletToDelegate = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
   
   const { logout } = useLogout({
     onSuccess: () => {
@@ -62,24 +63,24 @@ function Wallet() {
   const handleMinimizeToggle = () => {
     setIsMinimized(!isMinimized);
   };
-  const walletToDelegate = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
+
 
   useEffect(() => {
     if (!walletToDelegate) return;
+    const publicKey = new web3.PublicKey(walletToDelegate.solPublicKey);
 
+    // Solana
+    const solanaConnection = new web3.Connection(
+      web3.clusterApiUrl("devnet"),
+      WALLET_STATE.CONFIRMED
+    );
     const fetchBalance = async () => {
       const now = Date.now();
 
       if (now - lastFetchedRef.current < 10000) return;
       lastFetchedRef.current = now;
       try {
-        const publicKey = new web3.PublicKey(walletToDelegate.solPublicKey);
 
-        // Solana
-        const solanaConnection = new web3.Connection(
-          web3.clusterApiUrl("devnet"),
-          WALLET_STATE.CONFIRMED
-        );
         const solBalance = await solanaConnection.getBalance(publicKey);
         const sol = (solBalance / 1_000_000_000).toFixed(4);
         setSolanaBalance(sol);
@@ -100,6 +101,14 @@ function Wallet() {
     };
 
     fetchBalance();
+    
+    const subscriptionId = solanaConnection.onAccountChange(publicKey, async () => {
+      await fetchBalance();
+    });
+  
+    return () => {
+      solanaConnection.removeAccountChangeListener(subscriptionId);
+    };
 
   }, [walletToDelegate]);
   // Find user name

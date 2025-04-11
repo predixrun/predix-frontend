@@ -54,7 +54,7 @@ export interface CreateSwapMessage extends BaseMessage {
     evmPk: string;
     fromNetwork: NetworkName;
     toNetwork: NetworkName;
-    fromAsset: string; // 수량 같은 문자열
+    fromAsset: string; 
     toAsset: string;
     quantity: string;
   };
