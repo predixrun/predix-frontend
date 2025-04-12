@@ -61,7 +61,6 @@ const LoginHandler: React.FC<{ setIsConnected: (value: boolean) => void }> = ({
     if (authenticated && user && externalWallet) {
       handlePostLogin();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticated, user, externalWallet]);
 
   const handleSignUpVerify = async (userAuthInfo: UserAuthInfo) => {

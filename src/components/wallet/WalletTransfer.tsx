@@ -9,6 +9,8 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { useState } from "react";
+import useLocalWallet from "@/hooks/useWallet";
+import { ethers } from "ethers";
 
 export function SendSolWithEmbeddedWallet() {
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
@@ -17,16 +19,16 @@ export function SendSolWithEmbeddedWallet() {
   const [amount, setAmount] = useState("");
   const [modalMessage, setModalMessage] = useState("");
 
-  const senderWallet =  JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
+  const { solPublicKey, solPrivateKey, evmPublicKey, evmPrivateKey } = useLocalWallet();
 
-  const handleSend = async () => {
+  const handleSendSolana = async () => {
     try {
-      if (!senderWallet) {
+      if (!solPublicKey || !solPrivateKey) {
         console.error("No sender wallet.");
         return;
       }
 
-      const senderPubKey = new PublicKey(senderWallet.solPublicKey);
+      const senderPubKey = new PublicKey(solPublicKey);
       const recipientPubKey = new PublicKey(recipientAddress);
       const lamports = parseFloat(amount) * 1e9;
 
@@ -43,18 +45,15 @@ export function SendSolWithEmbeddedWallet() {
           lamports,
         })
       );
-    // private key를 이용하여 트랜잭션 서명
-    const senderArray = bs58.decode(senderWallet.solPrivateKey);
-    const keypair = Keypair.fromSecretKey(senderArray);
-   
-    // keypair를 사용하여 트랜잭션 서명
-    transaction.sign(keypair);
+      const senderArray = bs58.decode(solPrivateKey);
+      const keypair = Keypair.fromSecretKey(senderArray);
     
-    //rawTransaction base64로 인코딩
-    const signedTransaction = transaction.serialize();
-      const rawTransaction = signedTransaction.toString('base64');
+      transaction.sign(keypair);
+    
+      const signedTransaction = transaction.serialize();
+      const rawTransaction = signedTransaction.toString("base64");
       const confirmation = await connection.sendRawTransaction(
-        Buffer.from(rawTransaction, 'base64')
+        Buffer.from(rawTransaction, "base64")
       );
       if (confirmation) {
         setModalMessage("✅ Transaction successful!");
@@ -70,6 +69,41 @@ export function SendSolWithEmbeddedWallet() {
       }, 1000);
     }
   };
+
+  const handleSendEthereum = async () => {
+    try {
+      if (!evmPublicKey || !evmPrivateKey) {
+        console.error("No sender wallet address or private key.");
+        return;
+      }
+      if (!recipientAddress || !amount) return;
+      
+      // Create wallet from private key
+      const wallet = new ethers.Wallet(evmPrivateKey);
+      
+      // Connect to provider
+      const provider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
+      const connectedWallet = wallet.connect(provider);
+      
+      // Create and send transaction
+      const tx = await connectedWallet.sendTransaction({
+        to: recipientAddress,
+        value: ethers.parseEther(amount),
+      });
+      
+      await tx.wait();
+      
+      setModalMessage("✅ Ethereum transaction successful!");
+    } catch (error) {
+      console.error("Ethereum transaction error:", error);
+      setModalMessage("❌ Ethereum transaction failed.");
+    } finally {
+      setAmount("");
+      setRecipientAddress("");
+      setTimeout(() => setModalMessage(""), 1000);
+    }
+  };
+  
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/^\d*\.?\d*$/.test(value)) {
@@ -93,16 +127,16 @@ export function SendSolWithEmbeddedWallet() {
           type="number"
           min="0"
           step="any"
-          placeholder="Amount of SOL to send"
+          placeholder="Amount of ETH to send"
           value={amount}
           onChange={handleAmountChange}
           className=" px-4 py-2 w-full outline-none placeholder:text-[#767676] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
         <button
-          onClick={handleSend}
-          disabled={!recipientAddress || !amount || !senderWallet}
+          onClick={handleSendEthereum}
+          disabled={!recipientAddress || !amount || !evmPublicKey || !evmPrivateKey}
           className={`ml-2 bg-[${colors.darkBg}] text-[${colors.text.gray}] ${
-            !recipientAddress || !amount || !senderWallet
+            !recipientAddress || !amount || !evmPublicKey || !evmPrivateKey
               ? "opacity-50 cursor-not-allowed"
               : "hover:scale-110 cursor-pointer"
           }`}

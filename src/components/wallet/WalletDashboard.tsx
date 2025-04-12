@@ -1,3 +1,4 @@
+import leaderboardAPI from "@/api/game/leaderboardAPI";
 import { useState, useRef, useEffect } from "react";
 
 interface WalletDashboardProps {
@@ -9,13 +10,21 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
   isOpen,
   onClose,
 }) => {
-  const leaderboardData = Array.from({ length: 300 }, (_, i) => ({
-    rank: i + 1,
-    username: `@user${i + 1}`,
-    score: Math.floor(Math.random() * 100),
-    change: Math.random() > 0.5 ? 1 : -1,
-  }));
-
+  // const leaderboardData = Array.from({ length: 300 }, (_, i) => ({
+  //   rank: i + 1,
+  //   username: `@user${i + 1}`,
+  //   score: Math.floor(Math.random() * 100),
+  //   change: Math.random() > 0.5 ? 1 : -1,
+  // }));
+  const [leaderboardData, setLeaderboardData] = useState([
+    {
+      nickname: null,
+      currentRank: 1,
+      totalAmoount: "0.30000000",
+      prevRank: null,
+      rankDiff: null
+    },
+  ]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [isScrollable, setIsScrollable] = useState<boolean>(false);
@@ -52,7 +61,31 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
   const toggleScrollable = () => {
     setIsScrollable((prev) => !prev);
   };
-
+  const fetchLeaderboardData = async () => {
+    try {
+      const response = await leaderboardAPI.getLeaderboard(
+        "DAILY",
+        "2025-04-12",
+        1,
+        10
+      );
+      if (response.data && response.data.ranks) {
+        const formattedData = response.data.ranks.map((item: any) => ({
+          nickname: item.nickname || null,
+          currentRank: item.currentRank || 0,
+          totalAmoount: item.totalAmoount || "0",
+          prevRank: item.prevRank || null,
+          rankDiff: item.rankDiff || null
+        }));
+        setLeaderboardData(formattedData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch leaderboard:", error);
+    } 
+  };
+  useEffect(() => {
+    fetchLeaderboardData();
+  }, []);
   const pageOptions = Array.from(
     { length: totalPages },
     (_, i) => (i + 1) * itemsPerPage
@@ -74,9 +107,31 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
   return (
     <div className="flex items-center justify-center z-50 w-full text-sm">
       <div
-        className=" bg-custom-dark rounded-xl p-2 relative w-[280px]"
+        className="bg-custom-dark rounded-xl p-2 relative w-[280px]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Rank Type Selector */}
+        <div className="flex justify-between mb-2">
+          {/* <button
+            className={`px-3 py-1 rounded ${rankType === "DAILY" ? "bg-[#2C2C2C] text-white" : "text-gray-400"}`}
+            onClick={() => handleRankTypeChange("DAILY")}
+          >
+            Daily
+          </button>
+          <button
+            className={`px-3 py-1 rounded ${rankType === "WEEKLY" ? "bg-[#2C2C2C] text-white" : "text-gray-400"}`}
+            onClick={() => handleRankTypeChange("WEEKLY")}
+          >
+            Weekly
+          </button>
+          <button
+            className={`px-3 py-1 rounded ${rankType === "MONTHLY" ? "bg-[#2C2C2C] text-white" : "text-gray-400"}`}
+            onClick={() => handleRankTypeChange("MONTHLY")}
+          >
+            Monthly
+          </button> */}
+        </div>
+
         {/* 리더보드 클릭 시 전체 보기 */}
         <div
           ref={listContainerRef}
@@ -90,44 +145,44 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
             <div className="bg-[#2C2C2C] rounded-xl mb-2 shadow-lg">
               {displayedData.slice(0, 3).map((entry, index) => (
                 <div
-                  key={entry.rank}
+                  key={entry.currentRank}
                   ref={(el) => {
                     if (el) pageRefs.current[index] = el;
                   }}
                   className={`flex items-center rounded-xl p-2.5 gap-3 duration-200 transition-all border-transparent
                     hover:scale-95 text-[#B3B3B3] hover:text-white  hover:border-2 hover:border-[#383838]
                     ${
-                      entry.rank === 1
+                      entry.currentRank === 1
                         ? "bg-black text-black shadow-lg"
                         : "bg-[#2C2C2C] text-white shadow-md"
                     }`}
                 >
                   <div
                     className={`w-[28px] h-[32px] rounded-sm flex items-center justify-center font-semibold ${
-                      entry.rank === 1
+                      entry.currentRank === 1
                         ? "bg-[#E8B931] text-black"
                         : "bg-white text-black"
                     }`}
                   >
-                    {entry.rank === 1 ? "🏆" : entry.rank}
+                    {entry.currentRank === 1 ? "🏆" : entry.currentRank}
                   </div>
 
                   <div className="flex items-center gap-2 flex-1">
                     <img
-                      src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
+                      src="evmLogo.png"
                       alt="profile"
                       className="w-[30px] h-[30px] rounded-full"
                     />
                     <span className="text-[#00A1F1] flex-1">
-                      @{entry.username}
+                      @{entry.nickname}
                       <span className="text-[#E8B931] ml-2">
-                        +{entry.score}
+                        +{entry.totalAmoount}
                       </span>
                     </span>
                   </div>
                   <span
                     className={`text-sm flex items-center ${
-                      entry.change > 0 ? "text-[#7FED58]" : "text-[#FF0000]"
+                      entry.rankDiff && entry.rankDiff > 0 ? "text-[#7FED58]" : "text-[#FF0000]"
                     }`}
                   >
                     <svg
@@ -139,13 +194,13 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                       <path fill="none" d="M0 0h24v24H0z" />
                       <path
                         d={
-                          entry.change > 0
+                          entry.rankDiff && entry.rankDiff > 0
                             ? "M12 8L18 14H6L12 8Z"
                             : "M12 16L6 10H18L12 16Z"
                         }
                       />
                     </svg>
-                    {Math.abs(entry.change)}
+                    {Math.abs(entry.rankDiff || 0)}
                   </span>
                 </div>
               ))}
@@ -154,11 +209,11 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
 
           {/* 4등 이하*/}
           {displayedData.map((entry, index) => {
-            if (currentPage === 1 && entry.rank <= 3) return null;
+            if (currentPage === 1 && entry.currentRank <= 3) return null;
 
             return (
               <div
-                key={entry.rank}
+                key={entry.currentRank}
                 ref={(el) => {
                   if (el) pageRefs.current[index] = el;
                 }}
@@ -168,7 +223,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                     hover:scale-95 text-gray-300 cursor-pointer`}
               >
                 <div className="w-[28px] h-[32px] rounded-sm flex items-center justify-center font-semibold bg-black">
-                  {entry.rank}
+                  {entry.currentRank}
                 </div>
 
                 <div className="flex items-center gap-2 flex-1">
@@ -178,13 +233,13 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                     className="w-[30px] h-[30px] rounded-full"
                   />
                   <span className="text-[#00A1F1] flex-1">
-                    @{entry.username}
-                    <span className="text-[#E8B931] ml-2">+{entry.score}</span>
+                    @{entry.nickname}
+                    <span className="text-[#E8B931] ml-2">+{parseFloat(entry.totalAmoount).toFixed(4)}</span>
                   </span>
                 </div>
                 <span
                   className={`text-sm flex items-center ${
-                    entry.change > 0 ? "text-[#7FED58]" : "text-[#FF0000]"
+                    entry.rankDiff && entry.rankDiff > 0 ? "text-[#7FED58]" : "text-[#FF0000]"
                   }`}
                 >
                   <svg
@@ -196,13 +251,13 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                     <path fill="none" d="M0 0h24v24H0z" />
                     <path
                       d={
-                        entry.change > 0
+                        entry.rankDiff && entry.rankDiff > 0
                           ? "M12 8L18 14H6L12 8Z"
                           : "M12 16L6 10H18L12 16Z"
                       }
                     />
                   </svg>
-                  {Math.abs(entry.change)}
+                  {Math.abs(entry.rankDiff || 0)}
                 </span>
               </div>
             );
@@ -220,7 +275,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
               className="bg-[#2C2C2C] px-4 py-2 rounded shadow-lg w-[160px] text-center flex gap-4 items-center"
             >
               <div>
-                {currentPage * itemsPerPage} / {leaderboardData.length}
+                {currentPage * itemsPerPage} / {Math.ceil(leaderboardData.length / 10)}
               </div>
               <div
                 className={`transition-transform duration-300 ${
