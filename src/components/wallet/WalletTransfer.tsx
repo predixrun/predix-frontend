@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import useLocalWallet from "@/hooks/useWallet";
 import { ethers } from "ethers";
+import Spinner from "../styles/spiner/home/Spiner";
 
 export function SendSolWithEmbeddedWallet() {
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
@@ -18,6 +19,7 @@ export function SendSolWithEmbeddedWallet() {
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [modalMessage, setModalMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const { solPublicKey, solPrivateKey, evmPublicKey, evmPrivateKey } = useLocalWallet();
 
@@ -78,6 +80,7 @@ export function SendSolWithEmbeddedWallet() {
       }
       if (!recipientAddress || !amount) return;
       
+      setLoading(true);
       // Create wallet from private key
       const wallet = new ethers.Wallet(evmPrivateKey);
       
@@ -92,6 +95,7 @@ export function SendSolWithEmbeddedWallet() {
       });
       
       const receipt = await tx.wait();
+      
       console.log(receipt);
       
       if(receipt?.status === 1) {
@@ -103,9 +107,11 @@ export function SendSolWithEmbeddedWallet() {
       console.error("Ethereum transaction error:", error);
       setModalMessage("❌ Ethereum transaction failed.");
     } finally {
+      setLoading(false);
       setAmount("");
       setRecipientAddress("");
       setTimeout(() => setModalMessage(""), 1000);
+
     }
   };
   
@@ -163,6 +169,11 @@ export function SendSolWithEmbeddedWallet() {
               {modalMessage}
             </p>
           </div>
+        </div>
+      )}
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-[100]">
+          <Spinner />
         </div>
       )}
     </div>

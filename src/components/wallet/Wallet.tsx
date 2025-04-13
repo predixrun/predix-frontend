@@ -285,7 +285,7 @@ function Wallet() {
                           />
                           <span>{Balance} {CoinBase.ETH}</span>
                         </div>
-                        <div>${Balance}</div>
+                        <div>${usdValue}</div>
                       </div>
                       <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
                         <div className="flex items-center gap-2">
@@ -296,7 +296,7 @@ function Wallet() {
                           />
                           <span>{Balance} {CoinBase.ETH}</span>
                         </div>
-                        <div>${Balance}</div>
+                        <div>${usdValue}</div>
                       </div>
                       <div
                         className=" flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
