@@ -5,6 +5,13 @@ interface WalletDashboardProps {
   isOpen: boolean;
   onClose: () => void;
 }
+interface LeaderboardData {
+  nickname: string | null;
+  currentRank: number;
+  totalAmount: string;
+  prevRank: number | null;
+  rankDiff: number | null;
+}
 
 const WalletDashboard: React.FC<WalletDashboardProps> = ({
   isOpen,
@@ -16,11 +23,12 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
   //   score: Math.floor(Math.random() * 100),
   //   change: Math.random() > 0.5 ? 1 : -1,
   // }));
-  const [leaderboardData, setLeaderboardData] = useState([
+
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardData[]>([
     {
       nickname: null,
       currentRank: 1,
-      totalAmoount: "0.30000000",
+      totalAmount: "0.30000000",
       prevRank: null,
       rankDiff: null
     },
@@ -30,7 +38,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
   const [isScrollable, setIsScrollable] = useState<boolean>(false);
 
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(leaderboardData.length / itemsPerPage);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<HTMLDivElement[]>([]);
 
@@ -61,23 +69,25 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
   const toggleScrollable = () => {
     setIsScrollable((prev) => !prev);
   };
+
   const fetchLeaderboardData = async () => {
     try {
       const response = await leaderboardAPI.getLeaderboard(
         "DAILY",
-        "2025-04-12",
-        1,
+        new Date().toISOString().split('T')[0],
+        currentPage,
         10
       );
       if (response.data && response.data.ranks) {
         const formattedData = response.data.ranks.map((item: any) => ({
           nickname: item.nickname || null,
           currentRank: item.currentRank || 0,
-          totalAmoount: item.totalAmoount || "0",
           prevRank: item.prevRank || null,
-          rankDiff: item.rankDiff || null
+          rankDiff: item.rankDiff || null,
+          totalAmount: item.totalAmount ? item.totalAmount.toFixed(4) : "0.0000"
         }));
         setLeaderboardData(formattedData);
+        setTotalPages(Math.ceil(response.data.total / 10));
       }
     } catch (error) {
       console.error("Failed to fetch leaderboard:", error);
@@ -85,7 +95,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
   };
   useEffect(() => {
     fetchLeaderboardData();
-  }, []);
+  }, [currentPage]);
   const pageOptions = Array.from(
     { length: totalPages },
     (_, i) => (i + 1) * itemsPerPage
@@ -138,7 +148,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
           className={`max-h-[556px] transition-all duration-300 ${
             isScrollable ? "overflow-scroll [&::-webkit-scrollbar]:hidden" : ""
           }`}
-          onClick={toggleScrollable}
+          // onClick={toggleScrollable}
         >
           {/* 1~3등 섹션 */}
           {currentPage === 1 && (
@@ -176,7 +186,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                     <span className="text-[#00A1F1] flex-1">
                       @{entry.nickname}
                       <span className="text-[#E8B931] ml-2">
-                        +{entry.totalAmoount}
+                        +{entry.totalAmount}
                       </span>
                     </span>
                   </div>
@@ -234,7 +244,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                   />
                   <span className="text-[#00A1F1] flex-1">
                     @{entry.nickname}
-                    <span className="text-[#E8B931] ml-2">+{parseFloat(entry.totalAmoount).toFixed(4)}</span>
+                    <span className="text-[#E8B931] ml-2">+{entry.totalAmount}</span>
                   </span>
                 </div>
                 <span
@@ -271,11 +281,14 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
           </button>
           <div className="relative text-white">
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              onClick={() => {
+                setIsDropdownOpen(!isDropdownOpen);
+               
+              }}
               className="bg-[#2C2C2C] px-4 py-2 rounded shadow-lg w-[160px] text-center flex gap-4 items-center"
             >
               <div>
-                {currentPage * itemsPerPage} / {Math.ceil(leaderboardData.length / 10)}
+                {currentPage * itemsPerPage} / {totalPages * 10}
               </div>
               <div
                 className={`transition-transform duration-300 ${
