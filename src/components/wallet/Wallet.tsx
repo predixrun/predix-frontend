@@ -20,6 +20,7 @@ import useLocalWallet from "@/hooks/useWallet";
 import useWalletBalance from "@/hooks/useWalletBalance";
 import { CoinBase } from "@/types/coins";
 import leaderboardAPI from "@/api/game/gameDashboard";
+import BaseLogo from "/BaseLogo.svg";
 
 const WALLET_STATE = {
   DELEGATE: "delegate",
@@ -150,7 +151,7 @@ function Wallet() {
             <p>PrediX</p>
           </div>
 
-          <div className="absolute left-60 top-0 hidden peer-hover:block p-2  bg-custom-dark text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)]">
+          <div className="absolute left-60 top-0 hidden peer-hover:block p-2 mt-2 bg-custom-dark text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)] z-20">
             <div className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[10px] border-b-[10px] border-r-[10px] border-transparent border-r-[#1E1E1E]"></div>
             Back home
           </div>
@@ -278,8 +279,19 @@ function Wallet() {
                       <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
                         <div className="flex items-center gap-2">
                           <img
-                            src="evmLogo.png"
-                            alt="Ethereum"
+                            src={BaseLogo}
+                            alt="Base"
+                            className="size-5"
+                          />
+                          <span>{Balance} {CoinBase.ETH}</span>
+                        </div>
+                        <div>${Balance}</div>
+                      </div>
+                      <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={BaseLogo}
+                            alt="Base"
                             className="size-5"
                           />
                           <span>{Balance} {CoinBase.ETH}</span>
@@ -287,7 +299,7 @@ function Wallet() {
                         <div>${Balance}</div>
                       </div>
                       <div
-                        className="mt-1.5 flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
+                        className=" flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
                         onClick={toggleDashboard}
                       >
                         <span className="ml-4 mr-2 text-[18px]">
@@ -453,7 +465,7 @@ function Wallet() {
                   </div>
                 </div> */}
                 <div className="flex gap-2 items-center">
-                  <img src="evmLogo.png" alt="Ethereum" className="size-5" />
+                  <img src={BaseLogo} alt="Base" className="size-5" />
                   <div className="flex flex-col text-sm">
                     <span>
                       {Balance} {CoinBase.ETH}

@@ -82,14 +82,18 @@ const Leaderboard = () => {
     const updateTime = () => {
       const now = new Date();
       const endTime = new Date();
+
+      const dayOfWeek = now.getDay();
+      const daysUntilSunday = dayOfWeek === 0 ? 7 : 7 - dayOfWeek;
+
       endTime.setHours(0, 0, 0, 0);
-      endTime.setDate(endTime.getDate() + 1);
+      endTime.setDate(now.getDate() + daysUntilSunday);
 
       const diffMs = endTime.getTime() - now.getTime();
       const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
       const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
-      setRunningTime(`남은 시간: ${diffHrs}시간 ${diffMins}분`);
+      setRunningTime(`Time remaining: ${diffHrs}h ${diffMins}m`);
     };
 
     updateTime();
@@ -179,7 +183,8 @@ const Leaderboard = () => {
                     {Math.abs(entry.rankDiff || 0)}
 
                   </span>
-                  <div className="ml-2 text-[#E8B931]">
+                  <div className="ml-2 text-[#E8B931] flex items-center gap-2">
+                    <img src="evmLogo.png" alt="ETH" className="w-4 h-4" />
                     {parseFloat(entry.totalAmount) * 100} {CoinBase.ETH}
                   </div>
                 </div>
@@ -239,7 +244,8 @@ const Leaderboard = () => {
                   {Math.abs(entry.rankDiff || 0)}
 
                 </span>
-                <div className="ml-2 text-[#E8B931]">
+                <div className="ml-2 text-[#E8B931] flex items-center gap-2">
+                  <img src="evmLogo.png" alt="ETH" className="w-4 h-4" />
                   {parseFloat(entry.totalAmount) * 100} {CoinBase.ETH}
                 </div>
               </div>
@@ -257,7 +263,7 @@ const Leaderboard = () => {
               <button
                 className="text-white text-xl bg-transparent border-none cursor-pointer mx-4 disabled:opacity-50 disabled:cursor-not-allowed hover:text-[#D74713] transition-colors"
                 onClick={() => handlePageClick(currentPage + 1)}
-                // disabled={currentPage === pageCount - 1}
+              // disabled={currentPage === pageCount - 1}
               >
                 ›
               </button>

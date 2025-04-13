@@ -1,5 +1,6 @@
 import leaderboardAPI from "@/api/game/leaderboardAPI";
 import { useState, useRef, useEffect } from "react";
+import BaseLogo from "/BaseLogo.svg";
 
 interface WalletDashboardProps {
   isOpen: boolean;
@@ -179,7 +180,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
 
                   <div className="flex items-center gap-2 flex-1">
                     <img
-                      src="evmLogo.png"
+                      src={BaseLogo}
                       alt="profile"
                       className="w-[30px] h-[30px] rounded-full"
                     />

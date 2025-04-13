@@ -82,7 +82,7 @@ export function SendSolWithEmbeddedWallet() {
       const wallet = new ethers.Wallet(evmPrivateKey);
       
       // Connect to provider
-      const provider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
+      const provider = new ethers.JsonRpcProvider("https://sepolia.base.org");
       const connectedWallet = wallet.connect(provider);
       
       // Create and send transaction

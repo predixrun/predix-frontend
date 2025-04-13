@@ -32,7 +32,7 @@ export default function useWalletBalance({
           );
 
           const solBalance = await solanaConnection.getBalance(solanaKey);
-          const sol = (solBalance / 1_000_000_000).toFixed(4);
+          const sol = (solBalance / 1_000_000_000).toFixed(5);
           setBalance(sol);
 
           const res = await fetch(
@@ -60,7 +60,7 @@ export default function useWalletBalance({
           );
           const balanceBigInt = await provider.getBalance(publicKey);
           const eth = ethers.formatEther(balanceBigInt);
-          setBalance(parseFloat(eth).toFixed(5));
+          setBalance(parseFloat(eth).toFixed(6));
 
           const res = await fetch(
             "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
