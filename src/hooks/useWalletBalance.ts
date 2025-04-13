@@ -56,11 +56,11 @@ export default function useWalletBalance({
         }
         if (type === "ethereum") {
           const provider = new ethers.JsonRpcProvider(
-            "https://mainnet.base.org"
+            `https://sepolia.base.org`
           );
           const balanceBigInt = await provider.getBalance(publicKey);
           const eth = ethers.formatEther(balanceBigInt);
-          setBalance(parseFloat(eth).toFixed(4));
+          setBalance(parseFloat(eth).toFixed(5));
 
           const res = await fetch(
             "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"

@@ -74,7 +74,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
     try {
       const response = await leaderboardAPI.getLeaderboard(
         "DAILY",
-        new Date().toISOString().split('T')[0],
+        "2025-04-12",
         currentPage,
         10
       );

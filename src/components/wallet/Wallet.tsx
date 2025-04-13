@@ -137,10 +137,10 @@ function Wallet() {
   return (
     <div
       className={`absolute left-3 z-100 flex flex-col gap-2 ${
-        location.pathname.startsWith("/chat") ? "h-svh pt-4" : "h-auto top-3"
+        (location.pathname.startsWith("/chat") || location.pathname.startsWith("/leaderboard")) ? "h-svh pt-4" : "h-auto top-3"
       }`}
     >
-      {location.pathname.startsWith("/chat") && (
+      {(location.pathname.startsWith("/chat") || location.pathname.startsWith("/leaderboard")) && (
         <div className="">
           <div
             className="peer gap-2 opacity-30 hover:opacity-100 transition-all duration-300 text-[#B3B3B3] hover:text-white flex items-center font-family font-semibold cursor-pointer"
@@ -213,7 +213,7 @@ function Wallet() {
                           ? "h-[103px]"
                           : currentState === WALLET_STATE.DEPOSIT
                           ? "h-[144px]"
-                          : "h-[256px]"
+                          : "h-[270px]"
                       }`}
                     >
                       {currentState === WALLET_STATE.DEPOSIT && (

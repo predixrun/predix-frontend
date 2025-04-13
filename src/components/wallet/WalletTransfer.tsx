@@ -91,9 +91,14 @@ export function SendSolWithEmbeddedWallet() {
         value: ethers.parseEther(amount),
       });
       
-      await tx.wait();
+      const receipt = await tx.wait();
+      console.log(receipt);
       
-      setModalMessage("✅ Ethereum transaction successful!");
+      if(receipt?.status === 1) {
+        setModalMessage("✅ Ethereum transaction successful!");
+      } else {
+        setModalMessage("❌ Ethereum transaction failed.");
+      }
     } catch (error) {
       console.error("Ethereum transaction error:", error);
       setModalMessage("❌ Ethereum transaction failed.");

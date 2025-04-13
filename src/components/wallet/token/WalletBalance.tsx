@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import TokenWithSolanaBadge from "./TokenWithSolanaBadge";
 import walletAPI from "../../../api/wallet/walletAPI";
+import useLocalWallet from "@/hooks/useWallet";
 
 export default function BalanceFetch() {
     const [SolanaTokens, setSolanaTokens] = useState<any[]>([]);
     const [EthereumTokens, setEthereumTokens] = useState<any[]>([]);
-    const walletToSOL = JSON.parse(localStorage.getItem("user_wallet_info") || "{}").solPublicKey;
-    const walletToETH = JSON.parse(localStorage.getItem("user_wallet_info") || "{}").evmPublicKey;
+    const {solPublicKey:walletToSOL, evmPublicKey:walletToETH} = useLocalWallet()
 
     useEffect(() => {
         if (walletToSOL || walletToETH) {
@@ -15,9 +15,10 @@ export default function BalanceFetch() {
     }, [walletToSOL, walletToETH]);
 
     const fetchWalletBalances = async () => {
+
         try {
 
-            const response = await walletAPI.getWalletBalance(walletToETH, walletToSOL);
+            const response = await walletAPI.getWalletBalance(walletToETH || "", walletToSOL || "");
 
             const solanaTokens = [
                 {
@@ -95,7 +96,7 @@ export default function BalanceFetch() {
 
             <div className="flex items-center min-w-[296px] min-h-[42px] px-4 py-2">
                 <div className="flex flex-col w-full gap-4">
-                    <h3 className="font-bold">Solana Tokens</h3>
+                    {/* <h3 className="font-bold">Solana Tokens</h3>
                     {SolanaTokens.filter(token => token.amount > 0).map((token, idx) => (
                         <div key={idx} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -112,9 +113,9 @@ export default function BalanceFetch() {
                     ))}
                     {(SolanaTokens.length === 0 || SolanaTokens.every(token => token.amount === 0)) && (
                         <p className="text-sm text-gray-400">No SPL tokens held</p>
-                    )}
+                    )} */}
 
-                    <h3 className="font-bold mt-4">Ethereum Tokens</h3>
+                    <h3 className="font-bold mt-4">Base Tokens</h3>
                     {EthereumTokens.filter(token => token.amount > 0).map((token, idx) => (
                         <div key={idx} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
