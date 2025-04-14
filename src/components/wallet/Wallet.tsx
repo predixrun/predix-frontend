@@ -40,7 +40,8 @@ function Wallet() {
     currentRank: null,
     nickname: null,
     totalAmount: "0",
-    rankDiff: null
+    rankDiff: null,
+    prevRank: null,
   });
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -83,11 +84,13 @@ function Wallet() {
       const today = getTodayDateKey();
       try {
         const result = await leaderboardAPI.getUserRank("DAILY", today);
+        console.log(result.data.rank);
         setUserRank(result.data.rank || { 
             currentRank: null,
             nickname: null,
             totalAmount: "0",
-            rankDiff: null
+            rankDiff: null,
+            prevRank: null  
         }); 
       } catch (error) { 
         console.error("Error fetching leaderboard data:", error);
@@ -95,7 +98,8 @@ function Wallet() {
             currentRank: null,
             nickname: null,
             totalAmount: "0",
-            rankDiff: null
+              rankDiff: null,
+            prevRank: null
         });
       }
     };
