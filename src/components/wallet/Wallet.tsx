@@ -15,13 +15,15 @@ import WalletDashboard from "./WalletDashboard";
 import ChatHistory from "@/components/Chat/ChatHistory";
 import Profile from "../Profile/Profile";
 import AdressSelection from "./adress/AdressSelection";
-import BalanceFetch from "./token/WalletTokenBalance";
 import useLocalWallet from "@/hooks/useWallet";
 import useWalletBalance from "@/hooks/useWalletBalance";
+import useWalletMinimizer from "@/hooks/useWalletMinimizer";
 import { CoinBase } from "@/types/coins";
 import leaderboardAPI from "@/api/game/gameDashboard";
 import BaseLogo from "/BaseLogo.svg";
 import PrediXLogo from "/PrediX-logo.webp";
+import SolanaIcon from "/SolanaIcon.svg";
+
 const WALLET_STATE = {
   DELEGATE: "delegate",
   DEPOSIT: "deposit",
@@ -31,13 +33,17 @@ const WALLET_STATE = {
 
 function Wallet() {
   const [currentState, setCurrentState] = useState<string>(
-    WALLET_STATE.DEPOSIT
+    WALLET_STATE.CONFIRMED
   );
-  const [Balance, setBalance] = useState<string>("");
-  const [PriceUSD, setPriceUSD] = useState<number>(0);
-  const [isMinimized, setIsMinimized] = useState<boolean>(false);
-  const [userRank, setUserRank] = useState<any>(0);
+  const [userRank, setUserRank] = useState<any>({
+    currentRank: null,
+    nickname: null,
+    totalAmount: "0",
+    rankDiff: null
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const { isMinimized, toggleMinimize } = useWalletMinimizer();
 
   const [isDashboardView, setIsDashboardView] = useState<boolean>(false);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
@@ -50,7 +56,7 @@ function Wallet() {
   const { user } = usePrivy();
 
   const { solPublicKey, evmPublicKey } = useLocalWallet();
-  const { baseBalance, baseUsdValue, refetch: refetchBalance } = useWalletBalance({
+  const { baseBalance, baseUsdValue } = useWalletBalance({
     type: "ethereum",
     publicKey: evmPublicKey ?? undefined,
   });
@@ -58,29 +64,10 @@ function Wallet() {
     type: "solana",
     publicKey: solPublicKey ?? undefined,
   });
-
   const { predixBalance, predixUsdValue } = useWalletBalance({
     type: "predix",
     publicKey: evmPublicKey ?? undefined,
   });
-
-  useEffect(() => {
-    if (baseBalance) {
-      setBalance(baseBalance);
-    }
-    const totalUsdValue = Number(solanaUsdValue) + Number(baseUsdValue) + Number(predixUsdValue);
-    setPriceUSD(parseFloat(totalUsdValue.toFixed(6)));
-    refetchBalance();
-  }, []);
-
-  useEffect(() => {
-    if (isMinimized) {
-      const interval = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % 3);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [isMinimized]);
 
   const getTodayDateKey = (): string => {
     const today = new Date();
@@ -89,20 +76,28 @@ function Wallet() {
     const dd = String(today.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
   };
-  const today = getTodayDateKey();
-  const fetchLeaderboardData = async () => {
-    try {
-      const result = await leaderboardAPI.getUserRank("DAILY", today);
-      setUserRank(result.data.rank);
-      console.log("result.data.rank", result.data.rank);
-      return result.data;
-    } catch (error) {
-      console.error("Error fetching leaderboard data:", error);
-      return null;
-    }
-  };
 
   useEffect(() => {
+    const fetchLeaderboardData = async () => {
+      const today = getTodayDateKey();
+      try {
+        const result = await leaderboardAPI.getUserRank("DAILY", today);
+        setUserRank(result.data.rank || { 
+            currentRank: null,
+            nickname: null,
+            totalAmount: "0",
+            rankDiff: null
+        }); 
+      } catch (error) { 
+        console.error("Error fetching leaderboard data:", error);
+        setUserRank({ 
+            currentRank: null,
+            nickname: null,
+            totalAmount: "0",
+            rankDiff: null
+        });
+      }
+    };
     fetchLeaderboardData();
   }, []);
 
@@ -119,26 +114,13 @@ function Wallet() {
     },
   });
 
-  const handleMinimizeToggle = () => {
-    setIsMinimized(!isMinimized);
-  };
+  const username = user?.twitter?.username ?? user?.github?.username ?? user?.google?.name ?? "User";
+  const ProfileUrl = user?.twitter?.profilePictureUrl ?? "default_profile.png";
 
-  // Find user name
-  const twitterAccount = user?.linkedAccounts[0] as
-    | { username: string }
-    | undefined;
-  const username = twitterAccount?.username;
-  // Find user image
-  const twitterProfileUrl = user?.linkedAccounts[0] as
-    | { profilePictureUrl: string }
-    | undefined;
-  const ProfileUrl = twitterProfileUrl?.profilePictureUrl;
-
-  const minimizedPosition = location.pathname.startsWith("/chat")
+  const minimizedPosition = location.pathname.startsWith("/chat") || location.pathname.startsWith("/leaderboard")
     ? "top-15 -left-2"
     : "top-5 -left-2";
 
-  //share
   const handleShare = () => {
     const text = "Check out this awesome prediction market on PrediX!";
     const url = "https://PrediX.run";
@@ -155,6 +137,21 @@ function Wallet() {
   const handleAdressSelection = () => {
     setIsAdressSelection(!isAdressSelection);
   };
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+    if (isMinimized) {
+      intervalId = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % 3);
+      }, 5000);
+    }
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isMinimized]);
+
   return (
     <div>
         <div className="left-10 absolute h-auto top-10">
@@ -162,21 +159,20 @@ function Wallet() {
           className="peer gap-2 transition-all duration-300 text-white flex items-center font-family font-semibold cursor-pointer"
           onClick={() => {
             navigate("/")
-            setIsMinimized(true)
           }}
         >
-          <img src="PrediX-logo.webp" alt="logo" className="size-8" />
+          <img src={PrediXLogo} alt="logo" className="size-8" />
           <p>PrediX</p>
         </div>
       </div>
     <div
-      className={`absolute right-3 z-100 flex flex-col gap-2 ${(location.pathname.startsWith("/chat")) ? "h-svh pt-4" : "h-auto top-3"
+      className={`absolute right-3 z-100 flex flex-col gap-2 ${(location.pathname.startsWith("/chat") || location.pathname.startsWith("/leaderboard")) ? "h-svh pt-4" : "h-auto top-3"
         }`}
     >
 
       {!isMinimized ? (
         <Card
-          className={`py-4 items-start min-w-[320px]  bg-custom-dark text-[#767676] font-family font-semibold`}
+          className={`py-4 items-start min-w-[320px]  bg-custom-dark text-[#767676] font-family font-semibold wallet-fade-in`}
         >
           {!isDashboardView ? (
             <>
@@ -225,11 +221,9 @@ function Wallet() {
                 <>
                   {currentState !== WALLET_STATE.CONFIRMED && (
                     <div
-                      className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${currentState === WALLET_STATE.DELEGATE
-                        ? "h-[103px]"
-                        : currentState === WALLET_STATE.DEPOSIT
-                          ? "h-[144px]"
-                          : "h-[270px]"
+                      className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${currentState === WALLET_STATE.DEPOSIT
+                        ? "h-auto p-5"
+                        : "h-[270px]"
                         }`}
                     >
                       {currentState === WALLET_STATE.DEPOSIT && (
@@ -274,10 +268,8 @@ function Wallet() {
                   {currentState === WALLET_STATE.CONFIRMED && (
                     <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white gap-2">
                       <div className="text-[32px] font-bold">
-                        {/* 전체 USD 가치 합산하여 직접 표시 */}
                         ${(solanaUsdValue + baseUsdValue + predixUsdValue).toFixed(2)}
                       </div>
-                      {/* Ethereum */}
                       <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
                         <div className="flex items-center gap-2">
                           <img
@@ -289,7 +281,6 @@ function Wallet() {
                         </div>
                         <div>${baseUsdValue}</div>
                       </div>
-                      {/* Solana */}
                       <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
                         <div className="flex items-center gap-2">
                           <img
@@ -321,14 +312,14 @@ function Wallet() {
                         </span>
 
                         <div className="ml-1 flex gap-0.5 items-center">
-                          <span><img src={user?.twitter?.profilePictureUrl ?? ""} alt="profile" className="size-5 rounded-full" /></span>
+                          <span><img src={ProfileUrl} alt="profile" className="size-5 rounded-full" /></span>
                           <span className="text-[#767676]">
                             @{userRank.nickname ?? "-"}
                           </span>
                         </div>
 
                         <div className="text-[#E8B931]">
-                          +{parseFloat(userRank.totalAmoount || "0").toFixed(2)}
+                          +{parseFloat(userRank.totalAmount || "0").toFixed(2)}
                         </div>
 
                         <span className="text-sm text-[#7FED58] flex items-center">
@@ -345,8 +336,6 @@ function Wallet() {
                           <div>{userRank.rankDiff !== null ? userRank.rankDiff : 0}</div>
                         </span>
                       </div>
-                      <BalanceFetch />
-
                     </div>
                   )}
                 </>
@@ -419,7 +408,7 @@ function Wallet() {
                   </button>
                 </div>
                 <div
-                  onClick={handleMinimizeToggle}
+                  onClick={toggleMinimize}
                   className="cursor-pointer hover:text-white"
                 >
                   <svg
@@ -454,7 +443,7 @@ function Wallet() {
               <img
                 src={ProfileUrl}
                 alt="Profile"
-                className="rounded-full w-10 h-10"
+                className="rounded-full w-8 h-8"
               />
               <div className="flex flex-col ml-2">
                 <span>@{username}</span>
@@ -467,40 +456,33 @@ function Wallet() {
             <div className="min-w-[261px] h-[54px] rounded bg-custom-dark flex items-center justify-between px-3">
               <div className="flex gap-3 items-center">
                 {(() => {
-
                   if (currentIndex === 0) {
                     return (
-                      <div className="flex gap-2 items-center">
-                        <img src="SolanaIcon.svg" alt="Solana" className="size-5" />
-                        <div className="flex flex-col text-sm">
-                          <span>
-                            {solanaBalance} {CoinBase.SOL}
-                          </span>
-                          <span className="text-[#B3B3B3]">${solanaUsdValue}</span>
+                      <div className="flex gap-2 items-center wallet-fade-in min-w-0">
+                        <img src={SolanaIcon} alt="Solana" className="size-5 flex-shrink-0" />
+                        <div className="flex flex-col text-sm truncate">
+                          <span className="font-semibold">{solanaBalance} {CoinBase.SOL}</span>
+                          <span className="text-[#B3B3B3]">${solanaUsdValue.toFixed(2)}</span>
                         </div>
                       </div>
                     );
                   } else if (currentIndex === 1) {
                     return (
-                      <div className="flex gap-2 items-center">
-                        <img src={BaseLogo} alt="Base" className="size-5" />
-                        <div className="flex flex-col text-sm">
-                          <span>
-                            {baseBalance} {CoinBase.ETH}
-                          </span>
-                          <span className="text-[#B3B3B3]">${baseUsdValue}</span>
+                      <div className="flex gap-2 items-center wallet-fade-in min-w-0">
+                        <img src={BaseLogo} alt="Base" className="size-5 flex-shrink-0" />
+                        <div className="flex flex-col text-sm truncate">
+                          <span className="font-semibold">{baseBalance} {CoinBase.ETH}</span>
+                          <span className="text-[#B3B3B3]">${baseUsdValue.toFixed(2)}</span>
                         </div>
                       </div>
                     );
                   } else {
                     return (
-                      <div className="flex gap-2 items-center">
-                        <img src={PrediXLogo} alt="PrediX" className="size-5" />
-                        <div className="flex flex-col text-sm">
-                          <span>
-                            {predixBalance} {CoinBase.PREDIX}
-                          </span>
-                          <span className="text-[#B3B3B3]">${predixUsdValue}</span>
+                      <div className="flex gap-2 items-center wallet-fade-in min-w-0">
+                        <img src={PrediXLogo} alt="PrediX" className="size-5 flex-shrink-0" />
+                        <div className="flex flex-col text-sm truncate">
+                          <span className="font-semibold">{predixBalance} {CoinBase.PREDIX}</span>
+                          <span className="text-[#B3B3B3]">${predixUsdValue.toFixed(2)}</span>
                         </div>
                       </div>
                     );
@@ -508,8 +490,8 @@ function Wallet() {
                 })()}
               </div>
               <div
-                className="rotate-270 cursor-pointer"
-                onClick={handleMinimizeToggle}
+                className="rotate-270 cursor-pointer text-[#B3B3B3] hover:text-white transition-colors"
+                onClick={toggleMinimize}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
