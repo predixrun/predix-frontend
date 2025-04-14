@@ -191,27 +191,38 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                       </span>
                     </span>
                   </div>
-                  <span
-                    className={`text-sm flex items-center ${entry.rankDiff && entry.rankDiff > 0 ? "text-[#7FED58]" : "text-[#FF0000]"
+                  {entry.prevRank === null ? (
+                    <span className="text-sm text-yellow-400 font-semibold w-10 text-center">
+                      new
+                    </span>
+                  ) : (
+                    <span
+                      className={`text-sm flex items-center w-10 justify-center ${
+                        entry.rankDiff !== null && entry.rankDiff > 0 ? "text-[#7FED58]" : 
+                        entry.rankDiff !== null && entry.rankDiff < 0 ? "text-[#FF0000]" : 
+                        "text-gray-500"
                       }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="size-4 mr-1"
                     >
-                      <path fill="none" d="M0 0h24v24H0z" />
-                      <path
-                        d={
-                          entry.rankDiff && entry.rankDiff > 0
-                            ? "M12 8L18 14H6L12 8Z"
-                            : "M12 16L6 10H18L12 16Z"
-                        }
-                      />
-                    </svg>
-                    {Math.abs(entry.rankDiff || 0)}
-                  </span>
+                      {entry.rankDiff !== 0 && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="size-4 mr-1"
+                        >
+                          <path fill="none" d="M0 0h24v24H0z" />
+                          <path
+                            d={
+                              entry.rankDiff !== null && entry.rankDiff > 0
+                                ? "M12 8L18 14H6L12 8Z"
+                                : "M12 16L6 10H18L12 16Z"
+                            }
+                          />
+                        </svg>
+                      )}
+                      {Math.abs(entry.rankDiff || 0)}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
