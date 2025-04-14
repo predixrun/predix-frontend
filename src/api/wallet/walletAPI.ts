@@ -4,7 +4,7 @@ interface WalletBalanceResponse {
     status: string;
     errorCode: Record<string, any>;
     data: {
-        bnbUSDC: number;
+        bnbUSDC: string;
         baseUSDC: string;
         arbUSDC: string;
         optUSDC: string;

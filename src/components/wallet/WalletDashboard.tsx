@@ -75,7 +75,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
     try {
       const response = await leaderboardAPI.getLeaderboard(
         "DAILY",
-        "2025-04-12",
+        new Date().toISOString().split('T')[0],
         currentPage,
         10
       );
@@ -85,7 +85,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
           currentRank: item.currentRank || 0,
           prevRank: item.prevRank || null,
           rankDiff: item.rankDiff || null,
-          totalAmount: item.totalAmount ? item.totalAmount.toFixed(4) : "0.0000"
+          totalAmount: item.totalAmount ? item.totalAmount.toFixed(2) : "0.0000"
         }));
         setLeaderboardData(formattedData);
         setTotalPages(Math.ceil(response.data.total / 10));
