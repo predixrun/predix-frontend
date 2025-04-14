@@ -76,9 +76,9 @@ export default function useWalletBalance({
         setBaseUsdValue(parseFloat((parseFloat(ethBalance) * ethPrice).toFixed(6)));
       }
     } catch (err) {
-      if (type === 'solana') setSolanaBalance("Error");
-      else if (type === 'predix') setPredixBalance("Error");
-      else if (type === 'ethereum') setBaseBalance("Error");
+      if (type === 'solana') setSolanaBalance("0");
+      else if (type === 'predix') setPredixBalance("0");
+      else if (type === 'ethereum') setBaseBalance("0");
     } finally {
         isFetchingRef.current = false; 
     }
