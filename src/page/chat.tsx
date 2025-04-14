@@ -246,7 +246,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
 
         console.log("rawTransaction", rawTransaction);
         console.log("transId", transId);
-        const response = await SendTransactionGame(transId, rawTransaction);
+        const response = await SendTransactionGame(transId, rawTransaction, networkNm);
         console.log("response", response);
 
       } catch (error) {

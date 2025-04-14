@@ -1,10 +1,11 @@
 import { http } from "../http";
 
-export const SendTransactionGame = async (tId: string, rawTransaction?: string) => {
+export const SendTransactionGame = async (tId: string, rawTransaction?: string, networkNm?: string) => {
   try {
     const response = await http.post("/v1/game/create/send", {
       tId,
       rawTransaction,
+      networkNm
     });
 
     return response;

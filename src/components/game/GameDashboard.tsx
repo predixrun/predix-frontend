@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import "@/components/styles/game-dashboard-animations.css";
 import joinGame from "@/api/chat/joinAPI";
 import { SendTransactionGame } from "@/api/chat/signCreateAPI";
-import { CoinBase } from "@/types/coins";
 import { Game } from "./gameTypes";
 import { signEthereumTransaction, signSolanaTransaction } from "../wallet/SignWallet";
 import useLocalWallet from "@/hooks/useWallet";
@@ -97,7 +96,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
                   {game.user.name} | Ends: {game.gameExpiredAt}
                 </div>
               </div>
-              <div>Wager Size ({game.gameQuantity} {CoinBase.ETH})</div>
+              <div>Wager Size ({game.gameQuantity} {game.asset})</div>
             </div>
           </CardHeader>
           <CardContent className="mt-5">
@@ -127,7 +126,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Your votes</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                    {quantity || "0"} {CoinBase.ETH}
+                    {quantity || "0"} {game.asset}
                   </div>
                 </div>
                 <div className="flex justify-center">
@@ -136,7 +135,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Potential reward</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                    {potentialReward || "0"} {CoinBase.ETH}
+                    {potentialReward || "0"} {game.asset}
                   </div>
                 </div>
               </div>

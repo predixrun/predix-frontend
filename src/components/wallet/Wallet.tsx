@@ -23,6 +23,7 @@ import leaderboardAPI from "@/api/game/gameDashboard";
 import BaseLogo from "/BaseLogo.svg";
 import PrediXLogo from "/PrediX-logo.webp";
 import SolanaIcon from "/SolanaIcon.svg";
+import BalanceFetch from "./token/WalletTokenBalance";
 
 const WALLET_STATE = {
   DELEGATE: "delegate",
@@ -303,6 +304,7 @@ function Wallet() {
                         </div>
                         <div>${predixUsdValue}</div>
                       </div>
+                      
                       <div
                         className=" flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
                         onClick={toggleDashboard}
@@ -336,10 +338,13 @@ function Wallet() {
                           <div>{userRank.rankDiff !== null ? userRank.rankDiff : 0}</div>
                         </span>
                       </div>
+                      <BalanceFetch/>
                     </div>
                   )}
                 </>
               </CardTitle>
+              
+              
               <CardContent>
                 <div
                   className={`mb-4 transition-all duration-500 ease-in-out overflow-hidden ${isSendModalOpen
