@@ -15,7 +15,7 @@ import WalletDashboard from "./WalletDashboard";
 import ChatHistory from "@/components/Chat/ChatHistory";
 import Profile from "../Profile/Profile";
 import AdressSelection from "./adress/AdressSelection";
-import BalanceFetch from "./token/WalletBalance";
+import BalanceFetch from "./token/WalletTokenBalance";
 import useLocalWallet from "@/hooks/useWallet";
 import useWalletBalance from "@/hooks/useWalletBalance";
 import { CoinBase } from "@/types/coins";
@@ -159,19 +159,14 @@ function Wallet() {
     <div>
         <div className="left-10 absolute h-auto top-10">
           <div
-          className="peer gap-2 opacity-30 hover:opacity-100 transition-all duration-300 text-[#B3B3B3] hover:text-white flex items-center font-family font-semibold cursor-pointer"
+          className="peer gap-2 transition-all duration-300 text-white flex items-center font-family font-semibold cursor-pointer"
           onClick={() => {
             navigate("/")
             setIsMinimized(true)
           }}
         >
-          <img src="PrediX-logo.webp" alt="logo" className="size-8 " />
+          <img src="PrediX-logo.webp" alt="logo" className="size-8" />
           <p>PrediX</p>
-        </div>
-
-        <div className="absolute left-60 top-0 hidden peer-hover:block p-2 bg-custom-dark text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)] z-20">
-          <div className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[10px] border-b-[10px] border-r-[10px] border-transparent border-r-[#1E1E1E]"></div>
-          Back home
         </div>
       </div>
     <div
