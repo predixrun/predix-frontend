@@ -21,7 +21,7 @@ import useWalletBalance from "@/hooks/useWalletBalance";
 import { CoinBase } from "@/types/coins";
 import leaderboardAPI from "@/api/game/gameDashboard";
 import BaseLogo from "/BaseLogo.svg";
-
+import PrediXLogo from "/PrediX-logo.webp";
 const WALLET_STATE = {
   DELEGATE: "delegate",
   DEPOSIT: "deposit",
@@ -290,11 +290,11 @@ function Wallet() {
                       <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
                         <div className="flex items-center gap-2">
                           <img
-                            src={BaseLogo}
-                            alt="Base"
+                            src={PrediXLogo}
+                            alt="PrediX"
                             className="size-5"
                           />
-                          <span>{Balance} {CoinBase.ETH}</span>
+                          <span>{Balance} {CoinBase.PREDIX}</span>
                         </div>
                         <div>${usdValue}</div>
                       </div>

@@ -10,8 +10,8 @@ const strategyMap: Record<string, GameStrategy> = {
     filterGames: (games, _currentUserId, statusFilter) =>
       games.filter((game) => {
         const isOngoing = game.gameStatus === "ONGOING" || game.gameStatus === "READY";
-        const isExpired = game.gameStatus === "EXPIRED";
-        return statusFilter === "EXPIRED" ? isExpired : isOngoing;
+        const isExpired = game.gameStatus === "END";
+        return statusFilter === "END" ? isExpired : isOngoing;
       }),
   },
 
@@ -24,8 +24,8 @@ const strategyMap: Record<string, GameStrategy> = {
     filterGames: (games, _currentUserId, statusFilter) =>
       games.filter((game) => {
         const isOngoing = game.gameStatus === "ONGOING" || game.gameStatus === "READY";
-        const isExpired = game.gameStatus === "EXPIRED";
-        return statusFilter === "EXPIRED" ? isExpired : isOngoing;
+        const isExpired = game.gameStatus === "END";
+        return statusFilter === "END" ? isExpired : isOngoing;
       }),
   },
   History: {
@@ -40,7 +40,7 @@ const strategyMap: Record<string, GameStrategy> = {
         const isJoined = game.joined.choiceKey !== "";
         const isValidStatus =
           statusFilter === "END"
-            ? game.gameStatus === "EXPIRED"
+            ? game.gameStatus === "END"
             : game.gameStatus === "ONGOING" || game.gameStatus === "READY";
         return isJoined && isValidStatus;
       }),
@@ -57,7 +57,7 @@ const strategyMap: Record<string, GameStrategy> = {
         const isUserGame = game.user.userId === currentUserId;
         const isValidStatus =
           statusFilter === "END"
-            ? game.gameStatus === "EXPIRED"
+            ? game.gameStatus === "END"
             : game.gameStatus === "ONGOING" || game.gameStatus === "READY";
         return isUserGame && isValidStatus;
       }),

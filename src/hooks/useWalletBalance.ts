@@ -78,7 +78,7 @@ export default function useWalletBalance({
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
-      intervalRef.current = setInterval(fetchBalance, 10000);
+      intervalRef.current = setInterval(fetchBalance, 300000);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);

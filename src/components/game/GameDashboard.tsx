@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import "@/components/styles/game-dashboard-animations.css";
 import joinGame from "@/api/chat/joinAPI";
-import signGame from "@/api/chat/signCreateAPI";
+import { SendTransactionGame } from "@/api/chat/signCreateAPI";
 import { CoinBase } from "@/types/coins";
 import { Game } from "./gameTypes";
-import { signTransaction } from "../wallet/SignWallet";
+import { signEthereumTransaction } from "../wallet/SignWallet";
 import useLocalWallet from "@/hooks/useWallet";
 
 export interface GameDashboardProps {
@@ -19,7 +19,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
     "pending" | "success" | "fail" | ""
   >("");
 
-  const { solPrivateKey, evmPrivateKey } = useLocalWallet();
+  const { evmPrivateKey } = useLocalWallet();
 
 
   const handleClose = () => {
@@ -29,6 +29,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
     }, 300);
   };
 
+  // 분기처리 필요
   const handleConfirm = async () => {
     setBetStatus("pending");
 
@@ -38,9 +39,13 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
 
       const { tr, transId } = result.data;
 
-      const rawTransaction = await signTransaction(tr, evmPrivateKey);
+      if (!evmPrivateKey) {
+        throw new Error("Ethereum private key is not provided");
+      }
 
-      await signGame(transId, rawTransaction);
+      const rawTransaction = await signEthereumTransaction(tr, evmPrivateKey);
+
+      await SendTransactionGame(transId, rawTransaction);
 
       setBetStatus("success");
 
