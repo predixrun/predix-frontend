@@ -167,7 +167,7 @@ function Wallet() {
         </div>
       </div>
     <div
-      className={`absolute right-3 z-100 flex flex-col gap-2 ${(location.pathname.startsWith("/chat") || location.pathname.startsWith("/leaderboard")) ? "h-svh pt-4" : "h-auto top-3"
+      className={`absolute right-3 z-100 flex flex-col gap-2 ${(location.pathname.startsWith("/chat")) ? "h-svh pt-4" : "h-auto top-3"
         }`}
     >
 
