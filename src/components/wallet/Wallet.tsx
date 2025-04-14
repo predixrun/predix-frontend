@@ -34,9 +34,10 @@ function Wallet() {
     WALLET_STATE.DEPOSIT
   );
   const [Balance, setBalance] = useState<string>("");
-  const [PriceUSD, setPriceUSD] = useState(0);
+  const [PriceUSD, setPriceUSD] = useState<number>(0);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const [userRank, setUserRank] = useState<any>(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const [isDashboardView, setIsDashboardView] = useState<boolean>(false);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
@@ -47,20 +48,49 @@ function Wallet() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = usePrivy();
+
   const { solPublicKey, evmPublicKey } = useLocalWallet();
-  const { balance, usdValue } = useWalletBalance({
+  const { baseBalance, baseUsdValue, refetch: refetchBalance } = useWalletBalance({
     type: "ethereum",
+    publicKey: evmPublicKey ?? undefined,
+  });
+  const { solanaBalance, solanaUsdValue } = useWalletBalance({
+    type: "solana",
+    publicKey: solPublicKey ?? undefined,
+  });
+
+  const { predixBalance, predixUsdValue } = useWalletBalance({
+    type: "predix",
     publicKey: evmPublicKey ?? undefined,
   });
 
   useEffect(() => {
-    if (balance) {
-      setBalance(balance);
+    if (baseBalance) {
+      setBalance(baseBalance);
     }
-    if (usdValue) {
-      setPriceUSD(Number(usdValue));
+    const totalUsdValue = Number(solanaUsdValue || 0) + Number(baseUsdValue || 0) + Number(predixUsdValue || 0);
+    setPriceUSD(parseFloat(totalUsdValue.toFixed(4)));
+
+    const intervalId = setInterval(() => {
+      refetchBalance();
+      if (baseBalance) {
+        setBalance(baseBalance);
+      }
+      const updatedTotalUsdValue = Number(solanaUsdValue || 0) + Number(baseUsdValue || 0) + Number(predixUsdValue || 0);
+      setPriceUSD(parseFloat(updatedTotalUsdValue.toFixed(4)));
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    if (isMinimized) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % 3);
+      }, 5000);
+      return () => clearInterval(interval);
     }
-  }, [balance, usdValue]);
+  }, [isMinimized]);
 
   const getTodayDateKey = (): string => {
     const today = new Date();
@@ -137,9 +167,8 @@ function Wallet() {
   };
   return (
     <div
-      className={`absolute left-3 z-100 flex flex-col gap-2 ${
-        (location.pathname.startsWith("/chat") || location.pathname.startsWith("/leaderboard")) ? "h-svh pt-4" : "h-auto top-3"
-      }`}
+      className={`absolute left-3 z-100 flex flex-col gap-2 ${(location.pathname.startsWith("/chat") || location.pathname.startsWith("/leaderboard")) ? "h-svh pt-4" : "h-auto top-3"
+        }`}
     >
       {(location.pathname.startsWith("/chat") || location.pathname.startsWith("/leaderboard")) && (
         <div className="">
@@ -209,13 +238,12 @@ function Wallet() {
                 <>
                   {currentState !== WALLET_STATE.CONFIRMED && (
                     <div
-                      className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${
-                        currentState === WALLET_STATE.DELEGATE
-                          ? "h-[103px]"
-                          : currentState === WALLET_STATE.DEPOSIT
+                      className={`bg-black rounded-xl transition-all duration-300 min-w-[296px] ${currentState === WALLET_STATE.DELEGATE
+                        ? "h-[103px]"
+                        : currentState === WALLET_STATE.DEPOSIT
                           ? "h-[144px]"
                           : "h-[270px]"
-                      }`}
+                        }`}
                     >
                       {currentState === WALLET_STATE.DEPOSIT && (
                         <div className="wallet-fade-in h-full flex flex-col justify-center items-center font-prme text-white p-5 gap-1">
@@ -255,25 +283,25 @@ function Wallet() {
                       )}
                     </div>
                   )}
-                  
+
                   {currentState === WALLET_STATE.CONFIRMED && (
                     <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white gap-2">
                       <div className="text-[32px] font-bold">
-                        ${parseFloat(PriceUSD.toFixed(4))}
+                        ${PriceUSD}
                       </div>
 
                       {/* Solana */}
-                      {/* <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
+                      <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
                         <div className="flex items-center gap-2">
                           <img
                             src="SolanaIcon.svg"
                             alt="Solana"
                             className="size-5"
                           />
-                          <span>{Balance} SOL</span>
+                          <span>{solanaBalance} SOL</span>
                         </div>
-                        <div>${Balance}</div>
-                      </div> */}
+                        <div>${solanaUsdValue}</div>
+                      </div>
 
                       {/* Ethereum */}
                       <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
@@ -283,9 +311,9 @@ function Wallet() {
                             alt="Base"
                             className="size-5"
                           />
-                          <span>{Balance} {CoinBase.ETH}</span>
+                          <span>{baseBalance} {CoinBase.ETH}</span>
                         </div>
-                        <div>${usdValue}</div>
+                        <div>${baseUsdValue}</div>
                       </div>
                       <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
                         <div className="flex items-center gap-2">
@@ -294,9 +322,9 @@ function Wallet() {
                             alt="PrediX"
                             className="size-5"
                           />
-                          <span>{Balance} {CoinBase.PREDIX}</span>
+                          <span>{predixBalance} {CoinBase.PREDIX}</span>
                         </div>
-                        <div>${usdValue}</div>
+                        <div>${predixUsdValue}</div>
                       </div>
                       <div
                         className=" flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-center gap-2 cursor-pointer hover:bg-[#333333]"
@@ -339,11 +367,10 @@ function Wallet() {
               </CardTitle>
               <CardContent>
                 <div
-                  className={`mb-4 transition-all duration-500 ease-in-out overflow-hidden ${
-                    isSendModalOpen
-                      ? "opacity-100 visible pointer-events-auto max-h-[500px]"
-                      : "opacity-0 invisible pointer-events-none max-h-0"
-                  }`}
+                  className={`mb-4 transition-all duration-500 ease-in-out overflow-hidden ${isSendModalOpen
+                    ? "opacity-100 visible pointer-events-auto max-h-[500px]"
+                    : "opacity-0 invisible pointer-events-none max-h-0"
+                    }`}
                 >
                   <SendSolWithEmbeddedWallet />
                 </div>
@@ -451,28 +478,48 @@ function Wallet() {
             <div className="flex items-center gap-4 text-[#B3B3B3]"></div>
           </CardHeader>
           <CardFooter>
-            <div className="min-w-[261px] h-[54px] rounded  bg-custom-dark flex items-center justify-between px-3">
+            <div className="min-w-[261px] h-[54px] rounded bg-custom-dark flex items-center justify-between px-3">
               <div className="flex gap-3 items-center">
-                {/* <div className="flex gap-2 items-center">
-                  <img
-                    src="SolanaIcon.svg"
-                    alt="Solana"
-                    className="size-5"
-                  />
-                  <div className="flex flex-col text-sm">
-                    <span>{Balance} {CoinBase.SOL}</span>
-                    <span className="text-[#B3B3B3]">${PriceUSD}</span>
-                  </div>
-                </div> */}
-                <div className="flex gap-2 items-center">
-                  <img src={BaseLogo} alt="Base" className="size-5" />
-                  <div className="flex flex-col text-sm">
-                    <span>
-                      {Balance} {CoinBase.ETH}
-                    </span>
-                    <span className="text-[#B3B3B3]">${PriceUSD}</span>
-                  </div>
-                </div>
+                {(() => {
+
+                  if (currentIndex === 0) {
+                    return (
+                      <div className="flex gap-2 items-center">
+                        <img src="SolanaIcon.svg" alt="Solana" className="size-5" />
+                        <div className="flex flex-col text-sm">
+                          <span>
+                            {solanaBalance} {CoinBase.SOL}
+                          </span>
+                          <span className="text-[#B3B3B3]">${solanaUsdValue}</span>
+                        </div>
+                      </div>
+                    );
+                  } else if (currentIndex === 1) {
+                    return (
+                      <div className="flex gap-2 items-center">
+                        <img src={BaseLogo} alt="Base" className="size-5" />
+                        <div className="flex flex-col text-sm">
+                          <span>
+                            {baseBalance} {CoinBase.ETH}
+                          </span>
+                          <span className="text-[#B3B3B3]">${baseUsdValue}</span>
+                        </div>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="flex gap-2 items-center">
+                        <img src={PrediXLogo} alt="PrediX" className="size-5" />
+                        <div className="flex flex-col text-sm">
+                          <span>
+                            {predixBalance} {CoinBase.PREDIX}
+                          </span>
+                          <span className="text-[#B3B3B3]">${predixUsdValue}</span>
+                        </div>
+                      </div>
+                    );
+                  }
+                })()}
               </div>
               <div
                 className="rotate-270 cursor-pointer"

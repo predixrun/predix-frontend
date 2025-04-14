@@ -3,16 +3,25 @@ import * as web3 from "@solana/web3.js";
 import { ethers } from "ethers";
 
 interface UseWalletBalanceProps {
-  type: "solana" | "ethereum";
+  type: "solana" | "ethereum" | "predix";
   publicKey?: string;
 }
+const ERC20_ABI = [
+  "function balanceOf(address owner) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+];
 
 export default function useWalletBalance({
   type,
   publicKey,
 }: UseWalletBalanceProps) {
-  const [balance, setBalance] = useState<string>("0.0000");
-  const [usdValue, setUsdValue] = useState<number>(0);
+  const [solanaBalance, setSolanaBalance] = useState<string>("0.0000");
+  const [solanaUsdValue, setSolanaUsdValue] = useState<number>(0);
+  const [predixBalance, setPredixBalance] = useState<string>("0.0000");
+  const [predixUsdValue, setPredixUsdValue] = useState<number>(0);
+  const [baseBalance, setBaseBalance] = useState<string>("0.0000");
+  const [baseUsdValue, setBaseUsdValue] = useState<number>(0);
+
   const lastFetchedRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -31,14 +40,14 @@ export default function useWalletBalance({
 
         const solBalance = await solanaConnection.getBalance(solanaKey);
         const sol = (solBalance / 1_000_000_000).toFixed(5);
-        setBalance(sol);
+        setSolanaBalance(sol);
 
         const res = await fetch(
           "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
         );
         const data = await res.json();
         const solPrice = data.solana?.usd || 0;
-        setUsdValue(parseFloat((parseFloat(sol) * solPrice).toFixed(4)));
+        setSolanaUsdValue(parseFloat((parseFloat(sol) * solPrice).toFixed(4)));
 
         const subscriptionId = solanaConnection.onAccountChange(
           solanaKey,
@@ -51,21 +60,37 @@ export default function useWalletBalance({
           solanaConnection.removeAccountChangeListener(subscriptionId);
         };
       }
-      if (type === "ethereum") {
-        const provider = new ethers.JsonRpcProvider(
-          `https://sepolia.base.org`
-        );
-        const balanceBigInt = await provider.getBalance(publicKey);
-        const eth = ethers.formatEther(balanceBigInt);
-        setBalance(parseFloat(eth).toFixed(6));
 
-        const res = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
-        );
-        const data = await res.json();
-        const ethPrice = data.ethereum?.usd || 0;
-        setUsdValue(parseFloat((parseFloat(eth) * ethPrice).toFixed(4)));
-      }
+        if (type === "predix") {
+          const provider = new ethers.JsonRpcProvider(
+            `https://sepolia.base.org`
+          );
+          const tokenAddress = "0xE21835FBE4Df83a02D72a717Fd8BC1dcBCC6C042";
+          const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+
+          const [rawBalance, decimals] = await Promise.all([
+            tokenContract.balanceOf(publicKey),
+            tokenContract.decimals(),
+          ]);
+          const formatted = ethers.formatUnits(rawBalance, decimals);
+          setPredixBalance(formatted);
+          setPredixUsdValue(0);
+        }
+        if (type === "ethereum") {
+          const provider = new ethers.JsonRpcProvider(
+            `https://sepolia.base.org`
+          );
+          const balanceBigInt = await provider.getBalance(publicKey);
+          const ethBalance = ethers.formatEther(balanceBigInt);
+          setBaseBalance(parseFloat(ethBalance).toFixed(6));
+
+          const res = await fetch(
+            "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+          );
+          const data = await res.json();
+          const ethPrice = data.ethereum?.usd || 0;
+          setBaseUsdValue(parseFloat((parseFloat(ethBalance) * ethPrice).toFixed(6)));
+        }
     } catch (err) {
       console.error(`[${type}] Failed to fetch balance or price:`, err);
     }
@@ -74,7 +99,7 @@ export default function useWalletBalance({
   useEffect(() => {
     fetchBalance();
 
-    if (type === "ethereum" && publicKey) {
+    if ((type === "ethereum" || type === "predix" || type === "solana") && publicKey) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
@@ -93,8 +118,12 @@ export default function useWalletBalance({
   }, [type, publicKey]);
 
   return {
-    balance,
-    usdValue,
+    solanaBalance,
+    solanaUsdValue,
+    predixBalance,
+    predixUsdValue,
+    baseBalance,
+    baseUsdValue,
     refetch: fetchBalance,
   };
 }

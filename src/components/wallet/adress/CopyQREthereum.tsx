@@ -4,7 +4,6 @@ import { colors } from "@/lib/colors";
 
 const CopyQREthereum = () => {
   const { user } = usePrivy();
-  console.log("user", user);
   const [copied, setCopied] = useState(false);
 
   const walletToEVM = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");

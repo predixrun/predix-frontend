@@ -5,7 +5,7 @@ import joinGame from "@/api/chat/joinAPI";
 import { SendTransactionGame } from "@/api/chat/signCreateAPI";
 import { CoinBase } from "@/types/coins";
 import { Game } from "./gameTypes";
-import { signEthereumTransaction } from "../wallet/SignWallet";
+import { signEthereumTransaction, signSolanaTransaction } from "../wallet/SignWallet";
 import useLocalWallet from "@/hooks/useWallet";
 
 export interface GameDashboardProps {
@@ -19,7 +19,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
     "pending" | "success" | "fail" | ""
   >("");
 
-  const { evmPrivateKey } = useLocalWallet();
+  const { evmPrivateKey, solPrivateKey } = useLocalWallet();
 
 
   const handleClose = () => {
@@ -37,13 +37,18 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
       const gameId = game.gameId;
       const result = await joinGame(gameId);
 
-      const { tr, transId } = result.data;
-
+      const { tr, transId, networkNm } = result.data;
+      
       if (!evmPrivateKey) {
         throw new Error("Ethereum private key is not provided");
       }
 
-      const rawTransaction = await signEthereumTransaction(tr, evmPrivateKey);
+      let rawTransaction;
+      if(networkNm === "BASE") {
+        rawTransaction = await signEthereumTransaction(tr, evmPrivateKey);
+      } else {
+        rawTransaction = await signSolanaTransaction(tr, solPrivateKey);
+      }
 
       await SendTransactionGame(transId, rawTransaction);
 

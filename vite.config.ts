@@ -36,6 +36,6 @@ export default defineConfig({
     include: ['buffer'],
   },
   esbuild: {
-    drop: ['console', 'debugger'],
+    // drop: ['console', 'debugger'],
   },
 });
