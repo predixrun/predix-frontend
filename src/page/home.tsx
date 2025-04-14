@@ -72,8 +72,7 @@ function Home() {
 
         {/* new UI */}
         <div
-          className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center ${!selectedCategory ? "ml-60" : ""
-            } ${isConnected ? "fade-in" : "hidden"}`}
+          className={`min-w-[1113px] transition-all duration-300 ease-in-out flex flex-col items-center  ${isConnected ? "fade-in" : "hidden"}`}
         >
           <div className="w-full h-[77px] overflow-hidden mx-4">
             <div className="p-[1px] rounded-full w-full h-full flex items-center">
