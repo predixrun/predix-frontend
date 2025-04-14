@@ -49,7 +49,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
         rawTransaction = await signSolanaTransaction(tr, solPrivateKey);
       }
 
-      await SendTransactionGame(transId, rawTransaction);
+      await SendTransactionGame(transId, rawTransaction, networkNm);
 
       setBetStatus("success");
 
