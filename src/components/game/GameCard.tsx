@@ -1,6 +1,4 @@
-import { CoinBase } from "@/types/coins";
 import { Game } from "./gameTypes";
-
 interface GameCardProps {
   game: Game;
   onCardClick: (gameId: number) => void;
@@ -39,7 +37,7 @@ export default function GameCard({ game, onCardClick }: GameCardProps) {
               <span className="text-sm">{(game.gameExpiredAt)}</span>
             </div>
             <div className="text-sm text-gray-400">
-              <span className="text-sm">{Number(game.gameQuantity).toFixed(6)} {CoinBase.ETH}</span>
+              <span className="text-sm">{Number(game.gameQuantity).toFixed(6)} {game.asset}</span>
             </div>
           </div>
         </div>
@@ -47,3 +45,5 @@ export default function GameCard({ game, onCardClick }: GameCardProps) {
     </div>
   );
 } 
+
+

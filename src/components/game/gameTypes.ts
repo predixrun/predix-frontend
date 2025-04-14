@@ -24,6 +24,7 @@ export interface GameRelation {
 }
 
 export interface Game {
+  asset: string;
   gameId: number;
   gameTitle: string;
   gameContent: string;
