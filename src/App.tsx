@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import WalletLayout from "@/components/WalletLayout";
 const Home = lazy(() => import("./page/home"));
 const Chat = lazy(() => import("./page/chat"));
+const Leaderboard = lazy(() => import("./page/leaderboard"));
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/chat" element={<Chat />} />
                 <Route path="/chat/:externalId" element={<Chat />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/*" element={<Navigate to="/" replace />} />
               </Route>
             </Routes>

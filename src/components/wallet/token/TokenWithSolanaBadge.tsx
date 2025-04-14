@@ -16,7 +16,7 @@ const TokenWithSolanaBadge: React.FC<{
         alt={altToken}
         className="w-full h-full rounded-full object-contain"
       />
-      <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-black p-0.5 shadow-lg">
+      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-black p-0.5 shadow-lg">
         <img
           src={solanaSrc}
           alt={altSolana}

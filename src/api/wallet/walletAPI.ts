@@ -21,7 +21,6 @@ const walletAPI = {
                     svmAddress,
                 }
             });
-            console.log("지갑 잔액 응답:", response);
             return response;
         } catch (error) {
             console.error('지갑 잔액 조회 실패:', error);

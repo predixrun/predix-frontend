@@ -39,7 +39,7 @@ export default function GameCard({ game, onCardClick }: GameCardProps) {
               <span className="text-sm">{(game.gameExpiredAt)}</span>
             </div>
             <div className="text-sm text-gray-400">
-              <span className="text-sm">{Number(game.gameQuantity).toFixed(6)} {CoinBase.SOL}</span>
+              <span className="text-sm">{Number(game.gameQuantity).toFixed(6)} {CoinBase.ETH}</span>
             </div>
           </div>
         </div>

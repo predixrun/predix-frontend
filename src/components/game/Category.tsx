@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { CategoryProps } from "./gameTypes";
 
 const categories = [
@@ -61,16 +62,29 @@ const categories = [
       </svg>
     ),
   },
+  {
+    text: "Reward",
+    emoji: (
+      "💰"
+    ),
+    path: "/leaderboard",
+  },
 ];
 
 
 export function Category({ onSelect }: CategoryProps) {
+  const navigate = useNavigate();
   return (
     <div className="flex gap-4">
       {categories.map((category, index) => (
         <div
           key={index}
-          onClick={() => onSelect(category.text)}
+          onClick={() => {
+            onSelect(category.text);
+            if (category.path) {
+              navigate(category.path);
+            }
+          }}
           className="w-[210px] h-[80px] bg-gray-800 text-gray-600 rounded-lg relative border-2 border-gray-700 hover:text-white hover:border-gray-500 cursor-pointer"
         >
           <span className="absolute top-3 left-3">{category.text}</span>
