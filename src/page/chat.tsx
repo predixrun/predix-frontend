@@ -13,7 +13,7 @@ import Loading from "@/components/styles/spiner/wormhole/Loading";
 import { Chatting, MessageData } from "@/types/chat";
 import { useChat } from "@/hooks/useChat";
 import { useWebSocket } from "@/hooks/useWebSocket";
-
+import dayjs from "dayjs";
 function ChattingComponents() {
   const { user } = usePrivy();
 
@@ -178,9 +178,9 @@ Great, I can fetch information related to sports. Currently, I only support foot
           gameTitle: `${lastMarketMessage.data?.event?.home_team?.name} VS ${lastMarketMessage.data?.event?.away_team?.name}`,
           gameContent: lastMarketMessage.data?.market?.description,
           extras: "",
-          gameStartAt: lastMarketMessage.data?.event?.created_at,
-          gameEndAt: lastMarketMessage.data?.market?.close_date,
-          gameExpriedAt: lastMarketMessage.data?.market?.close_date,
+          gameStartAt: lastMarketMessage.data?.event?.start_time,
+          gameEndAt: dayjs(lastMarketMessage.data?.event?.start_time).add(2, 'hour').toDate(),
+          gameExpiredAt: dayjs(lastMarketMessage.data?.event?.start_time).add(2, 'hour').toDate(),
           fixtureId: lastMarketMessage.data?.event?.fixture_id,
           gameRelations: lastMarketMessage.data?.selections?.map(
             (selection: { type: string; name: string; thumbnail: string }, index: number) => ({
@@ -193,12 +193,13 @@ Great, I can fetch information related to sports. Currently, I only support foot
             })
           ),
           quantity: lastMarketMessage.data.market?.amount?.toString(),
-          // asset: lastMarketMessage.data.market?.currency,
-          asset: "BASE",
+          asset: lastMarketMessage.data.market?.currency,
           key: lastMarketMessage.data.selected_type === "win" ? "A" : "B",
           choiceType: lastMarketMessage.data.selected_type ?? "WIN",
+          networkNm : lastMarketMessage.data?.market?.networkNm,
         },
       };
+      
       console.log("userGameSelectionData.data.asset", userGameSelectionData.data.asset);
       const response = (await chatAPI.sendChatMessage(
         userGameSelectionData
@@ -214,9 +215,9 @@ Great, I can fetch information related to sports. Currently, I only support foot
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
 
-      const { tr, transId } = response.data.message.data;
-      console.log("tr", tr);
-      console.log("transId", transId);
+      const { tr, transId, networkNm } = response.data.message.data;
+      console.log("response.data.message.data", response.data.message.data);
+      console.log("networkNm", networkNm);
       if (!wallet) {
         throw new Error("Wallet is undefined");
       }
@@ -227,7 +228,12 @@ Great, I can fetch information related to sports. Currently, I only support foot
         }
         let rawTransaction;
         try {
-          rawTransaction = await signEthereumTransaction(tr, wallet.evmPrivateKey);
+          if (networkNm === "BASE") {
+            rawTransaction = await signEthereumTransaction(tr, wallet.evmPrivateKey);
+          } else {
+            rawTransaction = await signSolanaTransaction(tr, wallet.solPrivateKey);
+          }
+          console.log("rawTransaction", rawTransaction);
         } catch (err: any) {
           console.error("Transaction signing error:", err);
           throw new Error(`Failed to sign transaction: ${err.message}`);
@@ -332,3 +338,4 @@ Great, I can fetch information related to sports. Currently, I only support foot
 }
 
 export default ChattingComponents;
+
