@@ -168,8 +168,8 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                 >
                   <div
                     className={`w-[28px] h-[32px] rounded-sm flex items-center justify-center font-semibold ${entry.currentRank === 1
-                        ? "bg-[#E8B931] text-black"
-                        : "bg-white text-black"
+                      ? "bg-[#E8B931] text-black"
+                      : "bg-white text-black"
                       }`}
                   >
                     {entry.currentRank === 1 ? <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
@@ -197,29 +197,28 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                     </span>
                   ) : (
                     <span
-                      className={`text-sm flex items-center w-10 justify-center ${
-                        entry.rankDiff !== null && entry.rankDiff > 0 ? "text-[#7FED58]" : 
-                        entry.rankDiff !== null && entry.rankDiff < 0 ? "text-[#FF0000]" : 
-                        "text-gray-500"
-                      }`}
+                      className={`text-sm flex items-center w-10 justify-center ${entry.rankDiff !== null && entry.rankDiff > 0 ? "text-[#7FED58]" :
+                          entry.rankDiff !== null && entry.rankDiff < 0 ? "text-[#FF0000]" :
+                            "text-gray-500"
+                        }`}
                     >
-                      {entry.rankDiff !== 0 && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                          className="size-4 mr-1"
-                        >
-                          <path fill="none" d="M0 0h24v24H0z" />
-                          <path
-                            d={
-                              entry.rankDiff !== null && entry.rankDiff > 0
-                                ? "M12 8L18 14H6L12 8Z"
-                                : "M12 16L6 10H18L12 16Z"
-                            }
-                          />
-                        </svg>
-                      )}
+
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="size-4 mr-1"
+                      >
+                        <path fill="none" d="M0 0h24v24H0z" />
+                        <path
+                          d={
+                            entry.rankDiff !== null && entry.rankDiff > 0
+                              ? "M12 8L18 14H6L12 8Z"
+                              : "M12 16L6 10H18L12 16Z"
+                          }
+                        />
+                      </svg>
+
                       {Math.abs(entry.rankDiff || 0)}
                     </span>
                   )}

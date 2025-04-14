@@ -178,7 +178,7 @@ const Leaderboard = () => {
                         "text-gray-500"
                       }`}
                     >
-                      {entry.rankDiff !== 0 && (
+                      
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
@@ -194,7 +194,7 @@ const Leaderboard = () => {
                             }
                           />
                         </svg>
-                      )}
+
                       {Math.abs(entry.rankDiff || 0)}
                     </span>
                   )}
