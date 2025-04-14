@@ -7,7 +7,7 @@ import gameAPI from "@/api/game/gameAPI";
 import ChatMessage from "@/components/Chat/ChatMessage";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ChatInput from "@/components/Chat/ChatInput";
-import signTransaction from "@/components/wallet/SignWallet";
+import { signTransaction } from "@/components/wallet/SignWallet";
 import Loading from "@/components/styles/spiner/wormhole/Loading";
 
 import { Chatting, MessageData } from "@/types/chat";
@@ -171,7 +171,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
       if (!lastMarketMessage)
         throw new Error("No MARKET_FINALIZED message found");
 
-      const userGameSelectionData: MessageData = {
+      const userGameSelectionData: any = {
         externalId: lastMarketMessage.conversationExternalId ?? null,
         content: lastMarketMessage.data?.event.league.name,
         messageType: "CREATE_TR",
@@ -179,9 +179,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
           gameTitle: `${lastMarketMessage.data?.event?.home_team?.name} VS ${lastMarketMessage.data?.event?.away_team?.name}`,
           gameContent: lastMarketMessage.data?.market?.description,
           extras: "",
-          gameStartAt: formatToISO8601(
-            lastMarketMessage.data?.event?.created_at
-          ),
+          gameStartAt: lastMarketMessage.data?.event?.created_at,
           gameEndAt: lastMarketMessage.data?.market?.close_date,
           gameExpriedAt: lastMarketMessage.data?.market?.close_date,
           fixtureId: lastMarketMessage.data?.event?.fixture_id,

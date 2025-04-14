@@ -1,7 +1,8 @@
 import { Keypair, Transaction } from "@solana/web3.js";
+import { ethers } from "ethers";
 import bs58 from 'bs58';
 
-export default async function signTransaction(
+export async function signTransaction(
     transactionTr: any,
     signer: any,
   ): Promise<any> {
@@ -26,5 +27,25 @@ export default async function signTransaction(
     } catch (error) {
       console.error('Failed to send and confirm transaction', error);
       throw new Error('WalletSendTransactionFailException');
+    }
+  }
+
+
+export async function signEthereumTransaction(
+    transactionRequest: ethers.TransactionRequest,
+    evmPrivateKey: string, // Ethereum private key (hex string)
+  ): Promise<string> {
+    try {
+        const wallet = new ethers.Wallet(evmPrivateKey);
+
+        const signedTx = await wallet.signTransaction(transactionRequest);
+        
+        console.log("Signed Ethereum Transaction:", signedTx);
+        
+        return signedTx;
+
+    } catch (error) {
+      console.error('Failed to sign Ethereum transaction', error);
+      throw new Error('FailedToSignEthereumTransaction');
     }
   }

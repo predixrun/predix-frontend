@@ -5,7 +5,7 @@ import joinGame from "@/api/chat/joinAPI";
 import signGame from "@/api/chat/signCreateAPI";
 import { CoinBase } from "@/types/coins";
 import { Game } from "./gameTypes";
-import signTransaction from "../wallet/SignWallet";
+import { signTransaction } from "../wallet/SignWallet";
 import useLocalWallet from "@/hooks/useWallet";
 
 export interface GameDashboardProps {
@@ -19,7 +19,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
     "pending" | "success" | "fail" | ""
   >("");
 
-  const { solPrivateKey } = useLocalWallet();
+  const { solPrivateKey, evmPrivateKey } = useLocalWallet();
 
 
   const handleClose = () => {
@@ -38,7 +38,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
 
       const { tr, transId } = result.data;
 
-      const rawTransaction = await signTransaction(tr, solPrivateKey);
+      const rawTransaction = await signTransaction(tr, evmPrivateKey);
 
       await signGame(transId, rawTransaction);
 

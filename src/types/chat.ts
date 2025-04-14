@@ -16,9 +16,9 @@ export interface GameData {
   gameTitle: string;
   gameContent: string;
   extras: string;
-  gameStartAt: string;
-  gameEndAt: string;
-  gameExpriedAt: string;
+  gameStartAt: Date;
+  gameEndAt: Date;
+  gameExpriedAt: Date;
   fixtureId: number;
   gameRelations: GameRelation[];
   quantity: string;
