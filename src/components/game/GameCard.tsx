@@ -21,8 +21,8 @@ export default function GameCard({ game, onCardClick }: GameCardProps) {
             <img src={game.gameRelation[0].thumbnail || "PrediX-logo.webp"} alt="home" className="size-5" />
             vs
             <img src={game.gameRelation[1].thumbnail || "PrediX-logo.webp"} alt="away" className="size-5" />
-            {game.gameStatus === "EXPIRED" && (
-              <span className="text-red-500 ml-2">Expired</span>
+            {game.gameStatus === "END" && (
+              <span className="text-red-500 ml-2">End</span>
             )}
           </div>
         </div>
@@ -39,7 +39,7 @@ export default function GameCard({ game, onCardClick }: GameCardProps) {
               <span className="text-sm">{(game.gameExpiredAt)}</span>
             </div>
             <div className="text-sm text-gray-400">
-              <span className="text-sm">{Number(game.gameQuantity).toFixed(6)} {CoinBase.SOL}</span>
+              <span className="text-sm">{Number(game.gameQuantity).toFixed(6)} {CoinBase.ETH}</span>
             </div>
           </div>
         </div>

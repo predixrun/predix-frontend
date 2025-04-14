@@ -1,61 +1,19 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import chatAPI from "@/api/chat/chatAPI";
 import "@/components/styles/game-dashboard-animations.css";
 import { usePrivy } from "@privy-io/react-auth";
-import signGame from "@/api/chat/signCreateAPI";
+import {SendTransactionGame} from "@/api/chat/signCreateAPI";
 import gameAPI from "@/api/game/gameAPI";
 import ChatMessage from "@/components/Chat/ChatMessage";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ChatInput from "@/components/Chat/ChatInput";
-import signTransaction from "@/components/wallet/SignWallet";
+import { signSolanaTransaction, signEthereumTransaction } from "@/components/wallet/SignWallet";
 import Loading from "@/components/styles/spiner/wormhole/Loading";
 
-interface Chatting {
-  externalId?: string | null;
-  conversationExternalId?: string;
-  sender?: string | null;
-  content: string;
-  messageType: string;
-  data?: any | null;
-}
-
-interface GameRelation {
-  key: string;
-  content: string;
-}
-
-interface GameData {
-  gameTitle: string;
-  gameContent: string;
-  extras: string;
-  gameStartAt: string;
-  gameEndAt: string;
-  gameExpriedAt: string;
-  fixtureId: number;
-  gameRelations: GameRelation[];
-  quantity: string;
-  key: string;
-  asset: string;
-  choiceType: string;
-}
-
-interface ChatMessage {
-  externalId: string | null;
-  content: string;
-  messageType: "CREATE_TR";
-  data: GameData;
-}
-
-interface ConversationResponse {
-  status: string;
-  data: {
-    conversation: {
-      externalId: string;
-      messages: Chatting[];
-    };
-  };
-}
-
+import { Chatting, MessageData } from "@/types/chat";
+import { useChat } from "@/hooks/useChat";
+import { useWebSocket } from "@/hooks/useWebSocket";
+import dayjs from "dayjs";
 function ChattingComponents() {
   const { user } = usePrivy();
 
@@ -68,66 +26,21 @@ function ChattingComponents() {
   const location = useLocation();
   const homeInputText = location.state?.message || "";
   const wallet = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
-  console.log("wallet", wallet);
-  const [messages, setMessages] = useState<Chatting[]>([]);
   const [inputText, setInputText] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [conversationExternalId, setConversationExternalId] = useState<
-    string | null
-  >(null);
 
   const [bridgeLoading, setBridgeLoading] = useState<boolean>(false);
   const [bridge, setBridge] = useState<"yes" | "no">("no");
-  const isHomeMessageProcessed = useRef(false);
-  console.log("messages", messages);
-  const getWelcomeMessage = (username: string): Chatting => ({
-    externalId: null,
-    content: `
-#### Hello, **${username}**! 
-There are three options you can choose from: 
-`,
-    messageType: "Market_Info",
-    sender: "SYSTEM",
-    data: {
-      selections: [
-        {
-          name: "Create Prediction",
-          type: "option",
-          description: "Start your own prediction market.",
-        },
-        {
-          name: "Sports Search",
-          type: "option",
-          description: "Join an existing prediction market.",
-        },
-        {
-          name: "Chat",
-          type: "option",
-          description: "Ask PrediX anything you want to know!",
-        },
-      ],
-    },
-  });
 
-  const fetchConversationMessages = async (id: string) => {
-    try {
-      setLoading(true);
-      const response: ConversationResponse = await chatAPI.getChatMessages(id);
-      if (response.status === "SUCCESS") {
-        setMessages([
-          getWelcomeMessage(username),
-          ...response.data.conversation.messages,
-        ]);
-        setConversationExternalId(response.data.conversation.externalId);
-      }
-    } catch (error) {
-      console.error("Error fetching conversation messages:", error);
-      setMessages([getWelcomeMessage(username)]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const {
+    messages,
+    loading,
+    conversationExternalId,
+    setMessages,
+    setLoading,
+    sendChatMessage,
+    fetchConversationMessages,
+    getWelcomeMessage
+  } = useChat(username);
 
   useEffect(() => {
     if (externalId) {
@@ -135,32 +48,11 @@ There are three options you can choose from:
     } else {
       setMessages([getWelcomeMessage(username)]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [externalId]);
-  useEffect(() => {
-    chatAPI.connectSocket();
-
-    const interval = setInterval(() => {
-      if (chatAPI.connectSocket()) {
-        clearInterval(interval);
-
-        if (!isHomeMessageProcessed.current && homeInputText.trim() !== "") {
-          isHomeMessageProcessed.current = true;
-          const newMessage: Chatting = {
-            externalId: null,
-            content: homeInputText,
-            messageType: "TEXT",
-            sender: null,
-          };
-          sendChatMessage(newMessage);
-          navigate(location.pathname, { replace: true, state: {} });
-        }
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useWebSocket(homeInputText, (message: Chatting) => {
+    sendChatMessage(message);
+    navigate(location.pathname, { replace: true, state: {} });
+  });
 
   useEffect(() => {
     const lastMarketMessage = messages.find(
@@ -173,34 +65,8 @@ There are three options you can choose from:
     if (lastMarketMessage && bridge.toLowerCase() === "yes") {
       BridgeCreateMessage();
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
-  const sendChatMessage = async (message: Chatting) => {
-    setMessages((prevMessages) => [...prevMessages, message]);
-    setLoading(true);
-    try {
-      chatAPI.sendSoketMessage(message);
-    } catch (error) {
-      console.error("WebSocket 전송 실패:", error);
-    } finally {
-      chatAPI.addSocketListener((msg: Chatting) => {
-        const filteredContent = msg.content.replace(
-          /\n\s*-\s*\*\*Fixture ID:\*\*\s*\d+/g,
-          ""
-        );
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { ...msg, content: filteredContent.trim() },
-        ]);
-        setLoading(false);
-        if (!conversationExternalId && msg.conversationExternalId) {
-          setConversationExternalId(msg.conversationExternalId);
-        }
-      });
-    }
-  };
 
   const sendMessage = () => {
     if (inputText.trim() === "") return;
@@ -304,7 +170,7 @@ Great, I can fetch information related to sports. Currently, I only support foot
       if (!lastMarketMessage)
         throw new Error("No MARKET_FINALIZED message found");
 
-      const userGameSelectionData: ChatMessage = {
+      const userGameSelectionData: any = {
         externalId: lastMarketMessage.conversationExternalId ?? null,
         content: lastMarketMessage.data?.event.league.name,
         messageType: "CREATE_TR",
@@ -312,11 +178,9 @@ Great, I can fetch information related to sports. Currently, I only support foot
           gameTitle: `${lastMarketMessage.data?.event?.home_team?.name} VS ${lastMarketMessage.data?.event?.away_team?.name}`,
           gameContent: lastMarketMessage.data?.market?.description,
           extras: "",
-          gameStartAt: formatToISO8601(
-            lastMarketMessage.data?.event?.created_at
-          ),
-          gameEndAt: lastMarketMessage.data?.market?.close_date,
-          gameExpriedAt: lastMarketMessage.data?.market?.close_date,
+          gameStartAt: lastMarketMessage.data?.event?.start_time,
+          gameEndAt: dayjs(lastMarketMessage.data?.event?.start_time).add(2, 'hour').toDate(),
+          gameExpiredAt: dayjs(lastMarketMessage.data?.event?.start_time).add(2, 'hour').toDate(),
           fixtureId: lastMarketMessage.data?.event?.fixture_id,
           gameRelations: lastMarketMessage.data?.selections?.map(
             (selection: { type: string; name: string; thumbnail: string }, index: number) => ({
@@ -332,11 +196,15 @@ Great, I can fetch information related to sports. Currently, I only support foot
           asset: lastMarketMessage.data.market?.currency,
           key: lastMarketMessage.data.selected_type === "win" ? "A" : "B",
           choiceType: lastMarketMessage.data.selected_type ?? "WIN",
+          networkNm : lastMarketMessage.data?.market?.networkNm,
         },
       };
+      
+      console.log("userGameSelectionData.data.asset", userGameSelectionData.data.asset);
       const response = (await chatAPI.sendChatMessage(
         userGameSelectionData
       )) as any;
+      console.log("response", response);
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
           externalId: conversationExternalId,
@@ -347,19 +215,25 @@ Great, I can fetch information related to sports. Currently, I only support foot
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
 
-      const { tr, transId } = response.data.message.data;
-      console.log("tr", tr);
+      const { tr, transId, networkNm } = response.data.message.data;
+      console.log("response.data.message.data", response.data.message.data);
+      console.log("networkNm", networkNm);
       if (!wallet) {
         throw new Error("Wallet is undefined");
       }
 
       try {
-        if (!wallet.solPrivateKey) {
+        if (!wallet.evmPrivateKey) {
           throw new Error("Wallet does not support transaction signing");
         }
         let rawTransaction;
         try {
-          rawTransaction = await signTransaction(tr, wallet.solPrivateKey);
+          if (networkNm === "BASE") {
+            rawTransaction = await signEthereumTransaction(tr, wallet.evmPrivateKey);
+          } else {
+            rawTransaction = await signSolanaTransaction(tr, wallet.solPrivateKey);
+          }
+          console.log("rawTransaction", rawTransaction);
         } catch (err: any) {
           console.error("Transaction signing error:", err);
           throw new Error(`Failed to sign transaction: ${err.message}`);
@@ -369,14 +243,18 @@ Great, I can fetch information related to sports. Currently, I only support foot
           throw new Error("Signed transaction is null");
         }
 
-        await signGame(transId, rawTransaction);
+
+        console.log("rawTransaction", rawTransaction);
+        console.log("transId", transId);
+        const response = await SendTransactionGame(transId, rawTransaction);
+        console.log("response", response);
+
       } catch (error) {
         console.error("Transaction processing error:", error);
         throw error;
       }
     } catch (error) {
       console.error("CreateMessage 실패:", error);
-      alert("게임 생성에 실패했습니다: " + error);
     } finally {
       setTimeout(async () => {
         try {
@@ -460,3 +338,4 @@ Great, I can fetch information related to sports. Currently, I only support foot
 }
 
 export default ChattingComponents;
+

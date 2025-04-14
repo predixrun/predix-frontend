@@ -1,11 +1,7 @@
 import leaderboardAPI from "@/api/game/leaderboardAPI";
+import { CoinBase } from "@/types/coins";
 import { useState, useRef, useEffect } from "react";
-import BaseLogo from "/BaseLogo.svg";
 
-interface WalletDashboardProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
 interface LeaderboardData {
   nickname: string | null;
   currentRank: number;
@@ -14,30 +10,12 @@ interface LeaderboardData {
   rankDiff: number | null;
 }
 
-const WalletDashboard: React.FC<WalletDashboardProps> = ({
-  isOpen,
-  onClose,
-}) => {
-  // const leaderboardData = Array.from({ length: 300 }, (_, i) => ({
-  //   rank: i + 1,
-  //   username: `@user${i + 1}`,
-  //   score: Math.floor(Math.random() * 100),
-  //   change: Math.random() > 0.5 ? 1 : -1,
-  // }));
-
+const Leaderboard = () => {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData[]>([
-    {
-      nickname: null,
-      currentRank: 1,
-      totalAmount: "0.30000000",
-      prevRank: null,
-      rankDiff: null
-    },
   ]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-  const [isScrollable, setIsScrollable] = useState<boolean>(false);
 
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isScrollable, setIsScrollable] = useState<boolean>(false);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState<number>(1);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
@@ -52,12 +30,9 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
 
   const handlePageClick = (selectedPage: number) => {
     setCurrentPage(selectedPage);
-    setIsDropdownOpen(false);
-
     if (isScrollable) {
       const targetIndex = selectedPage * itemsPerPage - itemsPerPage / 2;
       const targetElement = pageRefs.current[targetIndex];
-
       if (targetElement) {
         targetElement.scrollIntoView({
           behavior: "smooth",
@@ -67,10 +42,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
     }
   };
 
-  const toggleScrollable = () => {
-    setIsScrollable((prev) => !prev);
-  };
-
+  const [runningTime, setRunningTime] = useState<string>("");
   const fetchLeaderboardData = async () => {
     try {
       const response = await leaderboardAPI.getLeaderboard(
@@ -79,13 +51,14 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
         currentPage,
         10
       );
+      console.log(response.data);
       if (response.data && response.data.ranks) {
         const formattedData = response.data.ranks.map((item: any) => ({
           nickname: item.nickname || null,
           currentRank: item.currentRank || 0,
           prevRank: item.prevRank || null,
           rankDiff: item.rankDiff || null,
-          totalAmount: item.totalAmount ? item.totalAmount.toFixed(2) : "0.0000"
+          totalAmount: item.totalAmount ? item.totalAmount.toFixed(4) : "0.0000"
         }));
         setLeaderboardData(formattedData);
         setTotalPages(Math.ceil(response.data.total / 10));
@@ -95,60 +68,63 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
     }
   };
   useEffect(() => {
+    // const updateTime = () => {
+    //   const now = new Date();
+    //   const currentDay = now.getDay();
+
+    //   const daysUntilNextMonday = (8 - currentDay) % 7 || 7;
+
+    //   const endTime = new Date(now);
+    //   endTime.setDate(now.getDate() + daysUntilNextMonday);
+    //   endTime.setHours(0, 0, 0, 0); 
+
+    //   const diffMs = endTime.getTime() - now.getTime();
+    //   const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    //   const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    //   setRunningTime(`⏳ Time remaining: ${diffHrs}h ${diffMins}m`);
+    // };
+      const updateTime = () => {
+        const now = new Date();
+        
+        const endTime = new Date(now);
+        endTime.setHours(24, 0, 0, 0);
+        
+        const diffMs = endTime.getTime() - now.getTime();
+        const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        
+        setRunningTime(`⏳ Time remaining: ${diffHrs}h ${diffMins}m`);
+      };
+      
+    updateTime();
     fetchLeaderboardData();
-  }, [currentPage]);
-  const pageOptions = Array.from(
-    { length: totalPages },
-    (_, i) => (i + 1) * itemsPerPage
-  );
+    const interval = setInterval(() => {
+      fetchLeaderboardData();
+      updateTime();
+    }, 60000);
 
-  useEffect(() => {
-    if (isDropdownOpen && isScrollable && listContainerRef.current) {
-      const targetIndex = currentPage * itemsPerPage - itemsPerPage / 2;
-      const activeItem = pageRefs.current[targetIndex];
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
-      if (activeItem) {
-        activeItem.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }
-  }, [currentPage, isDropdownOpen, isScrollable]);
-
-  if (!isOpen) return null;
-
+  
   return (
-    <div className="flex items-center justify-center z-50 w-full text-sm">
-      <div
-        className="bg-custom-dark rounded-xl p-2 relative w-[280px]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Rank Type Selector */}
-        <div className="flex justify-between mb-2">
-          {/* <button
-            className={`px-3 py-1 rounded ${rankType === "DAILY" ? "bg-[#2C2C2C] text-white" : "text-gray-400"}`}
-            onClick={() => handleRankTypeChange("DAILY")}
-          >
-            Daily
-          </button>
-          <button
-            className={`px-3 py-1 rounded ${rankType === "WEEKLY" ? "bg-[#2C2C2C] text-white" : "text-gray-400"}`}
-            onClick={() => handleRankTypeChange("WEEKLY")}
-          >
-            Weekly
-          </button>
-          <button
-            className={`px-3 py-1 rounded ${rankType === "MONTHLY" ? "bg-[#2C2C2C] text-white" : "text-gray-400"}`}
-            onClick={() => handleRankTypeChange("MONTHLY")}
-          >
-            Monthly
-          </button> */}
+    <div className="flex items-center justify-center z-50 w-full text-sm font-bold font-mono">
+      <div className="bg-custom-dark rounded-xl p-2 relative w-[600px]">
+        <div className="flex justify-between items-center text-xs text-[#B3B3B3] mb-2">
+          <h1 className="text-white text-xl">
+            Leaderboard
+          </h1>
+          <h2 className="text-[#B3B3B3]">
+            {runningTime}
+          </h2>
         </div>
-
-        {/* 리더보드 클릭 시 전체 보기 */}
         <div
           ref={listContainerRef}
           className={`max-h-[556px] transition-all duration-300 ${isScrollable ? "overflow-scroll [&::-webkit-scrollbar]:hidden" : ""
             }`}
-        // onClick={toggleScrollable}
         >
           {/* 1~3등 섹션 */}
           {currentPage === 1 && (
@@ -168,19 +144,16 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                 >
                   <div
                     className={`w-[28px] h-[32px] rounded-sm flex items-center justify-center font-semibold ${entry.currentRank === 1
-                        ? "bg-[#E8B931] text-black"
-                        : "bg-white text-black"
+                      ? "bg-[#E8B931] text-black"
+                      : "bg-white text-black"
                       }`}
                   >
-                    {entry.currentRank === 1 ? <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
-                      <path fillRule="evenodd" d="M10 1c-1.828 0-3.623.149-5.371.435a.75.75 0 0 0-.629.74v.387c-.827.157-1.642.345-2.445.564a.75.75 0 0 0-.552.698 5 5 0 0 0 4.503 5.152 6 6 0 0 0 2.946 1.822A6.451 6.451 0 0 1 7.768 13H7.5A1.5 1.5 0 0 0 6 14.5V17h-.75C4.56 17 4 17.56 4 18.25c0 .414.336.75.75.75h10.5a.75.75 0 0 0 .75-.75c0-.69-.56-1.25-1.25-1.25H14v-2.5a1.5 1.5 0 0 0-1.5-1.5h-.268a6.453 6.453 0 0 1-.684-2.202 6 6 0 0 0 2.946-1.822 5 5 0 0 0 4.503-5.152.75.75 0 0 0-.552-.698A31.804 31.804 0 0 0 16 2.562v-.387a.75.75 0 0 0-.629-.74A33.227 33.227 0 0 0 10 1ZM2.525 4.422C3.012 4.3 3.504 4.19 4 4.09V5c0 .74.134 1.448.38 2.103a3.503 3.503 0 0 1-1.855-2.68Zm14.95 0a3.503 3.503 0 0 1-1.854 2.68C15.866 6.449 16 5.74 16 5v-.91c.496.099.988.21 1.475.332Z" clipRule="evenodd" />
-                    </svg>
-                      : entry.currentRank}
+                    {entry.currentRank === 1 ? "🏆" : entry.currentRank}
                   </div>
 
                   <div className="flex items-center gap-2 flex-1">
                     <img
-                      src={BaseLogo}
+                      src="evmLogo.png"
                       alt="profile"
                       className="w-[30px] h-[30px] rounded-full"
                     />
@@ -211,13 +184,18 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                       />
                     </svg>
                     {Math.abs(entry.rankDiff || 0)}
+
                   </span>
+                  <div className="ml-2 text-[#E8B931] flex items-center gap-2">
+                    <img src="PrediX-logo.webp" alt="PrediX" className="w-4 h-4" />
+                    {parseFloat(entry.totalAmount) * 100} {CoinBase.PREDIX}
+                  </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* 4등 이하*/}
+          {/* 4등 이하 */}
           {displayedData.map((entry, index) => {
             if (currentPage === 1 && entry.currentRank <= 3) return null;
 
@@ -238,7 +216,7 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
 
                 <div className="flex items-center gap-2 flex-1">
                   <img
-                    src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=040"
+                    src="evmLogo.png"
                     alt="profile"
                     className="w-[30px] h-[30px] rounded-full"
                   />
@@ -267,48 +245,33 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
                     />
                   </svg>
                   {Math.abs(entry.rankDiff || 0)}
+
                 </span>
+                <div className="ml-2 text-[#E8B931] flex items-center gap-2">
+                  <img src="PrediX-logo.webp" alt="PrediX" className="w-4 h-4" />
+                  {parseFloat(entry.totalAmount) * 100} {CoinBase.PREDIX}
+                </div>
               </div>
             );
           })}
-        </div>
-
-        {/* 페이지네이션 */}
-        <div className="flex justify-between items-center mt-2">
-          <button onClick={onClose} className="text-white hover:text-gray-400">
-            ‹ Back
-          </button>
-          <div className="relative text-white">
-            <button
-              onClick={() => {
-                setIsDropdownOpen(!isDropdownOpen);
-
-              }}
-              className="bg-[#2C2C2C] px-4 py-2 rounded shadow-lg w-[160px] text-center flex gap-4 items-center"
-            >
-              <div>
-                {currentPage * itemsPerPage} / {totalPages * 10}
-              </div>
-              <div
-                className={`transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : "rotate-0"
-                  }`}
+          <div className="flex justify-end mt-4 relative">
+            <div className="flex justify-center items-center bg-black rounded-lg p-2">
+              <button
+                className="text-white text-xl bg-transparent border-none cursor-pointer mx-4 disabled:opacity-50 disabled:cursor-not-allowed hover:text-[#D74713] transition-colors"
+                onClick={() => handlePageClick(currentPage - 1)}
+                disabled={currentPage === 0}
               >
-                ▼
-              </div>
-            </button>
-            {isDropdownOpen && (
-              <div className="absolute bottom-full left-0 mb-2 w-full bg-[#2C2C2C] rounded shadow-lg z-10 max-h-[160px] overflow-scroll [&::-webkit-scrollbar]:hidden">
-                {pageOptions.map((option, i) => (
-                  <div
-                    key={i}
-                    className="px-3 py-1.5 cursor-pointer rounded-md transition-all duration-200 hover:bg-black hover:px-4"
-                    onClick={() => handlePageClick(i + 1)}
-                  >
-                    {option}
-                  </div>
-                ))}
-              </div>
-            )}
+                ‹
+              </button>
+              <button
+                className="text-white text-xl bg-transparent border-none cursor-pointer mx-4 disabled:opacity-50 disabled:cursor-not-allowed hover:text-[#D74713] transition-colors"
+                onClick={() => handlePageClick(currentPage + 1)}
+              // disabled={currentPage === pageCount - 1}
+              >
+                ›
+              </button>
+
+            </div>
           </div>
         </div>
       </div>
@@ -316,4 +279,4 @@ const WalletDashboard: React.FC<WalletDashboardProps> = ({
   );
 };
 
-export default WalletDashboard;
+export default Leaderboard; 

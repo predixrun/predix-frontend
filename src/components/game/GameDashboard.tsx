@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import "@/components/styles/game-dashboard-animations.css";
 import joinGame from "@/api/chat/joinAPI";
-import signGame from "@/api/chat/signCreateAPI";
+import { SendTransactionGame } from "@/api/chat/signCreateAPI";
 import { CoinBase } from "@/types/coins";
 import { Game } from "./gameTypes";
-import signTransaction from "../wallet/SignWallet";
+import { signEthereumTransaction, signSolanaTransaction } from "../wallet/SignWallet";
+import useLocalWallet from "@/hooks/useWallet";
 
 export interface GameDashboardProps {
   game: Game;
@@ -18,7 +19,8 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
     "pending" | "success" | "fail" | ""
   >("");
 
-  const wallet = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
+  const { evmPrivateKey, solPrivateKey } = useLocalWallet();
+
 
   const handleClose = () => {
     setClosing(true);
@@ -27,6 +29,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
     }, 300);
   };
 
+  // 분기처리 필요
   const handleConfirm = async () => {
     setBetStatus("pending");
 
@@ -34,13 +37,20 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
       const gameId = game.gameId;
       const result = await joinGame(gameId);
 
-      const { tr, transId } = result.data;
+      const { tr, transId, networkNm } = result.data;
+      
+      if (!evmPrivateKey) {
+        throw new Error("Ethereum private key is not provided");
+      }
 
-      const rawTransaction = await signTransaction(tr, wallet.solPrivateKey);
+      let rawTransaction;
+      if(networkNm === "BASE") {
+        rawTransaction = await signEthereumTransaction(tr, evmPrivateKey);
+      } else {
+        rawTransaction = await signSolanaTransaction(tr, solPrivateKey);
+      }
 
-
-
-      await signGame(transId, rawTransaction);
+      await SendTransactionGame(transId, rawTransaction);
 
       setBetStatus("success");
 
@@ -87,7 +97,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
                   {game.user.name} | Ends: {game.gameExpiredAt}
                 </div>
               </div>
-              <div>Wager Size ({game.gameQuantity} {CoinBase.SOL})</div>
+              <div>Wager Size ({game.gameQuantity} {CoinBase.ETH})</div>
             </div>
           </CardHeader>
           <CardContent className="mt-5">
@@ -117,7 +127,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Your votes</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                    {quantity || "0"} {CoinBase.SOL}
+                    {quantity || "0"} {CoinBase.ETH}
                   </div>
                 </div>
                 <div className="flex justify-center">
@@ -126,7 +136,7 @@ function GameDashboard({ game, onClose }: GameDashboardProps) {
                 <div className="flex flex-col items-center">
                   <div className="text-[#B3B3B3]">Potential reward</div>
                   <div className="text-[#D74713] font-semibold font-prme">
-                    {potentialReward || "0"} {CoinBase.SOL}
+                    {potentialReward || "0"} {CoinBase.ETH}
                   </div>
                 </div>
               </div>

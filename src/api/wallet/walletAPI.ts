@@ -4,7 +4,7 @@ interface WalletBalanceResponse {
     status: string;
     errorCode: Record<string, any>;
     data: {
-        bnbUSDC: number;
+        bnbUSDC: string;
         baseUSDC: string;
         arbUSDC: string;
         optUSDC: string;
@@ -21,13 +21,13 @@ const walletAPI = {
                     svmAddress,
                 }
             });
-            console.log("지갑 잔액 응답:", response);
             return response;
         } catch (error) {
-            console.error('지갑 잔액 조회 실패:', error);
+            console.error('Failed to fetch wallet balance:', error);
             throw error;
         }
-    }
+    },
+
 };
 
 export default walletAPI; 

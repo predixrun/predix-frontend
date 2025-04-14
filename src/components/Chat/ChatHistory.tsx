@@ -33,8 +33,8 @@ function ChatHistory() {
   };
 
   return (
-    <div className="h-full overflow-y-hidden pb-4">
-      <div className="p-4 w-80 bg-[#161414] text-white rounded-lg shadow-lg flex flex-col h-full">
+    <div className="h-full w-full overflow-y-hidden pb-4">
+      <div className="p-4 bg-[#161414] text-white rounded-lg shadow-lg flex flex-col h-full">
         <h3 className="text-lg font-semibold border-b pb-2 mb-2">
           Chat History
         </h3>
