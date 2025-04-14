@@ -1,7 +1,6 @@
 import leaderboardAPI from "@/api/game/leaderboardAPI";
 import { useState, useRef, useEffect } from "react";
 import BaseLogo from "/BaseLogo.svg";
-import TrophyIcon from "/TrophyIcon.svg";
 
 interface WalletDashboardProps {
   isOpen: boolean;
