@@ -68,19 +68,9 @@ function Wallet() {
     if (baseBalance) {
       setBalance(baseBalance);
     }
-    const totalUsdValue = Number(solanaUsdValue || 0) + Number(baseUsdValue || 0) + Number(predixUsdValue || 0);
-    setPriceUSD(parseFloat(totalUsdValue.toFixed(4)));
-
-    const intervalId = setInterval(() => {
-      refetchBalance();
-      if (baseBalance) {
-        setBalance(baseBalance);
-      }
-      const updatedTotalUsdValue = Number(solanaUsdValue || 0) + Number(baseUsdValue || 0) + Number(predixUsdValue || 0);
-      setPriceUSD(parseFloat(updatedTotalUsdValue.toFixed(4)));
-    }, 5 * 60 * 1000);
-
-    return () => clearInterval(intervalId);
+    const totalUsdValue = Number(solanaUsdValue) + Number(baseUsdValue) + Number(predixUsdValue);
+    setPriceUSD(parseFloat(totalUsdValue.toFixed(6)));
+    refetchBalance();
   }, []);
 
   useEffect(() => {
@@ -166,26 +156,28 @@ function Wallet() {
     setIsAdressSelection(!isAdressSelection);
   };
   return (
+    <div>
+        <div className="left-10 absolute h-auto top-10">
+          <div
+          className="peer gap-2 opacity-30 hover:opacity-100 transition-all duration-300 text-[#B3B3B3] hover:text-white flex items-center font-family font-semibold cursor-pointer"
+          onClick={() => {
+            navigate("/")
+            setIsMinimized(true)
+          }}
+        >
+          <img src="PrediX-logo.webp" alt="logo" className="size-8 " />
+          <p>PrediX</p>
+        </div>
+
+        <div className="absolute left-60 top-0 hidden peer-hover:block p-2 bg-custom-dark text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)] z-20">
+          <div className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[10px] border-b-[10px] border-r-[10px] border-transparent border-r-[#1E1E1E]"></div>
+          Back home
+        </div>
+      </div>
     <div
-      className={`absolute left-3 z-100 flex flex-col gap-2 ${(location.pathname.startsWith("/chat") || location.pathname.startsWith("/leaderboard")) ? "h-svh pt-4" : "h-auto top-3"
+      className={`absolute right-3 z-100 flex flex-col gap-2 ${(location.pathname.startsWith("/chat")) ? "h-svh pt-4" : "h-auto top-3"
         }`}
     >
-      {(location.pathname.startsWith("/chat") || location.pathname.startsWith("/leaderboard")) && (
-        <div className="">
-          <div
-            className="peer gap-2 opacity-30 hover:opacity-100 transition-all duration-300 text-[#B3B3B3] hover:text-white flex items-center font-family font-semibold cursor-pointer"
-            onClick={() => navigate("/")}
-          >
-            <img src="PrediX-logo.webp" alt="logo" className="size-8 " />
-            <p>PrediX</p>
-          </div>
-
-          <div className="absolute left-60 top-0 hidden peer-hover:block p-2 mt-2 bg-custom-dark text-white rounded-md font-bold shadow-[0px_0px_30px_rgba(255,255,255,0.4)] z-20">
-            <div className="absolute left-[-10px] top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-[10px] border-b-[10px] border-r-[10px] border-transparent border-r-[#1E1E1E]"></div>
-            Back home
-          </div>
-        </div>
-      )}
 
       {!isMinimized ? (
         <Card
@@ -287,22 +279,9 @@ function Wallet() {
                   {currentState === WALLET_STATE.CONFIRMED && (
                     <div className="wallet-fade-in h-full w-full flex flex-col items-center justify-center font-prme text-white gap-2">
                       <div className="text-[32px] font-bold">
-                        ${PriceUSD}
+                        {/* 전체 USD 가치 합산하여 직접 표시 */}
+                        ${(solanaUsdValue + baseUsdValue + predixUsdValue).toFixed(2)}
                       </div>
-
-                      {/* Solana */}
-                      <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <img
-                            src="SolanaIcon.svg"
-                            alt="Solana"
-                            className="size-5"
-                          />
-                          <span>{solanaBalance} SOL</span>
-                        </div>
-                        <div>${solanaUsdValue}</div>
-                      </div>
-
                       {/* Ethereum */}
                       <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
                         <div className="flex items-center gap-2">
@@ -314,6 +293,18 @@ function Wallet() {
                           <span>{baseBalance} {CoinBase.ETH}</span>
                         </div>
                         <div>${baseUsdValue}</div>
+                      </div>
+                      {/* Solana */}
+                      <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src="SolanaIcon.svg"
+                            alt="Solana"
+                            className="size-5"
+                          />
+                          <span>{solanaBalance} SOL</span>
+                        </div>
+                        <div>${solanaUsdValue}</div>
                       </div>
                       <div className="flex items-center bg-black rounded-xl min-w-[296px] min-h-[42px] justify-between px-4 py-2">
                         <div className="flex items-center gap-2">
@@ -543,6 +534,7 @@ function Wallet() {
         </div>
       )}
       {location.pathname.startsWith("/chat") && <ChatHistory />}
+    </div>
     </div>
   );
 }

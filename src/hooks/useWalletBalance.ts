@@ -11,6 +11,9 @@ const ERC20_ABI = [
   "function decimals() view returns (uint8)",
 ];
 
+const PREDIIX_TOKEN_ADDRESS = "0xE21835FBE4Df83a02D72a717Fd8BC1dcBCC6C042";
+const BASE_SEPOLIA_RPC = "https://sepolia.base.org";
+
 export default function useWalletBalance({
   type,
   publicKey,
@@ -22,100 +25,123 @@ export default function useWalletBalance({
   const [baseBalance, setBaseBalance] = useState<string>("0.0000");
   const [baseUsdValue, setBaseUsdValue] = useState<number>(0);
 
-  const lastFetchedRef = useRef<number>(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const solanaConnectionRef = useRef<web3.Connection | null>(null);
+  const solanaSubscriptionIdRef = useRef<number | null>(null);
+  const evmIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isFetchingRef = useRef<boolean>(false); 
 
   const fetchBalance = async () => {
-    if (!publicKey) return;
-    const now = Date.now();
-    lastFetchedRef.current = now;
+    if (!publicKey || isFetchingRef.current) return;
+        isFetchingRef.current = true;
 
     try {
       if (type === "solana") {
         const solanaKey = new web3.PublicKey(publicKey);
-        const solanaConnection = new web3.Connection(
-          web3.clusterApiUrl("devnet"),
-          "confirmed"
-        );
+        const connection = new web3.Connection(web3.clusterApiUrl("devnet"), "confirmed");
+        solanaConnectionRef.current = connection;
 
-        const solBalance = await solanaConnection.getBalance(solanaKey);
-        const sol = (solBalance / 1_000_000_000).toFixed(5);
+        const solBalanceLamports = await connection.getBalance(solanaKey);
+        const sol = (solBalanceLamports / web3.LAMPORTS_PER_SOL).toFixed(5);
         setSolanaBalance(sol);
 
         const res = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
+          `https://pro-api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&x_cg_pro_api_key=${import.meta.env.VITE_COINGECKO_API_KEY}`
         );
         const data = await res.json();
         const solPrice = data.solana?.usd || 0;
         setSolanaUsdValue(parseFloat((parseFloat(sol) * solPrice).toFixed(4)));
-
-        const subscriptionId = solanaConnection.onAccountChange(
-          solanaKey,
-          async () => {
-            await fetchBalance();
-          }
-        );
-
-        return () => {
-          solanaConnection.removeAccountChangeListener(subscriptionId);
-        };
       }
+      else if (type === "predix") {
+        const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC);
+        const tokenContract = new ethers.Contract(PREDIIX_TOKEN_ADDRESS, ERC20_ABI, provider);
+        const [rawBalance, decimals] = await Promise.all([
+          tokenContract.balanceOf(publicKey),
+          tokenContract.decimals(),
+        ]);
+        const formatted = ethers.formatUnits(rawBalance, decimals);
+        setPredixBalance(parseFloat(formatted).toFixed(4)); 
+        setPredixUsdValue(0); 
+      }
+      else if (type === "ethereum") {
+        const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC);
+        const balanceBigInt = await provider.getBalance(publicKey);
+        const ethBalance = ethers.formatEther(balanceBigInt);
+        setBaseBalance(parseFloat(ethBalance).toFixed(6));
 
-        if (type === "predix") {
-          const provider = new ethers.JsonRpcProvider(
-            `https://sepolia.base.org`
-          );
-          const tokenAddress = "0xE21835FBE4Df83a02D72a717Fd8BC1dcBCC6C042";
-          const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-
-          const [rawBalance, decimals] = await Promise.all([
-            tokenContract.balanceOf(publicKey),
-            tokenContract.decimals(),
-          ]);
-          const formatted = ethers.formatUnits(rawBalance, decimals);
-          setPredixBalance(formatted);
-          setPredixUsdValue(0);
-        }
-        if (type === "ethereum") {
-          const provider = new ethers.JsonRpcProvider(
-            `https://sepolia.base.org`
-          );
-          const balanceBigInt = await provider.getBalance(publicKey);
-          const ethBalance = ethers.formatEther(balanceBigInt);
-          setBaseBalance(parseFloat(ethBalance).toFixed(6));
-
-          const res = await fetch(
-            "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
-          );
-          const data = await res.json();
-          const ethPrice = data.ethereum?.usd || 0;
-          setBaseUsdValue(parseFloat((parseFloat(ethBalance) * ethPrice).toFixed(6)));
-        }
+        const res = await fetch(
+          `https://pro-api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&x_cg_pro_api_key=${import.meta.env.VITE_COINGECKO_API_KEY}`
+        );
+        const data = await res.json();
+        const ethPrice = data.ethereum?.usd || 0;
+        setBaseUsdValue(parseFloat((parseFloat(ethBalance) * ethPrice).toFixed(6)));
+      }
     } catch (err) {
-      console.error(`[${type}] Failed to fetch balance or price:`, err);
+      if (type === 'solana') setSolanaBalance("Error");
+      else if (type === 'predix') setPredixBalance("Error");
+      else if (type === 'ethereum') setBaseBalance("Error");
+    } finally {
+        isFetchingRef.current = false; 
     }
   };
 
   useEffect(() => {
-    fetchBalance();
+    if (solanaSubscriptionIdRef.current && solanaConnectionRef.current) {
+        solanaConnectionRef.current.removeAccountChangeListener(solanaSubscriptionIdRef.current)
+            .catch(err => console.error("Error removing previous Solana listener:", err));
+        solanaSubscriptionIdRef.current = null;
+        solanaConnectionRef.current = null;
+    }
 
-    if ((type === "ethereum" || type === "predix" || type === "solana") && publicKey) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      intervalRef.current = setInterval(fetchBalance, 300000);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+    if (type === 'solana' && publicKey) {
+        fetchBalance(); 
+
+        const solanaKey = new web3.PublicKey(publicKey);
+        const connection = new web3.Connection(web3.clusterApiUrl("devnet"), "confirmed");
+        solanaConnectionRef.current = connection;
+        
+        try {
+            solanaSubscriptionIdRef.current = connection.onAccountChange(
+                solanaKey,
+                async () => {
+                    await fetchBalance();
+                },
+                "confirmed"
+            );
+        } catch (error) {
+            console.error("[solana] Failed to subscribe to account changes:", error);
+        }
     }
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+        if (solanaSubscriptionIdRef.current && solanaConnectionRef.current) {
+            solanaConnectionRef.current.removeAccountChangeListener(solanaSubscriptionIdRef.current)
+                .catch(err => console.error("Error removing Solana listener on cleanup:", err));
+            solanaSubscriptionIdRef.current = null;
+            solanaConnectionRef.current = null;
+        }
     };
-  }, [type, publicKey]);
+  }, [type, publicKey]); 
+  useEffect(() => {
+    if (evmIntervalRef.current) {
+        clearInterval(evmIntervalRef.current);
+        evmIntervalRef.current = null;
+    }
+
+    if ((type === 'ethereum' || type === 'predix') && publicKey) {
+        fetchBalance();
+
+        evmIntervalRef.current = setInterval(() => {
+            fetchBalance();
+        }, 300000);
+    }
+
+    return () => {
+        if (evmIntervalRef.current) {
+            clearInterval(evmIntervalRef.current);
+            evmIntervalRef.current = null;
+        }
+    };
+  }, [type, publicKey]); 
 
   return {
     solanaBalance,
@@ -124,6 +150,6 @@ export default function useWalletBalance({
     predixUsdValue,
     baseBalance,
     baseUsdValue,
-    refetch: fetchBalance,
+    refetch: fetchBalance, 
   };
 }

@@ -1,3 +1,4 @@
+import leaderboardAPI from "@/api/game/leaderboardAPI";
 import { CoinBase } from "@/types/coins";
 import { useState, useRef, useEffect } from "react";
 
@@ -11,53 +12,11 @@ interface LeaderboardData {
 
 const Leaderboard = () => {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData[]>([
-    {
-      nickname: "user1",
-      currentRank: 1,
-      totalAmount: "0.30000000",
-      prevRank: 2,
-      rankDiff: 1
-    },
-    {
-      nickname: "user2",
-      currentRank: 2,
-      totalAmount: "0.25000000",
-      prevRank: 1,
-      rankDiff: -1
-    },
-    {
-      nickname: "user3",
-      currentRank: 3,
-      totalAmount: "0.20000000",
-      prevRank: 3,
-      rankDiff: 0
-    },
-    {
-      nickname: "user4",
-      currentRank: 4,
-      totalAmount: "0.15000000",
-      prevRank: 5,
-      rankDiff: 1
-    },
-    {
-      nickname: "user5",
-      currentRank: 5,
-      totalAmount: "0.10000000",
-      prevRank: 4,
-      rankDiff: -1
-    },
-    {
-      nickname: "user6",
-      currentRank: 6,
-      totalAmount: "0.05000000",
-      prevRank: 5,
-      rankDiff: -1
-    }
   ]);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isScrollable, setIsScrollable] = useState<boolean>(false);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState<number>(1);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<HTMLDivElement[]>([]);
@@ -84,28 +43,64 @@ const Leaderboard = () => {
   };
 
   const [runningTime, setRunningTime] = useState<string>("");
-
+  const fetchLeaderboardData = async () => {
+    try {
+      const response = await leaderboardAPI.getLeaderboard(
+        "DAILY",
+        new Date().toISOString().split('T')[0],
+        currentPage,
+        10
+      );
+      console.log(response.data);
+      if (response.data && response.data.ranks) {
+        const formattedData = response.data.ranks.map((item: any) => ({
+          nickname: item.nickname || null,
+          currentRank: item.currentRank || 0,
+          prevRank: item.prevRank || null,
+          rankDiff: item.rankDiff || null,
+          totalAmount: item.totalAmount ? item.totalAmount.toFixed(4) : "0.0000"
+        }));
+        setLeaderboardData(formattedData);
+        setTotalPages(Math.ceil(response.data.total / 10));
+      }
+    } catch (error) {
+      console.error("Failed to fetch leaderboard:", error);
+    }
+  };
   useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const currentDay = now.getDay();
+    // const updateTime = () => {
+    //   const now = new Date();
+    //   const currentDay = now.getDay();
 
-      const daysUntilNextMonday = (8 - currentDay) % 7 || 7;
+    //   const daysUntilNextMonday = (8 - currentDay) % 7 || 7;
 
-      const endTime = new Date(now);
-      endTime.setDate(now.getDate() + daysUntilNextMonday);
-      endTime.setHours(0, 0, 0, 0); 
+    //   const endTime = new Date(now);
+    //   endTime.setDate(now.getDate() + daysUntilNextMonday);
+    //   endTime.setHours(0, 0, 0, 0); 
 
-      const diffMs = endTime.getTime() - now.getTime();
-      const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    //   const diffMs = endTime.getTime() - now.getTime();
+    //   const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    //   const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
-      setRunningTime(`⏳ Time remaining: ${diffHrs}h ${diffMins}m`);
-    };
-
+    //   setRunningTime(`⏳ Time remaining: ${diffHrs}h ${diffMins}m`);
+    // };
+      const updateTime = () => {
+        const now = new Date();
+        
+        const endTime = new Date(now);
+        endTime.setHours(24, 0, 0, 0);
+        
+        const diffMs = endTime.getTime() - now.getTime();
+        const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        
+        setRunningTime(`⏳ Time remaining: ${diffHrs}h ${diffMins}m`);
+      };
+      
     updateTime();
-
+    fetchLeaderboardData();
     const interval = setInterval(() => {
+      fetchLeaderboardData();
       updateTime();
     }, 60000);
 
@@ -193,7 +188,7 @@ const Leaderboard = () => {
                   </span>
                   <div className="ml-2 text-[#E8B931] flex items-center gap-2">
                     <img src="PrediX-logo.webp" alt="PrediX" className="w-4 h-4" />
-                    {parseFloat(entry.totalAmount) * 100} {CoinBase.ETH}
+                    {parseFloat(entry.totalAmount) * 100} {CoinBase.PREDIX}
                   </div>
                 </div>
               ))}
@@ -254,7 +249,7 @@ const Leaderboard = () => {
                 </span>
                 <div className="ml-2 text-[#E8B931] flex items-center gap-2">
                   <img src="PrediX-logo.webp" alt="PrediX" className="w-4 h-4" />
-                  {parseFloat(entry.totalAmount) * 100} {CoinBase.ETH}
+                  {parseFloat(entry.totalAmount) * 100} {CoinBase.PREDIX}
                 </div>
               </div>
             );

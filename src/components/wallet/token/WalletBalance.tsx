@@ -19,41 +19,42 @@ export default function BalanceFetch() {
         try {
 
             const response = await walletAPI.getWalletBalance(walletToETH || "", walletToSOL || "");
-
+            
+            console.log("response", response);
             const solanaTokens = [
                 {
                     mint: "USDC",
-                    amount: parseFloat(response.data.svmUSDC),
+                    amount: parseFloat(response.data.svmUSDC) || 0,
                     symbol: "USDC"
                 }
             ];
             setSolanaTokens(solanaTokens);
 
-            const ethereumTokens = [];
+            const ethereumTokens = [
+            ];
+            ethereumTokens.push({
+                address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", 
+                name: "USD Coin (Base)",
+                symbol: "USDC",
+                amount: parseFloat(response.data.baseUSDC) || 0,
+                logo: "UsdcIcon.svg",
+                network: "Base"
+            });
 
             ethereumTokens.push({
                 address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
                 name: "USD Coin (BNB Chain)",
                 symbol: "USDC",
-                amount: parseFloat(String(response.data.bnbUSDC || "0")),
+                amount: parseFloat(response.data.bnbUSDC) || 0,
                 logo: "UsdcIcon.svg",
                 network: "BNB"
             });
 
             ethereumTokens.push({
                 address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", 
-                name: "USD Coin (Base)",
-                symbol: "USDC",
-                amount: parseFloat(String(response.data.baseUSDC || "0")),
-                logo: "UsdcIcon.svg",
-                network: "Base"
-            });
-
-            ethereumTokens.push({
-                address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", 
                 name: "USD Coin (Arbitrum)",
                 symbol: "USDC",
-                amount: parseFloat(String(response.data.arbUSDC || "0")),
+                amount: parseFloat(response.data.arbUSDC) || 0,
                 logo: "UsdcIcon.svg",
                 network: "Arbitrum"
             });
@@ -62,7 +63,7 @@ export default function BalanceFetch() {
                 address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", 
                 name: "USD Coin (Optimism)",
                 symbol: "USDC",
-                amount: parseFloat(String(response.data.optUSDC || "0")),
+                amount: parseFloat(response.data.optUSDC) || 0,
                 logo: "UsdcIcon.svg",
                 network: "Optimism"
             });
@@ -78,10 +79,10 @@ export default function BalanceFetch() {
 
     const getChainLogo = (network: string) => {
         switch (network) {
-            case "BNB":
-                return "bnbIcon.svg";
             case "Base":
                 return "baseIcon.svg";
+            case "BNB":
+                return "bnbIcon.svg";
             case "Arbitrum":
                 return "https://cryptologos.cc/logos/arbitrum-arb-logo.png";
             case "Optimism":
@@ -97,7 +98,7 @@ export default function BalanceFetch() {
             <div className="flex items-center min-w-[296px] min-h-[42px] px-4 py-2">
                 <div className="flex flex-col w-full gap-4">
                     <h3 className="font-bold">Solana Tokens</h3>
-                    {SolanaTokens.filter(token => token.amount > 0).map((token, idx) => (
+                    {SolanaTokens.map((token, idx) => (
                         <div key={idx} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <TokenWithSolanaBadge
@@ -111,12 +112,10 @@ export default function BalanceFetch() {
                             <div>${token.amount.toFixed(3)}</div>
                         </div>
                     ))}
-                    {(SolanaTokens.length === 0 || SolanaTokens.every(token => token.amount === 0)) && (
-                        <p className="text-sm text-gray-400">No SPL tokens held</p>
-                    )}
+
 
                     <h3 className="font-bold mt-4">Base Tokens</h3>
-                    {EthereumTokens.filter(token => token.amount > 0).map((token, idx) => (
+                    {EthereumTokens.filter(token => token.network !== "Arbitrum" && token.network !== "Optimism" && token.network !== "BNB").map((token, idx) => (
                         <div key={idx} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="relative">
@@ -136,9 +135,6 @@ export default function BalanceFetch() {
                             <div>${token.amount.toFixed(3)}</div>
                         </div>
                     ))}
-                    {(EthereumTokens.length === 0 || EthereumTokens.every(token => token.amount === 0)) && (
-                        <p className="text-sm text-gray-400">No ERC20 tokens held</p>
-                    )}
 
                 </div>
             </div>
