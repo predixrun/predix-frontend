@@ -43,7 +43,7 @@ export default function GameInterfaceComponent({
     const loadGames = async () => {
       const strategy = strategyMap[selectedCategory];
       if (!strategy) return;
-
+      
       const params = strategy.getApiParams(currentPage, statusFilter);
       const gameData = await gameAPI.fetchGameHistory(params);
 

@@ -33,10 +33,10 @@ export default function FilterButtons({
             </button>
             <button
               className={`bg-custom-dark border-2 border-[#2C2C2C] text-[#B3B3B3] w-[56px] h-[32px] text-[14px] rounded-full mr-2 transition-all duration-300 ease-in-out hover:bg-transparent hover:border-[#D74713] hover:text-white ${
-                statusFilter === "EXPIRED" ? "border-[#D74713] text-white" : ""
+                statusFilter === "END" ? "border-[#D74713] text-white" : ""
               }`}
               onClick={() => {
-                setStatusFilter("EXPIRED");
+                setStatusFilter("END");
                 setCurrentPage(0);
               }}
             >
@@ -62,6 +62,7 @@ export default function FilterButtons({
                 statusFilter === "END" ? "border-[#D74713] text-white" : ""
               }`}
               onClick={() => {
+
                 setStatusFilter("END");
                 setCurrentPage(0);
               }}

@@ -1,8 +1,8 @@
 import { Keypair, Transaction } from "@solana/web3.js";
-import { ethers } from "ethers";
+import Web3 from 'web3'; 
 import bs58 from 'bs58';
 
-export async function signTransaction(
+export async function signSolanaTransaction(
     transactionTr: any,
     signer: any,
   ): Promise<any> {
@@ -32,20 +32,29 @@ export async function signTransaction(
 
 
 export async function signEthereumTransaction(
-    transactionRequest: ethers.TransactionRequest,
-    evmPrivateKey: string, // Ethereum private key (hex string)
-  ): Promise<string> {
+    transactionRequest: string,
+    evmPrivateKey: string, 
+  ): Promise<string | undefined> {
     try {
-        const wallet = new ethers.Wallet(evmPrivateKey);
+        if (!evmPrivateKey) { 
+            throw new Error('Private key is not provided');
+        }
 
-        const signedTx = await wallet.signTransaction(transactionRequest);
+        const web3 = new Web3();
+
+        const key = evmPrivateKey.startsWith('0x') ? evmPrivateKey : `0x${evmPrivateKey}`;
+        const account = web3.eth.accounts.privateKeyToAccount(key);
         
-        console.log("Signed Ethereum Transaction:", signedTx);
+        const transactionObject = JSON.parse(transactionRequest);
+        console.log("Parsed Transaction Request:", transactionObject);
+
+        const signedTx = await account.signTransaction(transactionObject);
+        console.log("Signed Ethereum Transaction (web3):", signedTx);
         
-        return signedTx;
+        return signedTx.rawTransaction;
 
     } catch (error) {
-      console.error('Failed to sign Ethereum transaction', error);
+      console.error('Failed to sign Ethereum transaction with web3', error);
       throw new Error('FailedToSignEthereumTransaction');
     }
   }

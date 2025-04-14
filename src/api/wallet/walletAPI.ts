@@ -23,10 +23,11 @@ const walletAPI = {
             });
             return response;
         } catch (error) {
-            console.error('지갑 잔액 조회 실패:', error);
+            console.error('Failed to fetch wallet balance:', error);
             throw error;
         }
-    }
+    },
+
 };
 
 export default walletAPI; 

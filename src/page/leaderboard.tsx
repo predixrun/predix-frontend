@@ -45,12 +45,19 @@ const Leaderboard = () => {
       totalAmount: "0.10000000",
       prevRank: 4,
       rankDiff: -1
+    },
+    {
+      nickname: "user6",
+      currentRank: 6,
+      totalAmount: "0.05000000",
+      prevRank: 5,
+      rankDiff: -1
     }
   ]);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isScrollable, setIsScrollable] = useState<boolean>(false);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
   const [totalPages, setTotalPages] = useState<number>(1);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<HTMLDivElement[]>([]);
@@ -81,19 +88,19 @@ const Leaderboard = () => {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const endTime = new Date();
+      const currentDay = now.getDay();
 
-      const dayOfWeek = now.getDay();
-      const daysUntilSunday = dayOfWeek === 0 ? 7 : 7 - dayOfWeek;
+      const daysUntilNextMonday = (8 - currentDay) % 7 || 7;
 
-      endTime.setHours(0, 0, 0, 0);
-      endTime.setDate(now.getDate() + daysUntilSunday);
+      const endTime = new Date(now);
+      endTime.setDate(now.getDate() + daysUntilNextMonday);
+      endTime.setHours(0, 0, 0, 0); 
 
       const diffMs = endTime.getTime() - now.getTime();
       const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
       const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
-      setRunningTime(`Time remaining: ${diffHrs}h ${diffMins}m`);
+      setRunningTime(`⏳ Time remaining: ${diffHrs}h ${diffMins}m`);
     };
 
     updateTime();
@@ -107,6 +114,7 @@ const Leaderboard = () => {
     };
   }, []);
 
+  
   return (
     <div className="flex items-center justify-center z-50 w-full text-sm font-bold font-mono">
       <div className="bg-custom-dark rounded-xl p-2 relative w-[600px]">
@@ -184,7 +192,7 @@ const Leaderboard = () => {
 
                   </span>
                   <div className="ml-2 text-[#E8B931] flex items-center gap-2">
-                    <img src="evmLogo.png" alt="ETH" className="w-4 h-4" />
+                    <img src="PrediX-logo.webp" alt="PrediX" className="w-4 h-4" />
                     {parseFloat(entry.totalAmount) * 100} {CoinBase.ETH}
                   </div>
                 </div>
@@ -245,7 +253,7 @@ const Leaderboard = () => {
 
                 </span>
                 <div className="ml-2 text-[#E8B931] flex items-center gap-2">
-                  <img src="evmLogo.png" alt="ETH" className="w-4 h-4" />
+                  <img src="PrediX-logo.webp" alt="PrediX" className="w-4 h-4" />
                   {parseFloat(entry.totalAmount) * 100} {CoinBase.ETH}
                 </div>
               </div>

@@ -8,10 +8,10 @@ interface WalletInfo {
 }
 
 export default function useLocalWallet() {
-  const [evmPublicKey, setEvmPublicKey] = useState<string | null>(null);
-  const [evmPrivateKey, setEvmPrivateKey] = useState<string | null>(null);
-  const [solPublicKey, setSolPublicKey] = useState<string | null>(null);
-  const [solPrivateKey, setSolPrivateKey] = useState<string | null>(null);
+  const [evmPublicKey, setEvmPublicKey] = useState<string|null>(null);
+  const [evmPrivateKey, setEvmPrivateKey] = useState<string|null>(null);
+  const [solPublicKey, setSolPublicKey] = useState<string|null>(null);
+  const [solPrivateKey, setSolPrivateKey] = useState<string|null>(null);
 
   useEffect(() => {
     try {

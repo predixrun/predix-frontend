@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import chatAPI from "@/api/chat/chatAPI";
 import "@/components/styles/game-dashboard-animations.css";
 import { usePrivy } from "@privy-io/react-auth";
-import signGame from "@/api/chat/signCreateAPI";
+import {SendTransactionGame} from "@/api/chat/signCreateAPI";
 import gameAPI from "@/api/game/gameAPI";
 import ChatMessage from "@/components/Chat/ChatMessage";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ChatInput from "@/components/Chat/ChatInput";
-import { signTransaction } from "@/components/wallet/SignWallet";
+import { signSolanaTransaction, signEthereumTransaction } from "@/components/wallet/SignWallet";
 import Loading from "@/components/styles/spiner/wormhole/Loading";
 
 import { Chatting, MessageData } from "@/types/chat";
@@ -26,7 +26,6 @@ function ChattingComponents() {
   const location = useLocation();
   const homeInputText = location.state?.message || "";
   const wallet = JSON.parse(localStorage.getItem("user_wallet_info") || "{}");
-  console.log("wallet", wallet);
   const [inputText, setInputText] = useState<string>("");
 
   const [bridgeLoading, setBridgeLoading] = useState<boolean>(false);
@@ -194,14 +193,17 @@ Great, I can fetch information related to sports. Currently, I only support foot
             })
           ),
           quantity: lastMarketMessage.data.market?.amount?.toString(),
-          asset: lastMarketMessage.data.market?.currency,
+          // asset: lastMarketMessage.data.market?.currency,
+          asset: "BASE",
           key: lastMarketMessage.data.selected_type === "win" ? "A" : "B",
           choiceType: lastMarketMessage.data.selected_type ?? "WIN",
         },
       };
+      console.log("userGameSelectionData.data.asset", userGameSelectionData.data.asset);
       const response = (await chatAPI.sendChatMessage(
         userGameSelectionData
       )) as any;
+      console.log("response", response);
       if (response?.data?.message?.content) {
         const newMessage: Chatting = {
           externalId: conversationExternalId,
@@ -214,17 +216,18 @@ Great, I can fetch information related to sports. Currently, I only support foot
 
       const { tr, transId } = response.data.message.data;
       console.log("tr", tr);
+      console.log("transId", transId);
       if (!wallet) {
         throw new Error("Wallet is undefined");
       }
 
       try {
-        if (!wallet.solPrivateKey) {
+        if (!wallet.evmPrivateKey) {
           throw new Error("Wallet does not support transaction signing");
         }
         let rawTransaction;
         try {
-          rawTransaction = await signTransaction(tr, wallet.solPrivateKey);
+          rawTransaction = await signEthereumTransaction(tr, wallet.evmPrivateKey);
         } catch (err: any) {
           console.error("Transaction signing error:", err);
           throw new Error(`Failed to sign transaction: ${err.message}`);
@@ -234,14 +237,18 @@ Great, I can fetch information related to sports. Currently, I only support foot
           throw new Error("Signed transaction is null");
         }
 
-        await signGame(transId, rawTransaction);
+
+        console.log("rawTransaction", rawTransaction);
+        console.log("transId", transId);
+        const response = await SendTransactionGame(transId, rawTransaction);
+        console.log("response", response);
+
       } catch (error) {
         console.error("Transaction processing error:", error);
         throw error;
       }
     } catch (error) {
       console.error("CreateMessage 실패:", error);
-      alert("게임 생성에 실패했습니다: " + error);
     } finally {
       setTimeout(async () => {
         try {
