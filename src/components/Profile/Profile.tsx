@@ -21,7 +21,7 @@ const Profile = ({ Selection }: { Selection?: boolean }) => {
                 alt="Profile"
                 className="rounded-xl w-10 h-10"
             />
-            <div className="flex flex-col ml-2 text-sm">
+            <div className="flex flex-col ml-2 text-sm w-[80px]">
                 <span>@{username}</span>
                 {Selection &&
                     <span className={`text-[#2E6F17]`}>

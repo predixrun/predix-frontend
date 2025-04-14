@@ -304,14 +304,16 @@ Great, I can fetch information related to sports. Currently, I only support foot
       console.error("BridgeCreateMessage 실패:", error);
     } finally {
       setBridgeLoading(false);
-
+      navigate("/");
     }
   };
 
   return (
     <div className="font-family">
       {bridgeLoading && (
-        <Loading />
+        <div className="fixed inset-0 bg-black/50 bg-opacity-50 z-40">
+          <Loading />
+        </div>
       )}
       <div className="flex flex-col h-screen text-white w-[700px]">
         <div className="flex-1 overflow-scroll [&::-webkit-scrollbar]:hidden">
