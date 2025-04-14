@@ -321,7 +321,7 @@ function Wallet() {
                         </div>
 
                         <div className="text-[#E8B931]">
-                          +{parseFloat(userRank.totalAmount || "0").toFixed(2)}
+                          +{parseFloat(userRank.totalAmount || "0").toFixed(4)}
                         </div>
 
                         <span className="text-sm text-[#7FED58] flex items-center">
@@ -335,7 +335,13 @@ function Wallet() {
                               <path d="M12 8L18 14H6L12 8Z"></path>
                             </svg>
                           </div>
-                          <div>{userRank.rankDiff !== null ? userRank.rankDiff : 0}</div>
+                          {userRank.prevRank === null ? (
+                            <span className="text-sm text-yellow-400 font-semibold w-10 text-center">
+                              new
+                            </span>
+                          ) : (
+                            <div>{userRank.rankDiff !== null ? userRank.rankDiff : 0}</div>
+                          )}
                         </span>
                       </div>
                       <BalanceFetch/>
