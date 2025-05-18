@@ -28,7 +28,7 @@ const strategyMap: Record<string, GameStrategy> = {
         return statusFilter === "END" ? isExpired : isOngoing;
       }),
   },
-  History: {
+  "History": {
     getApiParams: (page, statusFilter) => ({
       page: page + 1,
       take: 8,
