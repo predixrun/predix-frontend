@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import chatAPI from '@/api/chat/chatAPI';
 import { Chatting, ConversationResponse } from '@/types/chat';
 
@@ -6,6 +6,7 @@ export const useChat = (username: string) => {
   const [messages, setMessages] = useState<Chatting[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [conversationExternalId, setConversationExternalId] = useState<string | null>(null);
+  const listenerRef = useRef<((msg: Chatting) => void) | null>(null);
 
   const getWelcomeMessage = (username: string): Chatting => ({
     externalId: null,
@@ -55,15 +56,9 @@ There are three options you can choose from:
     }
   };
 
-  const sendChatMessage = async (message: Chatting) => {
-    setMessages((prevMessages) => [...prevMessages, message]);
-    setLoading(true);
-    try {
-      chatAPI.sendSoketMessage(message);
-    } catch (error) {
-      console.error("WebSocket 전송 실패:", error);
-    } finally {
-      chatAPI.addSocketListener((msg: Chatting) => {
+  useEffect(() => {
+    if (!listenerRef.current) {
+      listenerRef.current = (msg: Chatting) => {
         const filteredContent = msg.content.replace(
           /\n\s*-\s*\*\*Fixture ID:\*\*\s*\d+/g,
           ""
@@ -76,7 +71,25 @@ There are three options you can choose from:
         if (!conversationExternalId && msg.conversationExternalId) {
           setConversationExternalId(msg.conversationExternalId);
         }
-      });
+      };
+      chatAPI.addSocketListener(listenerRef.current);
+    }
+    return () => {
+      if (listenerRef.current) {
+        chatAPI.removeSocketListener(listenerRef.current);
+      }
+    };
+  }, [conversationExternalId]);
+
+  const sendChatMessage = async (message: Chatting) => {
+    setMessages((prevMessages) => [...prevMessages, message]);
+    setLoading(true);
+    try {
+      await chatAPI.ensureConnected();
+      await chatAPI.sendSoketMessage(message);
+    } catch (error) {
+      console.error("WebSocket 전송 실패:", error);
+      setLoading(false);
     }
   };
 

@@ -6,13 +6,13 @@ export const useWebSocket = (homeInputText: string, onMessageReceived: (message:
   const isHomeMessageProcessed = useRef(false);
 
   useEffect(() => {
-    chatAPI.connectSocket();
+    let cancelled = false;
 
-    const interval = setInterval(() => {
-      if (chatAPI.connectSocket()) {
-        clearInterval(interval);
+    (async () => {
+      try {
+        await chatAPI.ensureConnected();
 
-        if (!isHomeMessageProcessed.current && homeInputText.trim() !== "") {
+        if (!cancelled && !isHomeMessageProcessed.current && homeInputText.trim() !== "") {
           isHomeMessageProcessed.current = true;
           const newMessage: Chatting = {
             externalId: null,
@@ -22,10 +22,14 @@ export const useWebSocket = (homeInputText: string, onMessageReceived: (message:
           };
           onMessageReceived(newMessage);
         }
+      } catch (e) {
+        console.error('Failed to ensure WebSocket connection:', e);
       }
-    }, 100);
+    })();
 
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return {

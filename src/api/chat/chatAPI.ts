@@ -5,16 +5,30 @@ import { ChatMessage } from "./chatInterfaces";
 const SOCKET_URL = "https://predix-dev.com";
 
 let socket: Socket;
-
-const authToken = localStorage.getItem("auth_token");
+let lastAuthToken: string | null = null;
+let isReceiveBound = false;
+const messageListeners = new Set<(msg: ChatMessage) => void>();
 
 const connectSocket = () => {
-  if (socket && socket.connected) return socket;
+  const token = localStorage.getItem("auth_token");
 
+  if (socket) {
+    if (lastAuthToken !== token) {
+      socket.auth = { token } as any;
+      lastAuthToken = token;
+      if (socket.connected) {
+        socket.disconnect();
+      }
+      socket.connect();
+    }
+    return socket;
+  }
+
+  lastAuthToken = token;
   socket = io(SOCKET_URL, {
     transports: ["polling"],
     auth: {
-      token: authToken,
+      token,
     },
     autoConnect: true,
     reconnection: true,
@@ -32,26 +46,64 @@ const connectSocket = () => {
 
   socket.on("disconnect", () => {
     console.log("WebSocket Disconnected");
-    setTimeout(connectSocket, 3000);
+    // 자동 재연결에 맡김
   });
+
+  if (!isReceiveBound) {
+    socket.on(
+      "receiveMessage",
+      (message: ChatMessage | { message: ChatMessage }) => {
+        const normalizedMessage = (message as any).message ?? message;
+        messageListeners.forEach((listener) => listener(normalizedMessage));
+      }
+    );
+    isReceiveBound = true;
+  }
 
   return socket;
 };
 
-const sendSoketMessage = (
+const ensureConnected = (timeoutMs: number = 7000): Promise<Socket> => {
+  const s = connectSocket();
+  if (s.connected) return Promise.resolve(s);
+
+  return new Promise((resolve, reject) => {
+    const onConnect = () => {
+      cleanup();
+      resolve(s);
+    };
+    const onDisconnect = () => {
+      // 연결이 끊겼다면 계속 대기 (타임아웃으로 종료)
+    };
+    const onError = () => {
+      // 에러는 타임아웃까지 재시도 대기
+    };
+
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error("WebSocket connection timeout"));
+    }, timeoutMs);
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      s.off("connect", onConnect);
+      s.off("disconnect", onDisconnect);
+      s.off("connect_error", onError);
+    };
+
+    s.on("connect", onConnect);
+    s.on("disconnect", onDisconnect);
+    s.on("connect_error", onError);
+  });
+};
+
+const sendSoketMessage = async (
   message: ChatMessage
 ): Promise<{ tr: string; transId: string }> => {
-  return new Promise((resolve, reject) => {
-    if (!socket || !socket.connected) {
-      const newSocket = connectSocket();
-      if (!newSocket?.connected) {
-        console.error("Failed to connect WebSocket");
-        reject(new Error("WebSocket connection failed"));
-        return;
-      }
-    }
+  const s = await ensureConnected();
 
-    socket?.emit("sendMessage", message, (response: any) => {
+  return new Promise((resolve, reject) => {
+    s.emit("sendMessage", message, (response: any) => {
       if (response?.error) {
         reject(new Error(response.error));
       } else if (response?.data?.message?.data) {
@@ -66,16 +118,11 @@ const sendSoketMessage = (
 
 const addSocketListener = (onMessage: (msg: ChatMessage) => void) => {
   connectSocket();
+  messageListeners.add(onMessage);
+};
 
-  socket?.on(
-    "receiveMessage",
-    (message: ChatMessage | { message: ChatMessage }) => {
-      const normalizedMessage = (message as any).message ?? message;
-
-      onMessage(normalizedMessage);
-      socket?.off("receiveMessage");
-    }
-  );
+const removeSocketListener = (onMessage: (msg: ChatMessage) => void) => {
+  messageListeners.delete(onMessage);
 };
 
 // Load chat messages
@@ -114,7 +161,9 @@ const chatAPI = {
   getChatList,
   sendSoketMessage,
   connectSocket,
+  ensureConnected,
   addSocketListener,
+  removeSocketListener,
 };
 
 export default chatAPI;
